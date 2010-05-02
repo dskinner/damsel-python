@@ -17,6 +17,7 @@ FEATURES TO IMPLEMENT
   directive is located, and produce a controlled result of all
   directives with a single eval call. Then layer this back into
   the original document. It's crazy, but it just might work...
+  re.findall(':(.*\=.*$|.*\))', f, re.M)
 
 IDEAS
 -----
@@ -60,7 +61,7 @@ IDEAS
 BUGFIXES
 --------
 look for the fixme's atm
-
+FIXME process_plntxt after parse "for-loop" finishes for plain text located
 
 """
 import __builtin__
@@ -68,89 +69,119 @@ from lxml import etree
 from time import time
 import re
 
+# this bit would create seperate groups which might be useful
+# for establish what should happen, but then it might not be
+# relevant with compile(... 'exec')
+# re.findall(':(.*\=.*$)|:(.*\))', f, re.M)
+
+p = re.compile(':(.*\=.*$|.*\))', re.M) # parse out : directives
 p2 = re.compile('(\(.*?\))') # pull out attribute declarations
 
-#process_plntxt()
-# FIXME process_plntxt after parse "for-loop" finishes for plain text located
-# at the end of document
+safe_locals = {'len': __builtin__.len, 'locals': __builtin__.locals}
 
-safe_locals = {'len': __builtin__.len}
+def is_func_call(x):
+    """
+    determines if string is a function call.
+    This differentiates between item assignment
+    and a function call on the assumption that there is no space
+    between func_name and the first instance of (
+
+    # FIXME this should account for the following
+
+        user='(Daniel)'
+
+      by checking for = between ^ and ( index
+    """
+    if '(' in x and ' ' not in x[:x.index('(')]:
+        return True
+    return False
+
+def func_to_locals(x):
+    """
+    This parses a string to be eval'd so as to add function
+    calls to the locals() index, ie:
+
+      greeting('Daniel')
+
+    will get transformed to:
+
+      locals()['''greeting('Daniel')'''] = greeting('Daniel')
+
+    while calls such as:
+
+      user = 'Daniel'
+
+    will be left intact.
+    """
+    if is_func_call(x):
+        return '''locals()["""{0}"""]={0}'''.format(x)
+    return x
 
 def safe_eval(s):
     return eval(s, {'__builtins__': None}, safe_locals)
 
-def get_eval_string(s):
-    if ':' in s and '(' in s:
-        a = s.index(':')+1
-        b = s.index('(')
-        func_name = s[a:b] # make a regex and see what speed diff is
-        if func_name in safe_locals:
-            c = s.index(')')+1
-            se = safe_eval(s[a:c])
-            tmp = s.replace(s[a-1:c], se)
-            return tmp
-    return False
+def parse_eval(f):
+    l = p.findall(f) # [':greeting = lambda x: x', ':greeting("meh")']
+    m = [func_to_locals(x) for x in l]
+    c = compile(';'.join(m), '<string>', 'exec')
+    safe_eval(c) # populates safe_locals
+    for x in l:
+        if x in safe_locals:
+            f = f.replace(':'+x, safe_locals[x])
+        else:
+            f = f.replace(':'+x, '')
+    return f
 
-def parse(f):
+def parse_doc(f):
     r = []
     plntxt = []
+    total_a_time = 0
     
-    for l in f.splitlines(): # enumerate for '%' check FIXME better way? save 0.1ms
-        # skip blank lines, just saved 0.4ms doing it this way!
-        t = l.rstrip()
+    for l in f.splitlines():
+        t = l.rstrip() # remove line break endings
         if t == '':
-            continue
+            continue # skip blank lines
 
-        # no directive (%#.)? append to plntxt and skip
+        # inspect directive, determine if plain text
         directive = t.lstrip()[0]
-        if '%' != directive:
+        if directive != '%':
             if directive == '#':
                 t = t.replace('#', '%#', 1)
             elif directive == '.':
                 t = t.replace('.', '%.', 1)
-            elif directive == ':':
-                if '=' in t:
-                    tmp = t.partition('=')
-                    se = safe_eval(tmp[2].strip())
-                    if se:
-                        safe_locals[tmp[0].strip()[1:]] = se  # safe_locals[':func_name'[1:]] = ...
-                    else:
-                        raise Exception('Failed to compile eval for:', tmp[2].strip())
-                    continue
-                else:
-                    se = get_eval_string(t)
-                    if se:
-                        t = se
-                    else:
-                        raise Exception('function declared at beginning of line but not in namespace')
             else:
                 plntxt.append(t)
                 continue
 
+        
         # check plntxt queue
-        if len(plntxt) is not 0:
-            for x in plntxt:
-                text = x.strip()
-                ws = ' '*(len(x)-len(text))
-                j = -1
-                while j:
-                    if ws > r[j][0]:
-                        if r[j][1].text is None:
-                            r[j][1].text = text
-                        else:
-                            r[j][1].text += ' '+text
-                        break
-                    elif ws == r[j][0]:
-                        if r[j][1].tail is None:
-                            r[j][1].tail = text
-                        else:
-                            r[j][1].tail += ' '+text
-                        break
-                    j -= 1
-            plntxt = []
+        # 6.24656677246e-05
+        # 6.72340393066e-05
+        a_time = time()
+        for x in plntxt:
+            text = x.strip()
+            ws = ' '*(len(x)-len(text))
+            j = -1
             
+            while j:
+                if ws > r[j][0]:
+                    if r[j][1].text is None:
+                        r[j][1].text = text
+                    else:
+                        r[j][1].text += ' '+text
+                    break
+                elif ws == r[j][0]:
+                    if r[j][1].tail is None:
+                        r[j][1].tail = text
+                    else:
+                        r[j][1].tail += ' '+text
+                    break
+                j -= 1
+            
+        plntxt = []
+        total_a_time += time()-a_time
         ###
-        t = t.format(**safe_locals)
+        #t = t.format(**safe_locals)
         t = t.partition('%') # ('    ', '%', 'tag#id.class(attr=val) content')
         
         attr = None
@@ -184,11 +215,11 @@ def parse(f):
         e = etree.Element(name)
 
         # check for : directives here
-        se = get_eval_string(u[2])
-        if se:
-            e.text = se
-        else:
-            e.text = u[2]
+        #se = get_eval_string(u[2])
+        #if se:
+        #    e.text = se
+        #else:
+        e.text = u[2]
 
         
         # FIXME slow slow slow slow slow...
@@ -205,6 +236,7 @@ def parse(f):
             e.attrib['class'] = _class.replace('.', ' ').strip()
 
         r.append((t[0], e))
+    print 'atime', total_a_time
     return r
 
 
@@ -235,7 +267,7 @@ def heuristic_test(parsed):
     return m
 
 def hr_build(parsed):
-    """
+    """ FIXME something is busted here as can be seen with bench/hdae/template.html
     This combines the heuristic and relative build methods. The heuristic method
     is able to figure out position of positively indented elements faster but is unable to
     tell position when indention decreases. At this point, we use a relative position
@@ -317,8 +349,13 @@ def relative_build(parsed):
 ###################################
 
 
-def haml(_f, t='r'):
-    l = parse(_f)
+def haml(f, t='r'):
+    _f = open(f).read()
+    # process eval stuff first
+    _f = parse_eval(_f)
+    
+    #parse document next
+    l = parse_doc(_f)
     if t == 'r':
         b = relative_build(l)
     elif t == 'hr':
@@ -327,23 +364,30 @@ def haml(_f, t='r'):
         b = heuristic_test(l)
     return etree.tostring(b[0][1])
 
+def test(func):
+    from time import time
+    times = []
+    for x in range(20):
+        a = time()
+        func()
+        times.append(time()-a)
+    print(min(times))
+
+
 if __name__ == '__main__':
     import sys
     f = sys.argv[1]
     t = sys.argv[2]
-    if t == 'r':
-        test = relative_build
-    if t == 'hr':
-        test = hr_build
-    if t == 'haml':
-        print haml(open(f).read())
-        sys.exit()
+
+    def render(f, t):
+        def _render():
+            return haml(f, t)
+        return _render
     
-    times = []
-    for x in range(20):
-        a = time()
-        _f = open(f).read()
-        l = parse(_f)
-        test(l)
-        times.append(time()-a)
-    print min(times)
+    if t == 'r':
+        test(render(f, t))
+    if t == 'hr':
+        test(render(f, t))
+    if t == 'haml':
+        print haml(f)
+
