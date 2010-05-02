@@ -3,12 +3,28 @@
 """
 FEATURES TO IMPLEMENT
 ---------------------
+* colon directive.
+  :myfunc
+      some param
+      and more
+  which would be the equivalent of calling
+  :myfunc('some param\nandmore')
+* setup string.Formatter custom namespace instead of
+  passing in safe_locals
+* try to speed up eval, check out mako source maybe?
+  speed up eval by making only one eval call. Somehow get all
+  : directives, viewing it as an overlay, remember where each
+  directive is located, and produce a controlled result of all
+  directives with a single eval call. Then layer this back into
+  the original document. It's crazy, but it just might work...
+
+IDEAS
+-----
 * static html instead of quick tags
 * line escaping for text using \
 * attribute syntax (attr=val) can stretch multiple lines
   this one can be done by seeing it doesn't end, buffer it,
   and mark the next iteration a continuation, maybe?
-* be able to call python functions?
 * tag/ self closing tags? does it matter? lxml etree handling this
 * whitespace control with > and < does this matter? relevant? etree again
   handling pre elements could be trouble and relevant
@@ -18,26 +34,36 @@ FEATURES TO IMPLEMENT
 * /[if IE] oh yeah, need this
 * comments specific to the doc that are not rendered anywhere, and indented
   sections are included as part of the comment
-* a python eval declartion using =
-* hyphen to run python? something like
+* not sure how best to handle this,
   - for x in range(4)
       %p x
   and then an unindent would end this bit
 * whitespace preservation?
-* :javascript directive? using colon to have filters where text would get passed
-  to a function? seems a bit redundant but nice syntax, maybe theres a middle ground
-* wtf is interpolation all about?
+* :javascript directive?
+  :overlay main.hdae namethis
+  would process this document then create a dict(namethis=processed) passed to the formatter
+  to overlay specified maybe? sounds good for one, but what about multiple includes?
 * escaping/unescaping html
 * pass namespace of controller method to formatter, that would kick fucking ass
-  @publisher
+  @publisher(_locals=True)
   def index(self):
       cat = 'meow'
   ---
   %p {cat}
   ---
-  but this could get funky, request data in json? pick up trash locals? i dunno
-"""
+* conditionals inside of attribute tags (attr=val) somehow something nice.. would probably
+  fit in with - for syntax
+  :r = range(4)
+  - for i in r
+      %li({if i+1 == len(r): class=last}) i
 
+BUGFIXES
+--------
+look for the fixme's atm
+
+
+"""
+import __builtin__
 from lxml import etree
 from time import time
 import re
@@ -47,6 +73,23 @@ p2 = re.compile('(\(.*?\))') # pull out attribute declarations
 #process_plntxt()
 # FIXME process_plntxt after parse "for-loop" finishes for plain text located
 # at the end of document
+
+safe_locals = {'len': __builtin__.len}
+
+def safe_eval(s):
+    return eval(s, {'__builtins__': None}, safe_locals)
+
+def get_eval_string(s):
+    if ':' in s and '(' in s:
+        a = s.index(':')+1
+        b = s.index('(')
+        func_name = s[a:b] # make a regex and see what speed diff is
+        if func_name in safe_locals:
+            c = s.index(')')+1
+            se = safe_eval(s[a:c])
+            tmp = s.replace(s[a-1:c], se)
+            return tmp
+    return False
 
 def parse(f):
     r = []
@@ -58,10 +101,31 @@ def parse(f):
         if t == '':
             continue
 
-        # no directive (%)? append to plntxt and skip
-        if '%' not in t:
-            plntxt.append(t)
-            continue
+        # no directive (%#.)? append to plntxt and skip
+        directive = t.lstrip()[0]
+        if '%' != directive:
+            if directive == '#':
+                t = t.replace('#', '%#', 1)
+            elif directive == '.':
+                t = t.replace('.', '%.', 1)
+            elif directive == ':':
+                if '=' in t:
+                    tmp = t.partition('=')
+                    se = safe_eval(tmp[2].strip())
+                    if se:
+                        safe_locals[tmp[0].strip()[1:]] = se  # safe_locals[':func_name'[1:]] = ...
+                    else:
+                        raise Exception('Failed to compile eval for:', tmp[2].strip())
+                    continue
+                else:
+                    se = get_eval_string(t)
+                    if se:
+                        t = se
+                    else:
+                        raise Exception('function declared at beginning of line but not in namespace')
+            else:
+                plntxt.append(t)
+                continue
 
         # check plntxt queue
         if len(plntxt) is not 0:
@@ -86,17 +150,19 @@ def parse(f):
             plntxt = []
             
         ###
-        
+        t = t.format(**safe_locals)
         t = t.partition('%') # ('    ', '%', 'tag#id.class(attr=val) content')
         
         attr = None
         if '(' in t[2]:
-            # FIXME content with parenthesis but tag without attributes will go wrong
             # TODO can this be done without regex? save 0.3ms
-            rsplt = p2.split(t[2])              # ['tag#id.class', '(attr=val)', 'content ', '(with)', ' parenthesis']
-            attr = rsplt.pop(1)                 # returns '(attr=val)'
-            
-            u = ''.join(rsplt).partition(' ')   # ('tag#id.class', ' ', 'content (with) parenthesis')
+            if ' ' in t[2][:t[2].index('(')]:
+                u = t[2].partition(' ') # FIXME duplicated at next else, refactor this somehow
+            else:
+                rsplt = p2.split(t[2])              # ['tag#id.class', '(attr=val)', 'content ', '(with)', ' parenthesis']
+                attr = rsplt.pop(1)                 # returns '(attr=val)'
+
+                u = ''.join(rsplt).partition(' ')   # ('tag#id.class', ' ', 'content (with) parenthesis')
         else:
             u = t[2].partition(' ')             # ('tag#id.class', ' ', 'content')
 
@@ -116,13 +182,21 @@ def parse(f):
         name = tag[0][0] != '' and tag[0][0] or 'div'
         #print '@@@:', tag
         e = etree.Element(name)
+
+        # check for : directives here
+        se = get_eval_string(u[2])
+        if se:
+            e.text = se
+        else:
+            e.text = u[2]
+
+        
         # FIXME slow slow slow slow slow...
         # FIXME splitting attributes with ', ' but it could be so many other ways like ',' or ',  ' or ' , '
         if attr is not None:
             for x in attr[1:-1].split(', '):
                 k, v = x.split('=')
                 e.attrib[k] = v
-        e.text = u[2]
         if tag[2][0] != '':
             e.attrib['id'] = tag[2][0]
 
@@ -243,8 +317,7 @@ def relative_build(parsed):
 ###################################
 
 
-def haml(f='test.hdae', t='r'):
-    _f = open(f).read()
+def haml(_f, t='r'):
     l = parse(_f)
     if t == 'r':
         b = relative_build(l)
@@ -252,7 +325,7 @@ def haml(f='test.hdae', t='r'):
         b = hr_build(l)
     elif t == 'h':
         b = heuristic_test(l)
-    return b[0][1]
+    return etree.tostring(b[0][1])
 
 if __name__ == '__main__':
     import sys
@@ -263,7 +336,7 @@ if __name__ == '__main__':
     if t == 'hr':
         test = hr_build
     if t == 'haml':
-        print etree.tostring(haml(f))
+        print haml(open(f).read())
         sys.exit()
     
     times = []
