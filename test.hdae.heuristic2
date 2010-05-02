@@ -1,0 +1,50 @@
+0 %html
+1     %head
+1         %title Coppa Say Wha?!
+2         %script(type=javascript, src=/common/site.js)
+4     %body
+1         %header
+1             %h1.hstuff(random=tada)
+1                 %a(href={item[href]}) Hello World
+2                 %p some content
+1                     %p some inner content
+1                         %span blah
+5                 %strong#sayit(random=tada) where cool beans live
+7             %p#desc.box.content(random=tada) some more same stuff
+1                 %span.fool#gone goofball!
+10        %section(random=tada)#down.bottom
+1             %.mine#yours.theirs this would be some paragraph text yo, what chu think?
+
+m  m  s  l  m  m  m  s  m  m  l  l  m  l   m
+1, 1, 2, 4, 1, 1, 1, 2, 1, 1, 5, 7, 1, 10, 1
+--------------------------------------------
+1, 1, 2, 4, 1, 1, 1, 2, 1, 1, 6, 1, 1, 2,  1
+
+more = 0
+same = 0
+m-> 1
+more = 1
+same = 0
+m-> 1
+more = 2
+same = 0
+s-> 2
+more = 2
+same = 1
+l: 4
+more = 2
+same = 1
+less = 1
+--------
+m-> 1
+more = 1
+same = 0
+m-> 1
+more = 2
+same = 0
+m-> 1
+more = 3
+same = 0
+s-> 2
+more = 3
+same = 1
