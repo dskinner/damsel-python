@@ -18,6 +18,7 @@ FEATURES TO IMPLEMENT
   directives with a single eval call. Then layer this back into
   the original document. It's crazy, but it just might work...
   re.findall(':(.*\=.*$|.*\))', f, re.M)
+* reserve keywords for safe_locals such as "encoding", "doctype", etc
 
 IDEAS
 -----
@@ -75,7 +76,7 @@ import re
 # re.findall(':(.*\=.*$)|:(.*\))', f, re.M)
 
 p = re.compile(':(.*\=.*$|.*\))', re.M) # parse out : directives
-p2 = re.compile('(\(.*?\))') # pull out attribute declarations
+p2 = re.compile('(\w.*?)=(\w.*?)\ ?,')
 
 safe_locals = {'len': __builtin__.len, 'locals': __builtin__.locals}
 
@@ -135,29 +136,28 @@ def parse_eval(f):
 def parse_doc(f):
     r = []
     plntxt = []
-    total_a_time = 0
     
     for l in f.splitlines():
-        t = l.rstrip() # remove line break endings
-        if t == '':
+        l = l.rstrip() # remove line break endings
+        if l == '':
             continue # skip blank lines
 
         # inspect directive, determine if plain text
-        directive = t.lstrip()[0]
-        if directive != '%':
-            if directive == '#':
-                t = t.replace('#', '%#', 1)
-            elif directive == '.':
-                t = t.replace('.', '%.', 1)
-            else:
-                plntxt.append(t)
-                continue
+        directive = l.lstrip()[0]
+        if directive == '%':
+            pass
+        elif directive == '#':
+            l = l.replace('#', '%#', 1)
+        elif directive == '.':
+            l = l.replace('.', '%.', 1)
+        else:
+            plntxt.append(l)
+            continue
 
         
         # check plntxt queue
-        # 6.24656677246e-05
-        # 6.72340393066e-05
-        a_time = time()
+        # everything in queue should be same indention width
+        # since nowhere in a doc should there be plain text indented to plain text
         for x in plntxt:
             text = x.strip()
             ws = ' '*(len(x)-len(text))
@@ -165,13 +165,10 @@ def parse_doc(f):
             
             while j:
                 if ws > r[j][0]:
-                    if r[j][1].text is None:
-                        r[j][1].text = text
-                    else:
-                        r[j][1].text += ' '+text
+                    r[j][1].text += ' '+text
                     break
                 elif ws == r[j][0]:
-                    if r[j][1].tail is None:
+                    if r[j][1].tail is None: # faster than init'ing tail on element creation everytime
                         r[j][1].tail = text
                     else:
                         r[j][1].tail += ' '+text
@@ -179,23 +176,25 @@ def parse_doc(f):
                 j -= 1
             
         plntxt = []
-        total_a_time += time()-a_time
-        ###
-        #t = t.format(**safe_locals)
-        t = t.partition('%') # ('    ', '%', 'tag#id.class(attr=val) content')
-        
-        attr = None
-        if '(' in t[2]:
-            # TODO can this be done without regex? save 0.3ms
-            if ' ' in t[2][:t[2].index('(')]:
-                u = t[2].partition(' ') # FIXME duplicated at next else, refactor this somehow
-            else:
-                rsplt = p2.split(t[2])              # ['tag#id.class', '(attr=val)', 'content ', '(with)', ' parenthesis']
-                attr = rsplt.pop(1)                 # returns '(attr=val)'
 
-                u = ''.join(rsplt).partition(' ')   # ('tag#id.class', ' ', 'content (with) parenthesis')
+        
+        #t = t.format(**safe_locals)
+        l = l.partition('%') # ('    ', '%', 'tag#id.class(attr=val) content')
+
+        # determine tag attributes
+        # TODO setup attributes to span multiple lines
+        attr = None
+        if '(' in l[2]:
+            op_i = l[2].index('(')
+            if ' ' not in l[2][:op_i]: # there should be no spaces in %tag#id.class(...
+                cp_i = l[2].index(')')+1
+                attr = l[2][op_i:cp_i]
+                u = l[2].replace(attr, '').partition(' ')
+            else:
+                u = l[2].partition(' ')
         else:
-            u = t[2].partition(' ')             # ('tag#id.class', ' ', 'content')
+            u = l[2].partition(' ')
+
 
         # this is pretty sweet, basically it will always return the following format
         #   [('tag', '', 'class'), ('#', '', ''), ('id', '.', 'class')]
@@ -209,25 +208,11 @@ def parse_doc(f):
         # and class will always be [0][2]+[2][2]
         # and this should be effin fast comparitively (to regex, other builtin string operations)
         tag = [x.partition('.') for x in u[0].partition('#')]
-        
-        name = tag[0][0] != '' and tag[0][0] or 'div'
-        #print '@@@:', tag
-        e = etree.Element(name)
 
-        # check for : directives here
-        #se = get_eval_string(u[2])
-        #if se:
-        #    e.text = se
-        #else:
+        # 
+        e = etree.Element(tag[0][0] or 'div')
         e.text = u[2]
-
         
-        # FIXME slow slow slow slow slow...
-        # FIXME splitting attributes with ', ' but it could be so many other ways like ',' or ',  ' or ' , '
-        if attr is not None:
-            for x in attr[1:-1].split(', '):
-                k, v = x.split('=')
-                e.attrib[k] = v
         if tag[2][0] != '':
             e.attrib['id'] = tag[2][0]
 
@@ -235,8 +220,12 @@ def parse_doc(f):
         if _class != ' ':
             e.attrib['class'] = _class.replace('.', ' ').strip()
 
-        r.append((t[0], e))
-    print 'atime', total_a_time
+        if attr is not None:
+            for x in attr[1:-1].split(','):
+                k, v = x.split('=')
+                e.attrib[k.strip()] = v.strip()
+        
+        r.append((l[0], e)) # ('    ', etree.Element)
     return r
 
 
