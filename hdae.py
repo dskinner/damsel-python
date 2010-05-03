@@ -275,33 +275,27 @@ def hr_build(parsed):
     m = {}
 
     prev = parsed[0][0]
-    for i, d in enumerate(parsed[1:]):
-        i += 1
-        if d[0] > prev:
+    for i, d in enumerate(parsed):
+        if i is 0:
+            continue
+        
+        ws = d[0]
+        
+        if ws > prev:
             r[i-1][1].append(r[i][1])   # ('    ', Element)[1].append(...)
-            more += 1
-            same = 0
-            m[d[0]] = i         # m['    '] = 1
-        elif d[0] == prev:
-            r[i-(2+same)][1].append(r[i][1])    # (more_indent->same_indent) == 2
-            same += 1
-        elif d[0] < prev:
-            j = m[d[0]]     # j = [i]
-            m[d[0]] = i         # m['    '] = 1
-            #print etree.tostring(r[0][1])
-            parent = r[j][1].getparent()
-            parent.append(d[1])
-            
-            # clear step counts
-            more = 0
-            same = 0
-
+            m[ws] = i
+        elif ws == prev:
+            r[i-1][1].getparent().append(r[i][1])
+            m[ws] = i
+        elif ws < prev:
+            j = m[ws]
+            r[j][1].getparent().append(r[i][1])
             # purge mapping of larger indents then this unindent
             for k in m.keys():
-                if k > d[0]:
+                if k > ws:
                     m.pop(k)
-            
-        prev = d[0]
+            m[ws] = i
+        prev = ws
     return r
 
 
