@@ -68,88 +68,148 @@ FIXME process_plntxt after parse "for-loop" finishes for plain text located
 import __builtin__
 from lxml import etree
 from time import time
-import re
+from string import Formatter
 
-# this bit would create seperate groups which might be useful
-# for establish what should happen, but then it might not be
-# relevant with compile(... 'exec')
-# re.findall(':(.*\=.*$)|:(.*\))', f, re.M)
+fmt = Formatter()
 
-p = re.compile(':(.*\=.*$|.*\))', re.M) # parse out : directives
-p2 = re.compile('(\w.*?)=(\w.*?)\ ?,')
-
-safe_locals = {'len': __builtin__.len, 'locals': __builtin__.locals}
-
-def is_func_call(x):
-    """
-    determines if string is a function call.
-    This differentiates between item assignment
-    and a function call on the assumption that there is no space
-    between func_name and the first instance of (
-
-    # FIXME this should account for the following
-
-        user='(Daniel)'
-
-      by checking for = between ^ and ( index
-    """
-    if '(' in x and ' ' not in x[:x.index('(')]:
-        return True
-    return False
-
-def func_to_locals(x):
-    """
-    This parses a string to be eval'd so as to add function
-    calls to the locals() index, ie:
-
-      greeting('Daniel')
-
-    will get transformed to:
-
-      locals()['''greeting('Daniel')'''] = greeting('Daniel')
-
-    while calls such as:
-
-      user = 'Daniel'
-
-    will be left intact.
-    """
-    if is_func_call(x):
-        return '''locals()["""{0}"""]={0}'''.format(x)
-    return x
+safe_locals = {'len': __builtin__.len, 'locals': __builtin__.locals, 'title': "SIMLE"}
 
 def safe_eval(s):
     return eval(s, {'__builtins__': None}, safe_locals)
 
-def parse_eval(f):
-    l = p.findall(f) # [':greeting = lambda x: x', ':greeting("meh")']
-    m = [func_to_locals(x) for x in l]
-    c = compile(';'.join(m), '<string>', 'exec')
-    safe_eval(c) # populates safe_locals
-    for x in l:
-        if x in safe_locals:
-            f = f.replace(':'+x, safe_locals[x])
+def is_func_call(l):
+    if '(' in l:
+        a = l.index('(')
+    else:
+        return False
+    if '=' in l:
+        b = l.index('=')
+    else:
+        return True
+    if a < b:
+        return True
+    else:
+        return False
+
+def is_embedded(l):
+    # look to see if :directive is embedded in line
+    if ':' in l:
+        a = l.index(':')
+    if '(' in l:
+        b = l.index('(')
+    else:
+        return False
+    if ' ' in l[a:b]:
+        return False
+    c = l.index(')')+1
+    return l[a+1:c]
+
+def inline_eval(l):
+    if is_func_call(l):
+        return eval(l, {'__builtins__': None}, safe_locals)
+    else:
+        a, b = [x.strip() for x in l.split('=', 1)]
+        safe_locals[a] = eval(b, {'__builtins__': None}, safe_locals)
+        return None
+
+def to_local(i, l):
+    return '''locals()["""__{0}_{1}__"""]={1}'''.format(i, l)
+
+def parse_call(i, l):
+    if '(' in l:
+        a = l.index('(')
+    else:
+        return l
+    if '=' in l:
+        b = l.index('=')
+    else:
+        return to_local(i, l)
+    if a < b:
+        return to_local(i, l)
+    else:
+        return l
+
+def parse_py(f):
+    """
+    runs faster and scales better then a regex that has to
+    calculate line numbers
+    """
+    queue = []
+    for i, l in enumerate(f):
+        l = l.strip()
+        if l == '':
+            continue
+
+        # see if this is :directive line
+        directive = l[0]
+        if directive == ':':
+            queue.append((i, l, parse_call(i, l[1:])))
+            continue
+
+        # check if {variable} is embedded in line
+        if '{' in l:
+            for x in fmt.parse(l):
+                if x[1] is not None:
+                    queue.append((i, x[1], to_local(i, x[1])))
+
+        # look to see if :directive is embedded in line
+        if ':' in l:
+            a = l.index(':')
+        if '(' in l:
+            b = l.index('(')
         else:
-            f = f.replace(':'+x, '')
+            continue
+        if ' ' in l[a:b]:
+            continue
+        c = l.index(')')+1
+        queue.append((i, l[a:c], to_local(i, l[a+1:c])))
+
+    
+    c = compile(';'.join([x[2] for x in queue]), '<string>', 'exec')
+    safe_eval(c)
+        
+    ###
+
+    for e in queue:
+        i = e[0]
+        l = e[1]
+
+        if l[0] != ':':
+            k = '''__{0}_{1}__'''.format(i, l)
+            l = '{'+l+'}'
+        else:
+            k = '''__{0}_{1}__'''.format(i, l[1:])
+        
+        if k in safe_locals:
+            f[i] = f[i].replace(l, safe_locals[k], 1)
+        else:
+            f[i] = f[i].replace(l, '', 1)
+
     return f
 
 def parse_doc(f):
     r = []
     plntxt = []
     
-    for l in f.splitlines():
+    for l in f:
         l = l.rstrip() # remove line break endings
         if l == '':
             continue # skip blank lines
 
         # inspect directive, determine if plain text
-        directive = l.lstrip()[0]
+        d = l.lstrip()
+        directive = d[0]
         if directive == '%':
             pass
         elif directive == '#':
             l = l.replace('#', '%#', 1)
         elif directive == '.':
             l = l.replace('.', '%.', 1)
+        #elif directive == ':':
+        #    output = inline_eval(d[1:])
+        #    if output is None:
+        #        continue
+        #    l = l.replace(d, output)
         else:
             plntxt.append(l)
             continue
@@ -177,8 +237,8 @@ def parse_doc(f):
             
         plntxt = []
 
-        
-        #t = t.format(**safe_locals)
+
+        #l = l.format(**safe_locals)
         l = l.partition('%') # ('    ', '%', 'tag#id.class(attr=val) content')
 
         # determine tag attributes
@@ -212,6 +272,17 @@ def parse_doc(f):
         # 
         e = etree.Element(tag[0][0] or 'div')
         e.text = u[2]
+        '''
+        ex = is_embedded(u[2])
+        if ex:
+            output = inline_eval(ex)
+            if output is None:
+                e.text = u[2].replace(':'+ex, '')
+            else:
+                e.text = u[2].replace(':'+ex, output)
+        else:
+            e.text = u[2]
+        '''
         
         if tag[2][0] != '':
             e.attrib['id'] = tag[2][0]
@@ -227,7 +298,6 @@ def parse_doc(f):
         
         r.append((l[0], e)) # ('    ', etree.Element)
     return r
-
 
 def heuristic_test(parsed):
     """
@@ -256,7 +326,7 @@ def heuristic_test(parsed):
     return m
 
 def hr_build(parsed):
-    """ FIXME something is busted here as can be seen with bench/hdae/template.html
+    """
     This combines the heuristic and relative build methods. The heuristic method
     is able to figure out position of positively indented elements faster but is unable to
     tell position when indention decreases. At this point, we use a relative position
@@ -298,7 +368,6 @@ def hr_build(parsed):
         prev = ws
     return r
 
-
 def relative_build(parsed):
     """
     stable parsing of document, but slightly slower then heuristic (which is still questionable atm)
@@ -327,15 +396,12 @@ def relative_build(parsed):
         prev = d[0]
     return r
 
-
-
 ###################################
 
-
-def haml(f, t='r'):
-    _f = open(f).read()
+def haml(f, t='hr'):
+    _f = open(f).readlines()
     # process eval stuff first
-    _f = parse_eval(_f)
+    _f = parse_py(_f)
     
     #parse document next
     l = parse_doc(_f)

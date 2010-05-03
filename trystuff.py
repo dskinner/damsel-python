@@ -8,6 +8,95 @@ import re
 p = re.compile(':(.*\=.*$|.*\))', re.M)
 p2 = re.compile(':(.*\=.*$)|(:.*\))', re.M)
 
+safe_locals = {'len': __builtin__.len, 'locals': __builtin__.locals}
+
+def safe_eval(s):
+    return eval(s, {'__builtins__': None}, safe_locals)
+
+def to_local(i, l):
+    return '''locals()["""__{0}_{1}__"""]={1}'''.format(i, l)
+
+def parse_call(i, l):
+    if '(' in l:
+        a = l.index('(')
+    else:
+        return l
+    if '=' in l:
+        b = l.index('=')
+    else:
+        return to_local(i, l)
+    if a < b:
+        return to_local(i, l)
+    else:
+        return l
+
+from string import Formatter
+fmt = Formatter()
+
+def parse_py():
+    """
+    runs faster and scales better then a regex that has to
+    calculate line numbers
+    """
+    f = open('bench/hdae/template.html').readlines()
+    queue = []
+    sss_total = 0
+    for i, l in enumerate(f):
+        l = l.strip()
+        if l == '':
+            continue
+
+        # see if this is :directive line
+        directive = l[0]
+        if directive == ':':
+            queue.append((i, l, parse_call(i, l[1:])))
+            continue
+
+        # check if {variable} is embedded in line
+        sss = time()
+        if '{' in l:
+            for x in fmt.parse(l):
+                if x[1] is not None:
+                    queue.append((i, x[1], to_local(i, x[1])))
+        sss_total += time()-sss
+
+        # look to see if :directive is embedded in line
+        if ':' in l:
+            a = l.index(':')
+        if '(' in l:
+            b = l.index('(')
+        else:
+            continue
+        if ' ' in l[a:b]:
+            continue
+        c = l.index(')')+1
+        queue.append((i, l[a:c], to_local(i, l[a+1:c])))
+
+    print '@@@@@@@@@', sss_total
+
+    c = compile(';'.join([x[2] for x in queue]), '<string>', 'exec')
+    safe_eval(c)
+
+    for e in queue:
+        i = e[0]
+        l = e[1]
+        
+        if l[0] != ':':
+            k = '''__{0}_{1}__'''.format(i, l)
+            l = '{'+l+'}'
+        else:
+            k = '''__{0}_{1}__'''.format(i, l[1:])
+        
+        if k in safe_locals:
+            f[i] = f[i].replace(l, safe_locals[k], 1)
+        else:
+            f[i] = f[i].replace(l, '', 1)
+        
+    return f
+
+
+
+
 def func_to_locals(x):
     """
     This parses a string to be eval'd so as to add function
@@ -39,14 +128,13 @@ def func_to_locals(x):
 
 
 
-safe_locals = {'len': __builtin__.len, 'locals': __builtin__.locals}
 
 
 def re_sub_test():
     f = open('bench/hdae/template.html').read()
-    l = p.findall(f)
-    for x in l:
-        f = re.sub(re.escape(x), '!!!!!!!!!!!', f)
+    #l = p.findall(f)
+    l = [(f.count('\n', 0, m.start()), m.group(1)) for m in p.finditer(f)]
+    return l
     
     
 def str_replace_test():
@@ -67,9 +155,6 @@ def compile_and_eval(f):
     l = [func_to_locals(x) for x in l]
     c = compile(';'.join(l), '<string>', 'exec')
     safe_eval(c)
-
-def safe_eval(s):
-    return eval(s, {'__builtins__': None}, safe_locals)
 
 
 def test_p():
@@ -92,11 +177,13 @@ def test_eval():
     c = compile(';'.join(new_l), '<string>', 'exec')
     eval(c, {}, loc)
 
-from time import time
 
-times = []
-for x in range(10):
-    a = time()
-    test_lambda()
-    times.append(time()-a)
-print min(times)
+if __name__ == '__main__':
+    from time import time
+    times = []
+    for x in range(10):
+        a = time()
+        parse_py()
+        times.append(time()-a)
+    print min(times)
+
