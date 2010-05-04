@@ -19,6 +19,7 @@ FEATURES TO IMPLEMENT
   the original document. It's crazy, but it just might work...
   re.findall(':(.*\=.*$|.*\))', f, re.M)
 * reserve keywords for safe_locals such as "encoding", "doctype", etc
+* FIXME need to create a safe way to open files with :include()
 
 IDEAS
 -----
@@ -69,13 +70,45 @@ import __builtin__
 from lxml import etree
 from time import time
 from string import Formatter
+import sys
 
 fmt = Formatter()
 
-safe_locals = {'len': __builtin__.len, 'locals': __builtin__.locals, 'title': "SIMLE"}
+def parse_args(l):
+    """
+    returns (args, kwargs)
+    """
+    a = []
+    d = {}
+    for x in l.split(','):
+        if '=' in x:
+            k, v = x.split('=')
+            d[k.strip()] = v.strip()
+        else:
+            a.append(x.strip())
+    return (a, d)
+
+def process_internal(l):
+    a = l.index(':')+1
+    b = l.index('(')
+    c = l[a:b]
+    if c in extensions:
+        args, kwargs = parse_args(l[b+1:-1])
+        extensions[c](*args, **kwargs)
+
+def include(f):
+    _f = open(f).readlines()
+    _f = parse_py(_f)
+    return _f
+
+def block(s):
+    s = s.splitlines()
+    s = parse_py(s)
+    safe_globals['__blocks__'][s[0]] = [s[1:], False] # [content, been-used-yet?]
+    return
 
 def safe_eval(s):
-    return eval(s, {'__builtins__': None}, safe_locals)
+    return eval(s, safe_globals)
 
 def is_func_call(l):
     if '(' in l:
@@ -106,16 +139,21 @@ def is_embedded(l):
 
 def inline_eval(l):
     if is_func_call(l):
-        return eval(l, {'__builtins__': None}, safe_locals)
+        return eval(l, {'__builtins__': None}, safe_globals)
     else:
         a, b = [x.strip() for x in l.split('=', 1)]
-        safe_locals[a] = eval(b, {'__builtins__': None}, safe_locals)
+        safe_globals[a] = eval(b, {'__builtins__': None}, safe_globals)
         return None
 
 def to_local(i, l):
-    return '''locals()["""__{0}_{1}__"""]={1}'''.format(i, l)
+    return '''globals()["""__{0}_{1}__"""]={1}'''.format(i, l)
 
 def parse_call(i, l):
+    if l[-1] == ':': # def, if, for; code block
+        return l
+    if l[0] == ' ': # a continued code block
+        return l
+    
     if '(' in l:
         a = l.index('(')
     else:
@@ -132,7 +170,7 @@ def parse_call(i, l):
 def parse_py(f):
     """
     runs faster and scales better then a regex that has to
-    calculate line numbers
+    calculate line numbers from my limited tests
     """
     queue = []
     for i, l in enumerate(f):
@@ -147,7 +185,7 @@ def parse_py(f):
             continue
 
         # check if {variable} is embedded in line
-        if '{' in l:
+        if '{' in l: # TODO and '}' in l
             for x in fmt.parse(l):
                 if x[1] is not None:
                     queue.append((i, x[1], to_local(i, x[1])))
@@ -155,6 +193,8 @@ def parse_py(f):
         # look to see if :directive is embedded in line
         if ':' in l:
             a = l.index(':')
+        else:
+            continue
         if '(' in l:
             b = l.index('(')
         else:
@@ -164,25 +204,52 @@ def parse_py(f):
         c = l.index(')')+1
         queue.append((i, l[a:c], to_local(i, l[a+1:c])))
 
-    
-    c = compile(';'.join([x[2] for x in queue]), '<string>', 'exec')
+    cmd_s = '\n'.join([x[2] for x in queue])
+    #print cmd_s
+    c = compile(cmd_s, '<string>', 'exec')
     safe_eval(c)
         
     ###
-
+    offset = 0
     for e in queue:
         i = e[0]
         l = e[1]
-
+        
         if l[0] != ':':
             k = '''__{0}_{1}__'''.format(i, l)
             l = '{'+l+'}'
         else:
             k = '''__{0}_{1}__'''.format(i, l[1:])
-        
-        if k in safe_locals:
-            f[i] = f[i].replace(l, safe_locals[k], 1)
+
+        if k in safe_globals:
+            v = safe_globals[k]
+            if isinstance(v, (list, tuple)): # if iterable, then indent everything appropriately
+                indention = f[i+offset].replace(l, '', 1).rstrip('\r\n')
+                f.pop(i+offset)
+                offset -= 1
+                for x in v:
+                    offset += 1
+                    f.insert(i+offset, indention+x)
+            else:
+                i += offset
+                f[i] = f[i].replace(l, v, 1)
+        elif ':block(' == e[1].lstrip()[:7]: # was this a block?
+            # FIXME for the love of god, fixme!
+            n = `e[1]`.split('\\n')[0].split('\\')[0].split("'")[1]
+            v, u = safe_globals['__blocks__'][n]
+            if u:
+                i += offset
+                f[i] = f[i].replace(l, '', 1)
+                continue
+            indention = f[i+offset].replace(l, '', 1).rstrip('\r\n')
+            f.pop(i+offset)
+            offset -= 1
+            for x in v:
+                offset += 1
+                f.insert(i+offset, indention+x)
+            safe_globals['__blocks__'][n][1] = True
         else:
+            i += offset
             f[i] = f[i].replace(l, '', 1)
 
     return f
@@ -190,7 +257,7 @@ def parse_py(f):
 def parse_doc(f):
     r = []
     plntxt = []
-    
+
     for l in f:
         l = l.rstrip() # remove line break endings
         if l == '':
@@ -205,6 +272,8 @@ def parse_doc(f):
             l = l.replace('#', '%#', 1)
         elif directive == '.':
             l = l.replace('.', '%.', 1)
+        elif directive == "'" and d[:3] == "'''":
+            continue # TODO mark comment start and do continues till end found
         #elif directive == ':':
         #    output = inline_eval(d[1:])
         #    if output is None:
@@ -236,9 +305,7 @@ def parse_doc(f):
                 j -= 1
             
         plntxt = []
-
-
-        #l = l.format(**safe_locals)
+        
         l = l.partition('%') # ('    ', '%', 'tag#id.class(attr=val) content')
 
         # determine tag attributes
@@ -272,17 +339,6 @@ def parse_doc(f):
         # 
         e = etree.Element(tag[0][0] or 'div')
         e.text = u[2]
-        '''
-        ex = is_embedded(u[2])
-        if ex:
-            output = inline_eval(ex)
-            if output is None:
-                e.text = u[2].replace(':'+ex, '')
-            else:
-                e.text = u[2].replace(':'+ex, output)
-        else:
-            e.text = u[2]
-        '''
         
         if tag[2][0] != '':
             e.attrib['id'] = tag[2][0]
@@ -396,11 +452,48 @@ def relative_build(parsed):
         prev = d[0]
     return r
 
+safe_locals = {}
+
+safe_globals = {'__builtins__': None,
+                '__blocks__': {},
+                'dict': __builtin__.dict,
+                'enumerate': __builtin__.enumerate,
+                'globals': __builtin__.globals,
+                'len': __builtin__.len,
+                'list': __builtin__.list,
+                'locals': __builtin__.locals,
+                'open': __builtin__.open, # FIXME make a safe wrapper for opening additional theme files safely
+                'map': __builtin__.map,
+                'min': __builtin__.min,
+                'max': __builtin__.max,
+                'block': block,
+                'title': "SIMLE",
+                'include': include,
+                'parse_py': parse_py}
+
+
+def parse_preprocessor(f):
+    _f = f
+    offset = 0
+    for i, x in enumerate(_f):
+        if x[:9] == ':extends(':
+            nf = open(x.split("'")[1]).readlines()
+            nf = parse_preprocessor(nf) # for multi-depth :extends(...)
+            f.pop(i+offset)
+            offset -= 1
+            for y in nf:
+                offset += 1
+                f.insert(i+offset, y)
+                
+    return f
+
+
 ###################################
 
 def haml(f, t='hr'):
     _f = open(f).readlines()
     # process eval stuff first
+    _f = parse_preprocessor(_f)
     _f = parse_py(_f)
     
     #parse document next
