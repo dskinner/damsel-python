@@ -1,3 +1,6 @@
+DAML
+====
+
 This project is a work in progress. Refer to test/templates/ for available syntax.
 
 To run unit tests:
@@ -7,3 +10,60 @@ To parse a document from command line:
 #> python daml.py my_template.daml daml # to get resulting string, uses hr_build
 #> python daml.py my_template.daml hr # run primitive speed test on hr_build method
 #> python daml.py my_template.daml r # run primitive speed test on relative_build method
+
+
+Explanation of Syntax Choices
+=============================
+
+First note, I've never actually used HAML or ruby for that matter beyond
+writing a quick ruby profiler (and having to google how to write every single
+line of the ruby code...) and using an example doc from their site. Point being
+I may very well and very easily mis-state some aspect of HAML.
+
+While the basic syntax choice to represent tags is the same as HAML, there are
+some significant differences from there on. Specifically, I have chosen
+syntaxes that are either, (a) already familiar with python users, or (b) found
+to my liking in the HAML syntax as specified by their documentation.
+
+Specifically on point (b), I was unhappy with the variation of syntax in HAML
+for doing different things. Such as applying text filters, calling ruby code,
+and some other various bits. As I went over the documentation and started
+making choices for how to implement these various pieces, one of the first
+choices I made was to unify much of the syntax. For example, to call any piece
+of python code, one simply uses the : directive. The : directive can also be
+embedded in a line, but *only* for calling a function. So for example, you can
+create blocks of python code as such
+
+  :l = []
+  :for x in range(10):
+  :    l.append(x)
+
+The variable l is accessible for use elsewhere in the document as well. In
+addition to the example above, one can also write straight to the document
+with a list comprehension.
+
+  %ul
+      :['%li {0}'.format(x) for x in l]
+
+Note, the above is more of a side effect of implementation more so then a
+planned feature. Everything is subject to change and still under heavy
+development. Here is an example of defining a lambda function and embedding a
+result somewhere
+
+  :greet = lambda x: 'Hello, {0}'.format(x)
+
+  %p :greet('John Doe'). Welcome to the site.
+
+Also note you can define a regular function as well, for example:
+
+  :def greet(x):
+  :    return 'Hello, {0}'.format(x)
+
+Now then, discussing part (a), the choice to follow python syntax for the
+recent string.Formatter seemed like the most logical choice. Currently due to
+speed issues, using the syntax is just that, and does not actually make use of
+string.Formatter. The intention though is for it to use string.Formatter so one
+can leverage a pre-existing knowledge of string formatting and make use of all
+features available from the standard library.
+
+More content soon..
