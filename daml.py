@@ -3,49 +3,39 @@
 """
 FEATURES TO IMPLEMENT
 ---------------------
-* colon directive.
+* colon directive multiline wrapping
   :myfunc
       some param
       and more
   which would be the equivalent of calling
   :myfunc('some param\nandmore')
 * setup string.Formatter custom namespace instead of
-  passing in safe_locals
-* try to speed up eval, check out mako source maybe?
-  speed up eval by making only one eval call. Somehow get all
-  : directives, viewing it as an overlay, remember where each
-  directive is located, and produce a controlled result of all
-  directives with a single eval call. Then layer this back into
-  the original document. It's crazy, but it just might work...
-  re.findall(':(.*\=.*$|.*\))', f, re.M)
-* reserve keywords for safe_locals such as "encoding", "doctype", etc
+  passing in locals that actually isn't slow..
+* reserve keywords for safe_locals such as "encoding", "doctype", etc,
+  and make it known in coming documentation
+* declare a doctype at top of document and charset, pass on to etree.tostring
 * FIXME need to create a safe way to open files with :include()
-
-IDEAS
------
 * static html instead of quick tags
 * line escaping for text using \
 * attribute syntax (attr=val) can stretch multiple lines
-  this one can be done by seeing it doesn't end, buffer it,
-  and mark the next iteration a continuation, maybe?
+  implement in preprocessor?
+* evaluate the NEED for a preprocessor..
+  
+IDEAS
+-----
 * tag/ self closing tags? does it matter? lxml etree handling this
 * whitespace control with > and < does this matter? relevant? etree again
   handling pre elements could be trouble and relevant
-* declare a doctype at top of document and charset, pass on to etree.tostring
 * forward slash / for html comments, or how about just writing html comments...
   hmm but wrapping indented sections of code, now we're talkin
 * /[if IE] oh yeah, need this
 * comments specific to the doc that are not rendered anywhere, and indented
   sections are included as part of the comment
 * not sure how best to handle this,
-  - for x in range(4)
-      %p x
-  and then an unindent would end this bit
+  :for x in range(3):
+      %p {x}
 * whitespace preservation?
 * :javascript directive?
-  :overlay main.hdae namethis
-  would process this document then create a dict(namethis=processed) passed to the formatter
-  to overlay specified maybe? sounds good for one, but what about multiple includes?
 * escaping/unescaping html
 * pass namespace of controller method to formatter, that would kick fucking ass
   @publisher(_locals=True)
@@ -59,6 +49,13 @@ IDEAS
   :r = range(4)
   - for i in r
       %li({if i+1 == len(r): class=last}) i
+  I've never liked looking at code like this, maybe something more appropriate that already is functional
+  is embedding functions inline
+  :r = range(4)
+  :is_last = lambda x: len(r) == x+1 and 'class="last"' or ''
+  :for i, x in enumerate(r):
+      %p(attr=val,:is_last(i)) {x}
+  of course the plain text indent doesn't work yet..
 
 BUGFIXES
 --------
@@ -74,28 +71,6 @@ import sys
 
 fmt = Formatter()
 
-def parse_args(l):
-    """
-    returns (args, kwargs)
-    """
-    a = []
-    d = {}
-    for x in l.split(','):
-        if '=' in x:
-            k, v = x.split('=')
-            d[k.strip()] = v.strip()
-        else:
-            a.append(x.strip())
-    return (a, d)
-
-def process_internal(l):
-    a = l.index(':')+1
-    b = l.index('(')
-    c = l[a:b]
-    if c in extensions:
-        args, kwargs = parse_args(l[b+1:-1])
-        extensions[c](*args, **kwargs)
-
 def include(f):
     _f = open(f).readlines()
     _f = parse_py(_f)
@@ -109,41 +84,6 @@ def block(s):
 
 def safe_eval(s):
     return eval(s, safe_globals)
-
-def is_func_call(l):
-    if '(' in l:
-        a = l.index('(')
-    else:
-        return False
-    if '=' in l:
-        b = l.index('=')
-    else:
-        return True
-    if a < b:
-        return True
-    else:
-        return False
-
-def is_embedded(l):
-    # look to see if :directive is embedded in line
-    if ':' in l:
-        a = l.index(':')
-    if '(' in l:
-        b = l.index('(')
-    else:
-        return False
-    if ' ' in l[a:b]:
-        return False
-    c = l.index(')')+1
-    return l[a+1:c]
-
-def inline_eval(l):
-    if is_func_call(l):
-        return eval(l, {'__builtins__': None}, safe_globals)
-    else:
-        a, b = [x.strip() for x in l.split('=', 1)]
-        safe_globals[a] = eval(b, {'__builtins__': None}, safe_globals)
-        return None
 
 def to_local(i, l):
     return '''globals()["""__{0}_{1}__"""]={1}'''.format(i, l)
@@ -169,9 +109,11 @@ def parse_call(i, l):
 
 def parse_py(f):
     """
-    runs faster and scales better then a regex that has to
-    calculate line numbers from my limited tests
+    FIXME I hacked this code to hell the other day, fix it, refactor it, make
+    it beautiful again. Run speed tests, get it back close to what it was.
+    Identify those bottle-necks and find a better way.
     """
+    
     queue = []
     for i, l in enumerate(f):
         l = l.strip()
@@ -309,7 +251,6 @@ def parse_doc(f):
         l = l.partition('%') # ('    ', '%', 'tag#id.class(attr=val) content')
 
         # determine tag attributes
-        # TODO setup attributes to span multiple lines
         attr = None
         if '(' in l[2]:
             op_i = l[2].index('(')
@@ -343,6 +284,7 @@ def parse_doc(f):
         if tag[2][0] != '':
             e.attrib['id'] = tag[2][0]
 
+        # TODO is this the fastest way to process classes and attributes?
         _class = tag[0][2] + ' ' + tag[2][2]
         if _class != ' ':
             e.attrib['class'] = _class.replace('.', ' ').strip()
@@ -383,17 +325,17 @@ def heuristic_test(parsed):
 
 def hr_build(parsed):
     """
-    This combines the heuristic and relative build methods. The heuristic method
-    is able to figure out position of positively indented elements faster but is unable to
-    tell position when indention decreases. At this point, we use a relative position
-    method to locate this node's parent. The speed increase is minimal, but every bit helps.
-    
-    When a section unindents, I think its safe to assume that it will fall on a pre-existing
-    indention level. All this is hardly my forte so this may be wrong. By recording a map of
-    all the latest elements on an indention level, we can access the last element on the same
-    indention level, get its parent, and append the new element to it. The one catch with this
-    method is we need to remove any mappings to larger indentions of the current unindent so
-    future elements do not get appended to incorrect items if variable indention is used.
+    As tags indent, it is easy to identify the parent. It is simply the last
+    element processed. If indention is the same, it is simply the last elements
+    parent.
+
+    While processing this data, we can record a dict indexed by indention. When
+    a tag decreases in indention, I think it is safe to assume that it will
+    fall on a pre-existing indention level. This will trigger a lookup in the
+    dict and get the parent of that element. Afterwards, we clean up the dict
+    to remove all keys with an indention level higher then the decreased one so
+    future elements do not get appended to incorrect items if variable
+    indention is used.
     """
     r = parsed
     more = 0
@@ -426,7 +368,8 @@ def hr_build(parsed):
 
 def relative_build(parsed):
     """
-    stable parsing of document, but slightly slower then heuristic (which is still questionable atm)
+    Stable parsing of document, but slightly slower then hr_build which should
+    should be stable now too.
     """
     r = [x for x in parsed if not isinstance(x, str)]
     m = {}
@@ -474,6 +417,20 @@ safe_globals = {'__builtins__': None,
 
 
 def parse_preprocessor(f):
+    """
+    The intention of this is to clean up and format the document before being
+    handed to parse_py. This is to allow for a non-pythonic syntax in the
+    document that makes sense for formatting text but still leverages python
+    to easily process the filter. It is also intended to clean up any other
+    short-cuts or features in the document before it gets handed to parse_doc
+    such as multiline breaks of tag attributes.
+
+    TODO Due to the nature of this, it might be best implemented with regex
+    over the course of the whole document. Perform various speed tests to see
+    what works fastest.
+    
+    TODO setup attributes to span multiple lines
+    """
     _f = f
     offset = 0
     for i, x in enumerate(_f):
