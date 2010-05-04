@@ -229,7 +229,7 @@ def parse_py(f):
                 offset -= 1
                 for x in v:
                     offset += 1
-                    f.insert(i+offset, indention+x)
+                    f.insert(i+offset, indention+str(x)) # FIXME str() get around this?
             else:
                 i += offset
                 f[i] = f[i].replace(l, v, 1)
@@ -466,6 +466,7 @@ safe_globals = {'__builtins__': None,
                 'map': __builtin__.map,
                 'min': __builtin__.min,
                 'max': __builtin__.max,
+                'range': __builtin__.range,
                 'block': block,
                 'title': "SIMLE",
                 'include': include,
