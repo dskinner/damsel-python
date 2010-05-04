@@ -1,5 +1,0 @@
-%html
-    %body
-        %div#content
-            - for x in range(20):
-                %p x

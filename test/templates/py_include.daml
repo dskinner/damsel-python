@@ -1,0 +1,12 @@
+:title = 'Hello World!'
+
+%html
+    %head
+        %title {title}
+    %body
+        :include('header.daml')
+
+        #content
+            %p Site content here...
+
+        :include('footer.daml')

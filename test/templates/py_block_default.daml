@@ -1,0 +1,7 @@
+%html
+    %body
+        :block('header\n#header.top This is some header content')
+
+        %div this is some middle content
+
+        :block('footer\n#footer.bottom this is some footer content')

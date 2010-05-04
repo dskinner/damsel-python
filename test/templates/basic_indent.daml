@@ -1,0 +1,19 @@
+%html
+    %head
+        %title
+        %link
+        %script
+    %body
+        %div
+            %h1
+        %span
+            %strong
+            %p
+                %a
+                %em
+                %img
+            %div
+                %img
+                %em
+                %a
+        %strong

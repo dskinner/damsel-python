@@ -1,0 +1,9 @@
+This project is a work in progress. Refer to test/templates/ for available syntax.
+
+To run unit tests:
+#> python test/
+
+To parse a document from command line:
+#> python daml.py my_template.daml daml # to get resulting string, uses hr_build
+#> python daml.py my_template.daml hr # run primitive speed test on hr_build method
+#> python daml.py my_template.daml r # run primitive speed test on relative_build method

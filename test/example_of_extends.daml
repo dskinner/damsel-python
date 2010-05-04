@@ -1,3 +1,0 @@
-:extends('template.html')
-
-:block('header\n#header\n    %h1 OVERRIDE {title}')

@@ -448,14 +448,13 @@ def parse_preprocessor(f):
 
 ###################################
 
-def haml(f, t='hr'):
-    _f = open(f).readlines()
+def parse(f, t='hr'):
     # process eval stuff first
-    _f = parse_preprocessor(_f)
-    _f = parse_py(_f)
+    f = parse_preprocessor(f)
+    f = parse_py(f)
     
     #parse document next
-    l = parse_doc(_f)
+    l = parse_doc(f)
     if t == 'r':
         b = relative_build(l)
     elif t == 'hr':
@@ -479,15 +478,17 @@ if __name__ == '__main__':
     f = sys.argv[1]
     t = sys.argv[2]
 
+    f = open(f).readlines()
+    
     def render(f, t):
         def _render():
-            return haml(f, t)
+            return parse(f, t)
         return _render
     
     if t == 'r':
         test(render(f, t))
     if t == 'hr':
         test(render(f, t))
-    if t == 'haml':
-        print haml(f)
+    if t == 'daml':
+        print parse(f)
 

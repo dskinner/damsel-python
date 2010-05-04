@@ -1,15 +1,5 @@
 %html
-    %head
-        %title {title}
     %body
-        :block('header\n#header\n    %h1 My Sweet New {title} Code Blocks\n.tag_line we make stuff!')
-
-        :greeting = lambda x: '%p Hello, {0}'.format(x)
-
-        :greeting('user')
-        :greeting('me')
-        :greeting('world')
-
         :items = ['a', 'b', 'c', 'd']
 
         :def is_last(i):
@@ -32,4 +22,4 @@
             :   l.append('%li{0} {1}'.format(is_last(i), x))
             {l}
 
-        :block('footer\n#footer cool beans')
+        #footer
