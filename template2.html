@@ -1,0 +1,35 @@
+%html
+    %head
+        %title {title}
+    %body
+        :block('header\n#header\n    %h1 My Sweet New {title} Code Blocks\n.tag_line we make stuff!')
+
+        :greeting = lambda x: '%p Hello, {0}'.format(x)
+
+        :greeting('user')
+        :greeting('me')
+        :greeting('world')
+
+        :items = ['a', 'b', 'c', 'd']
+
+        :def is_last(i):
+        :   return len(items) is i+1 and '(class=last)' or ''
+
+        %h2 Loop Method 1 (not really a loop.. python builtin map)
+
+        :li = lambda x: '%li {0}'.format(x)
+        %ul
+            :map(li, items)
+
+        %h2 Loop Method 2 (python list comprehension)
+        %ul
+            :['%li{0} {1}'.format(is_last(i), x) for i, x in enumerate(items)]
+
+        %h2 Loop Method 3 (A work in progress to reduce statements)
+        %ul
+            :l = []
+            :for i, x in enumerate(items):
+            :   l.append('%li{0} {1}'.format(is_last(i), x))
+            {l}
+
+        :block('footer\n#footer cool beans')
