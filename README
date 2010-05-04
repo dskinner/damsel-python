@@ -66,4 +66,18 @@ string.Formatter. The intention though is for it to use string.Formatter so one
 can leverage a pre-existing knowledge of string formatting and make use of all
 features available from the standard library.
 
-More content soon..
+Currently, the variable declaration syntax is limited until I work out some
+speed issues I am having with string.Formatter but never-the-less, here are
+some examples.
+
+  :title = 'Hello World!'
+  :user = 'John Doe'
+
+  %h1 = {title}
+  %p Welcome to the site, {user}. We hope you enjoy.
+
+This works find at the moment, but eventually, you can expect to leverage
+all that is string.Formatter and have it function essentially as you would ever
+expect it to.
+
+More to come..
