@@ -8,4 +8,5 @@ import daml
 from test_basic import *
 from test_py import *
 
+daml.template_dir = 'test/templates'
 unittest.main()

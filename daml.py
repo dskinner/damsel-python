@@ -4,14 +4,7 @@
 FEATURES TO IMPLEMENT
 ---------------------
 * TODO replace all split()s with partition()
-* colon directive multiline wrapping
-  :myfunc
-      some param
-      and more
-  which would be the equivalent of calling
-  :myfunc('some param\nandmore')
-* setup string.Formatter custom namespace instead of
-  passing in locals that actually isn't slow..
+* setup string.Formatter custom namespace
 * reserve keywords for safe_locals such as "encoding", "doctype", etc,
   and make it known in coming documentation
 * declare a doctype at top of document and charset, pass on to etree.tostring
@@ -58,10 +51,12 @@ IDEAS
       %p(attr=val,:is_last(i)) {x}
   of course the plain text indent doesn't work yet..
 
-BUGFIXES
+FIXMEH's
 --------
 look for the fixme's atm
 FIXME process_plntxt after parse "for-loop" finishes for plain text located
+FIXME im sure theres erroneous errors related to ' " in the code everywhere
+    create unit tests and find the problems if they are there
 
 """
 import __builtin__
@@ -69,11 +64,41 @@ from lxml import etree
 from time import time
 from string import Formatter
 import sys
+import os.path
+from re import escape
+
+class LXML(object):
+    """
+    Used to declare lxml.etree.tostring params by declaring attributes. This
+    ends up working faster then declaring variables and scraping and is easier
+    on the eyes and fingers for declaring common tostring keyword arguments
+    versus the use of a traditional dict.
+    """
+    pass
 
 fmt = Formatter()
 
+template_dir = ''
+
+def safe_open(f):
+    """
+    There doesn't appear to be a need to check for an escaped string sequence
+    such as .\.\/ or any variant as none of pythons os methods appears to
+    recognize this. TODO Check other template frameworks to see how this is
+    handled.
+
+    TODO See about a relative import based on main file's location, so
+    specifying a path of /template.daml would be an absolute path where root
+    is the template_dir and template.daml would be relative to whatever daml
+    file referenced it (include, extends, etc).
+    """
+    if '../' in f:
+        raise Exeception()
+    
+    return open(os.path.join(template_dir, f))
+
 def include(f):
-    _f = open(f).readlines()
+    _f = safe_open(f).readlines()
     _f = parse_py(_f)
     return _f
 
@@ -111,9 +136,6 @@ def parse_call(i, l):
 
 def parse_py(f):
     """
-    FIXME I hacked this code to hell the other day, fix it, refactor it, make
-    it beautiful again. Run speed tests, get it back close to what it was.
-    Identify those bottle-necks and find a better way.
     """
     
     queue = []
@@ -124,12 +146,14 @@ def parse_py(f):
 
         # see if this is :directive line
         directive = l[0]
+        if directive == '\\':
+            continue
         if directive == ':':
             queue.append((i, l, parse_call(i, l[1:])))
             continue
 
         # check if {variable} is embedded in line
-        if '{' in l: # TODO and '}' in l
+        if '{' in l: # TODO get string.formatter working correctly
             for x in fmt.parse(l):
                 if x[1] is not None:
                     queue.append((i, x[1], to_local(i, x[1])))
@@ -217,8 +241,9 @@ def parse_doc(f):
             l = l.replace('#', '%#', 1)
         elif directive == '.':
             l = l.replace('.', '%.', 1)
-        elif directive == "'" and d[:3] == "'''":
-            continue # TODO mark comment start and do continues till end found
+        elif directive == "\\":
+            plntxt.append(l.replace('\\', '', 1))
+            continue
         #elif directive == ':':
         #    output = inline_eval(d[1:])
         #    if output is None:
@@ -404,19 +429,22 @@ safe_globals = {'__builtins__': None,
                 '__blocks__': {},
                 'dict': __builtin__.dict,
                 'enumerate': __builtin__.enumerate,
+                'False': __builtin__.False,
                 'globals': __builtin__.globals,
                 'len': __builtin__.len,
                 'list': __builtin__.list,
                 'locals': __builtin__.locals,
-                'open': __builtin__.open, # FIXME make a safe wrapper for opening additional theme files safely
+                'open': safe_open, # FIXME make a safe wrapper for opening additional theme files safely
                 'map': __builtin__.map,
                 'min': __builtin__.min,
                 'max': __builtin__.max,
                 'range': __builtin__.range,
+                'True': __builtin__.True,
                 'block': block,
                 'title': "SIMLE",
                 'include': include,
-                'parse_py': parse_py}
+                'parse_py': parse_py,
+                'lxml': LXML()}
 
 
 def figure_indent(f):
@@ -520,7 +548,7 @@ def parse_preprocessor(f):
                 continue
             
             elif d[:9] == ':extends(': #factor this out, should only run at top of document, not every effin line
-                nf = open(x.split("'")[1]).readlines() # FIXME safe_open
+                nf = safe_open(x.split("'")[1]).readlines() # FIXME safe_open
                 nf = parse_preprocessor(nf) # for multi-depth :extends(...)
                 f.pop(i+offset)
                 offset -= 1
@@ -534,6 +562,11 @@ def parse_preprocessor(f):
     
     return f
 
+def tostring(o):
+    """
+    """
+    return etree.tostring(o, **safe_globals['lxml'].__dict__)
+    
 
 ###################################
 
@@ -549,7 +582,7 @@ def parse(f, t='hr'):
         b = hr_build(l)
     elif t == 'h':
         b = heuristic_test(l)
-    return etree.tostring(b[0][1])
+    return tostring(b[0][1])
 
 def test(func):
     from time import time
@@ -566,7 +599,7 @@ if __name__ == '__main__':
     f = sys.argv[1]
     t = sys.argv[2]
 
-    f = open(f).readlines()
+    f = safe_open(f).readlines()
     
     def render(f, t):
         def _render():
