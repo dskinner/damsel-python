@@ -11,6 +11,19 @@ To parse a document from command line:
 #> python daml.py my_template.daml hr # run primitive speed test on hr_build method
 #> python daml.py my_template.daml r # run primitive speed test on relative_build method
 
+Speed Tests
+===========
+
+I used the speed test mentioned on Mako's website which is a benchmark found
+in the Genshi repository. This are the current results as of Wed, 5 May and I
+am listing this to show that DAML is quite fast for all that it's doing.
+
+Mako: 0.37 ms
+Daml: 0.46 ms
+Cheetah: 0.63 ms
+Genshi_text: 1.00 ms
+Django: 2.28 ms
+Genshi: 2.84 ms
 
 Explanation of Syntax Choices
 =============================
@@ -148,7 +161,7 @@ some examples.
   :title = 'Hello World!'
   :user = 'John Doe'
 
-  %h1 = {title}
+  %h1 {title}
   %p Welcome to the site, {user}. We hope you enjoy.
 
 This works find at the moment, but eventually, you can expect to leverage
@@ -186,7 +199,7 @@ def block(s):
     # do some processing stuff like reST transforms or w/e
     return s
 
-Going back to the django blocks example, an document can then extend the
+Going back to the django blocks example, a document can then extend the
 example given that looks like this
 
 :extends('name_of_doc.daml')
