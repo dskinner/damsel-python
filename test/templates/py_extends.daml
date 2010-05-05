@@ -1,3 +1,5 @@
 :extends('py_block_default.daml')
 
-:block('header\n#header\n    %h1 OVERRIDE')
+:block header
+    #header
+        %h1 OVERRIDE

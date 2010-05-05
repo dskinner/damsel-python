@@ -29,10 +29,85 @@ Specifically on point (b), I was unhappy with the variation of syntax in HAML
 for doing different things. Such as applying text filters, calling ruby code,
 and some other various bits. As I went over the documentation and started
 making choices for how to implement these various pieces, one of the first
-choices I made was to unify much of the syntax. For example, to call any piece
-of python code, one simply uses the : directive. The : directive can also be
-embedded in a line, but *only* for calling a function. So for example, you can
-create blocks of python code as such
+choices I made was to unify much of the syntax. Now on to the actual syntax.
+
+The DAML Syntax
+===============
+
+This is pretty straight forward and deviates a little away from HAML when
+declaring tag attributes. Tags are declared with % and if omitted, a div is
+automatically used. You can use # and . and they mean the same just as the CSS
+selectors. Here is a basic document.
+
+%html
+    %head
+        %title
+    %body
+
+        #header
+            %h1 Welcome
+
+        #content
+            %p
+
+        #footer
+
+Also of not is that it is ok to have variable indention just as in python. So
+For example:
+
+%html
+    %head
+      %title
+    %body
+        #header
+                %p
+        #content
+            %a
+
+Text has a few limitations at the moment which will be resolved shortly enough.
+These limitations are white-space control, line escaping and embedded html.
+Currently all html will be escaped but various measures will be implemented to
+provide granular control over escaping. Let's look at some examples of using
+text in the document.
+
+%html
+    %head
+        %title Multiline Text
+    %body
+        %h1 Example of Multiline Text
+        %p This paragraph will stretch across
+            multiple lines and all of the line breaks
+            are indented under the parent.
+
+            .embedded This div is embedded in the paragraph
+                and also features multiline text in the
+                source document.
+
+            This text tails the %div.embedded and just as well,
+            features multiline text that is aligned appropriately
+            to the previous.
+
+        %p It's worth noting that
+            %em new tags
+            need to be on a new line for now but more then likely
+            this will probably
+            %strong remain the same
+            and besides this should be written
+            more along the lines of <em>new tags</em> anyway.
+
+        %em#footer And there you have it.
+
+Refer here for more info on what HAML style is good for (and not so good for):
+http://chriseppstein.github.com/blog/2010/02/08/haml-sucks-for-content/
+
+That about sums up basic text usage, more to be added as functionality
+increases.
+
+Calling Python Code
+===================
+To call any piece of python code, one simply uses the : directive.
+The : directive can also be embedded in a line, but *only* for calling a
+function. So for example, you can create blocks of python code as such
 
   :l = []
   :for x in range(10):
@@ -59,7 +134,7 @@ Also note you can define a regular function as well, for example:
   :def greet(x):
   :    return 'Hello, {0}'.format(x)
 
-Now then, discussing part (a), the choice to follow python syntax for the
+The choice to follow python syntax for the
 recent string.Formatter seemed like the most logical choice. Currently due to
 speed issues, using the syntax is just that, and does not actually make use of
 string.Formatter. The intention though is for it to use string.Formatter so one
@@ -80,4 +155,48 @@ This works find at the moment, but eventually, you can expect to leverage
 all that is string.Formatter and have it function essentially as you would ever
 expect it to.
 
-More to come..
+Also now available are multiline function calls, where those multiple lines are
+plain text. The first use of this is a django style :block directive. Take the
+following for example:
+
+%html
+    %body
+        :block header
+            %h1 Default Header
+            .tagline Default Tagline
+
+        :block content
+
+        :block footer
+            #footer Copyright Default
+                %p something to show multiple
+                    and lines
+
+Now what's really happening here is the parser translates the above to actually
+look like this
+
+:block('\nheader\n%h1 Default Header\n.tagline Default Tagline\n')
+
+and so on. You could also write the above if you preferred. This, with a few
+other additions, will allow it to be easy to create custom text filters in
+your server side code, so for example,
+
+def block(s):
+    s = s.splitlines()
+    # do some processing stuff like reST transforms or w/e
+    return s
+
+Going back to the django blocks example, an document can then extend the
+example given that looks like this
+
+:extends('name_of_doc.daml')
+
+:block header
+    %h1 OVERRIDE
+
+and as long as there aren't any bugs in the code ;) it works as expected. Keep
+in mind this is still under heavy development and very young. There are
+examples of this in the unit tests, the templates can be found under
+test/templates.
+
+Still more to come..

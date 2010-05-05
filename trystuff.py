@@ -5,10 +5,40 @@ eval('len("asdf")', {"__builtins__":None}, {'len': __builtin__.len})
 import __builtin__
 import re
 
+from daml import parse_preprocessor
+
 p = re.compile(':(.*\=.*$|.*\))', re.M)
 p2 = re.compile(':(.*\=.*$)|(:.*\))', re.M)
 
+p3 = re.compile(':[\w\d\s]*$')
+
 safe_locals = {'len': __builtin__.len, 'locals': __builtin__.locals}
+
+def test_multiline_join(f):
+    for x in range(24):
+        b=parse_preprocessor(f)
+
+def test_cond_builtin():
+    a = '''            :some just stuff junk yeah'''
+    for x in range(1000):
+        b = a.lstrip()
+        if b[0] == ':' and '=' not in b and '(' not in b:
+            a
+
+def test_cond_regex():
+    a = '''            :some just stuff junk yeah'''
+    for x in range(1000):
+        p3.search(a)
+
+def get_whitespace_partition():
+    a = '''            :some just stuff junk yeah'''
+    for x in range(10000):
+        indention = a.partition(':')[0]
+
+def get_whitespace_split():
+    a = '''            :some just stuff junk yeah'''
+    for x in range(10000):
+        indention = a.split(':')[0]
 
 def safe_eval(s):
     return eval(s, {'__builtins__': None}, safe_locals)
@@ -181,9 +211,10 @@ def test_eval():
 if __name__ == '__main__':
     from time import time
     times = []
+    f = open('test/templates/pre_multiline_method.daml').readlines()
     for x in range(10):
         a = time()
-        parse_py()
+        test_multiline_join(f)
         times.append(time()-a)
     print min(times)
 

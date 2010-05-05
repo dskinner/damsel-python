@@ -3,6 +3,7 @@
 """
 FEATURES TO IMPLEMENT
 ---------------------
+* TODO replace all split()s with partition()
 * colon directive multiline wrapping
   :myfunc
       some param
@@ -86,6 +87,7 @@ def safe_eval(s):
     return eval(s, safe_globals)
 
 def to_local(i, l):
+    # i should rethink this, it can lead to trouble down the road
     return '''globals()["""__{0}_{1}__"""]={1}'''.format(i, l)
 
 def parse_call(i, l):
@@ -175,6 +177,7 @@ def parse_py(f):
             else:
                 i += offset
                 f[i] = f[i].replace(l, v, 1)
+        # TODO setup a hooks system for template functions to hook into
         elif ':block(' == e[1].lstrip()[:7]: # was this a block?
             # FIXME for the love of god, fixme!
             n = `e[1]`.split('\\n')[0].split('\\')[0].split("'")[1]
@@ -416,6 +419,44 @@ safe_globals = {'__builtins__': None,
                 'parse_py': parse_py}
 
 
+def figure_indent(f):
+    r = f
+    m = {}
+
+    prev = ''
+    for i, d in enumerate(f):
+        if i is 0:
+            continue
+
+        ws = d[0]
+
+        if ws > prev:
+            r[i-1][1].append(r[i][1])   # ('    ', Element)[1].append(...)
+            m[ws] = i
+        elif ws == prev:
+            r[i-1][1].getparent().append(r[i][1])
+            m[ws] = i
+        elif ws < prev:
+            j = m[ws]
+            r[j][1].getparent().append(r[i][1])
+            # purge mapping of larger indents then this unindent
+            for k in m.keys():
+                if k > ws:
+                    m.pop(k)
+            m[ws] = i
+        prev = ws
+    return r
+
+
+def get_leading_whitespace(s):
+    def _get():
+        for x in s:
+            if x != ' ':
+                break
+            yield x
+    return ''.join(_get())
+
+
 def parse_preprocessor(f):
     """
     The intention of this is to clean up and format the document before being
@@ -433,16 +474,64 @@ def parse_preprocessor(f):
     """
     _f = f
     offset = 0
-    for i, x in enumerate(_f):
-        if x[:9] == ':extends(':
-            nf = open(x.split("'")[1]).readlines()
-            nf = parse_preprocessor(nf) # for multi-depth :extends(...)
+
+    multiline_func = None # [parent-indent, first-child-indent, parent-index, string-list]
+    
+    for i, x in enumerate(_f[:]):
+        x = x.rstrip()
+        if x == '':
             f.pop(i+offset)
             offset -= 1
-            for y in nf:
+            continue
+        
+        # check queue if we need to append this line
+        if multiline_func is not None:
+            #check indention and append appropriately
+            ws = get_leading_whitespace(x) # should keep up with this data and never call this func again
+            if ws > multiline_func[0]:
+                f.pop(i+offset)
+                offset -= 1
+                if multiline_func[1] is None:
+                    multiline_func[1] = ws
+                multiline_func[3].append(x[len(multiline_func[1]):])
+            else: # handle and clear queue once indention decreases to right place
+                multiline_func[3].append("')\n")
+                f.insert(multiline_func[2]+1, '\\n'.join(multiline_func[3])) #insert after, not before
                 offset += 1
-                f.insert(i+offset, y)
+                multiline_func = None
+        
+        #
+        d = x.lstrip()
+        directive = d[0] # if i keep the preprocessor, stuff like this might be able to get saved for use by parser
+        if directive == ':':
+            if '(' not in d and '=' not in d:
+                f.pop(i+offset)
+                offset -= 1
+
+                y = d.partition(' ')
+                ws = x.partition(':')[0]
                 
+                multiline_func = [ \
+                    ws,    # original whitespace
+                    None,                   # first childs whitespace
+                    i+offset,               # original index
+                    [ws+y[0]+"('"+y[2]]]             # build string
+                
+                continue
+            
+            elif d[:9] == ':extends(': #factor this out, should only run at top of document, not every effin line
+                nf = open(x.split("'")[1]).readlines() # FIXME safe_open
+                nf = parse_preprocessor(nf) # for multi-depth :extends(...)
+                f.pop(i+offset)
+                offset -= 1
+                for y in nf:
+                    offset += 1
+                    f.insert(i+offset, y)
+    
+    if multiline_func is not None: # ugh, one last check, need better solution for this
+        multiline_func[3].append("')\n")
+        f.append('\\n'.join(multiline_func[3]))
+    
     return f
 
 
@@ -452,7 +541,6 @@ def parse(f, t='hr'):
     # process eval stuff first
     f = parse_preprocessor(f)
     f = parse_py(f)
-    
     #parse document next
     l = parse_doc(f)
     if t == 'r':
