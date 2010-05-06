@@ -3,6 +3,12 @@
 """
 FEATURES TO IMPLEMENT
 ---------------------
+* Looking over django-mako to get an idea of whats involved with plugging into
+  django. Looks like theres all kinds of crazy tidbits to read up on. I would
+  prefer this to be able to replace any/all current functionality in
+  django-templates while also providing the option to be flexible and go
+  back and forth. If I write anything to plug this into django, I want it to
+  be complete.
 * TODO replace all split()s with partition()
 * setup string.Formatter custom namespace
 * reserve keywords for safe_locals such as "encoding", "doctype", etc,
@@ -59,7 +65,11 @@ FIXME im sure theres erroneous errors related to ' " in the code everywhere
     create unit tests and find the problems if they are there
 
 """
-import __builtin__
+try:
+    import __builtin__
+except ImportError:
+    import builtins as __builtin__ #Python 3.0
+
 from lxml import etree
 from time import time
 from string import Formatter
@@ -204,7 +214,8 @@ def parse_py(f):
         # TODO setup a hooks system for template functions to hook into
         elif ':block(' == e[1].lstrip()[:7]: # was this a block?
             # FIXME for the love of god, fixme!
-            n = `e[1]`.split('\\n')[0].split('\\')[0].split("'")[1]
+            #n = `e[1]`.split('\\n')[0].split('\\')[0].split("'")[1]
+            n =  e[1].split("'")[1].split('\\')[0]
             v, u = safe_globals['__blocks__'][n]
             if u:
                 i += offset
@@ -429,7 +440,6 @@ safe_globals = {'__builtins__': None,
                 '__blocks__': {},
                 'dict': __builtin__.dict,
                 'enumerate': __builtin__.enumerate,
-                'False': __builtin__.False,
                 'globals': __builtin__.globals,
                 'len': __builtin__.len,
                 'list': __builtin__.list,
@@ -439,42 +449,18 @@ safe_globals = {'__builtins__': None,
                 'min': __builtin__.min,
                 'max': __builtin__.max,
                 'range': __builtin__.range,
-                'True': __builtin__.True,
                 'block': block,
-                'title': "SIMLE",
                 'include': include,
                 'parse_py': parse_py,
                 'lxml': LXML()}
 
+# Python3
+if hasattr(__builtin__, 'False'):
+    safe_globals['False'] = getattr(__builtin__, 'False')
 
-def figure_indent(f):
-    r = f
-    m = {}
-
-    prev = ''
-    for i, d in enumerate(f):
-        if i is 0:
-            continue
-
-        ws = d[0]
-
-        if ws > prev:
-            r[i-1][1].append(r[i][1])   # ('    ', Element)[1].append(...)
-            m[ws] = i
-        elif ws == prev:
-            r[i-1][1].getparent().append(r[i][1])
-            m[ws] = i
-        elif ws < prev:
-            j = m[ws]
-            r[j][1].getparent().append(r[i][1])
-            # purge mapping of larger indents then this unindent
-            for k in m.keys():
-                if k > ws:
-                    m.pop(k)
-            m[ws] = i
-        prev = ws
-    return r
-
+if hasattr(__builtin__, 'True'):
+    safe_globals['True'] = getattr(__builtin__, 'True')
+#
 
 def get_leading_whitespace(s):
     def _get():
@@ -570,7 +556,8 @@ def tostring(o):
 
 ###################################
 
-def parse(f, t='hr'):
+def parse(f, t='hr', sandbox={}):
+    safe_globals.update(sandbox)
     # process eval stuff first
     f = parse_preprocessor(f)
     f = parse_py(f)
@@ -611,5 +598,5 @@ if __name__ == '__main__':
     if t == 'hr':
         test(render(f, t))
     if t == 'daml':
-        print parse(f)
+        print(parse(f))
 
