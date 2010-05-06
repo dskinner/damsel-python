@@ -177,8 +177,9 @@ def parse_py(f):
             b = l.index('(')
         else:
             continue
-        if ' ' in l[a:b]:
+        if ' ' in l[a:b] or a > b: # check a>b for attributes that have :
             continue
+        print '@@@', l
         c = l.index(')')+1
         queue.append((i, l[a:c], to_local(i, l[a+1:c])))
 
@@ -470,6 +471,16 @@ def get_leading_whitespace(s):
             yield x
     return ''.join(_get())
 
+def parse_postprocessor(f):
+    """
+    For now, should look for html tags embedded in Element.text and
+    Element.tail with some sort of marker that says to unescape this.
+    This can be done after tostring maybe with a find/replace or it
+    could be done before tostring and create proper Element's adjusting
+    head/tail text and appending as necessary. Im guessing the latter
+    would be slower.
+    """
+    pass
 
 def parse_preprocessor(f):
     """

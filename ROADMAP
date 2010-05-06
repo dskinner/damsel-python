@@ -1,0 +1,38 @@
+Roadmap
+=======
+
+I've recently tagged 0.1 in the repo. Below are the various aspects I will be
+looking to cover during this release and the coming 0.2 tag.
+
+DAML 0.1 series
+---------------
+
+* Start using DAML live at the dasa.cc domain to uncover problems
+* Refactor current code base to create Parser instances.
+* Rewrite/refactor sandboxed evals to to maintain namespace specific to
+  transformation at-hand while still being reasonably fast.
+* Try to uncover any and all issues related to characters in source document
+  that will cause the parser to error
+* Implement basic feature sets such as embedded html that will not be escaped
+  if written in the source document and also declaring python variables
+  containing html as safe. Any other basic features that arise during use.
+* Debate whether or not to change attribute syntax to reflect css selector
+  syntax more closely, specifically #header[attr=val][attr2=val2] or a
+  variation of such.
+* Possibly need to choose a new name? daml.org extends xml. This is a fuzzy
+  line of sorts.
+
+DAML 0.2 series
+---------------
+
+* Implement more complex features such as embedded daml syntax under for loops
+  and if statements. Any other complex feature set that comes up. Test and
+  debug throughout feature set.
+* Setup basic cherrypy Tool for getting cherrypy users easily started.
+
+DAML 0.3 series
+---------------
+
+* Work on django integration and implementing various features django provides
+  into DAML so that, if one chooses, they can use this instead of built-in
+  django templates, while not losing functionality.
