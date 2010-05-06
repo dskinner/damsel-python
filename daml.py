@@ -555,8 +555,12 @@ def tostring(o):
     
 
 ###################################
+from copy import copy
 
 def parse(f, t='hr', sandbox={}):
+    global safe_globals
+    _safe_globals = copy(safe_globals)
+    safe_globals['lxml'] = LXML()
     safe_globals.update(sandbox)
     # process eval stuff first
     f = parse_preprocessor(f)
@@ -569,7 +573,9 @@ def parse(f, t='hr', sandbox={}):
         b = hr_build(l)
     elif t == 'h':
         b = heuristic_test(l)
-    return tostring(b[0][1])
+    s = tostring(b[0][1])
+    safe_globals = copy(_safe_globals)
+    return s
 
 def test(func):
     from time import time
