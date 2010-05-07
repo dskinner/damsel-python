@@ -203,7 +203,7 @@ def parse_py(f):
 
     cmd_s = '\n'.join([x[2] for x in queue])
     #print cmd_s
-    c = compile(cmd_s, '<string>', 'exec')
+    c = compile('fmt.namespace=globals();'+cmd_s, '<string>', 'exec')
     safe_eval(c)
     
     ###
@@ -352,7 +352,7 @@ def parse_doc(f):
 
         if attr is not None:
             for x in attr[1:-1].split(','):
-                k, v = x.split('=')
+                k, v = x.split('=', 1)
                 e.attrib[k.strip()] = v.strip()
         
         r.append((l[0], e)) # ('    ', etree.Element)
