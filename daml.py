@@ -63,6 +63,8 @@ look for the fixme's atm
 FIXME process_plntxt after parse "for-loop" finishes for plain text located
 FIXME im sure theres erroneous errors related to ' " in the code everywhere
     create unit tests and find the problems if they are there
+FIXME bug with new Formatter usage means format_spec declarations will cause
+    :directives() on the same line to not process correctly
 
 """
 try:
@@ -76,6 +78,8 @@ from string import Formatter
 import sys
 import os.path
 
+from fmt import DAMLFormatter
+
 class LXML(object):
     """
     Used to declare lxml.etree.tostring params by declaring attributes. This
@@ -84,8 +88,6 @@ class LXML(object):
     versus the use of a traditional dict.
     """
     pass
-
-fmt = Formatter()
 
 template_dir = ''
 
@@ -105,13 +107,6 @@ def safe_open(f):
         raise Exeception()
     
     return open(os.path.join(template_dir, f))
-
-def safe(s):
-    """
-    do not escape html contained here
-    """
-    _s = parse_py(s.splitlines(), esc=False)
-    return _s
 
 def include(f):
     _f = safe_open(f).readlines()
@@ -157,9 +152,14 @@ def escape(s):
     The post processor will transform all &gt;'s and &lt;'s first and then
     transform all &amp;'s to keep responses sanitized.
     """
-    return s.replace('>', '&gt;').replace('<', '&lt;')
+    if s is not None:
+        return s.replace('>', '&gt;').replace('<', '&lt;')
+    return ''
 
-def parse_py(f, esc=True):
+def to_fmt(s):
+    return "fmt.format('''{0}''')".format(s)
+
+def parse_py(f):
     """
     """
     
@@ -179,10 +179,13 @@ def parse_py(f, esc=True):
 
         # check if {variable} is embedded in line
         if '{' in l: # TODO get string.formatter working correctly
+            queue.append((i, l, to_local(i, to_fmt(l))))
+        '''
             for x in fmt.parse(l):
                 if x[1] is not None:
                     queue.append((i, x[1], to_local(i, x[1])))
-
+        '''
+        
         # look to see if :directive is embedded in line
         if ':' in l:
             a = l.index(':')
@@ -202,7 +205,7 @@ def parse_py(f, esc=True):
     #print cmd_s
     c = compile(cmd_s, '<string>', 'exec')
     safe_eval(c)
-        
+    
     ###
     offset = 0
     
@@ -211,8 +214,8 @@ def parse_py(f, esc=True):
         l = e[1]
         
         if l[0] != ':':
-            k = '''__{0}_{1}__'''.format(i, l)
-            l = '{'+l+'}'
+            k = '''__{0}_{1}__'''.format(i, to_fmt(l))
+            #l = '{'+l+'}'
         else:
             k = '''__{0}_{1}__'''.format(i, l[1:])
         
@@ -225,13 +228,9 @@ def parse_py(f, esc=True):
                 f.pop(i+offset)
                 offset -= 1
                 for x in v:
-                    if esc:
-                        x = escape(x)
                     offset += 1
                     f.insert(i+offset, indention+str(x)) # FIXME str() get around this?
             else:
-                if esc:
-                    v = escape(v)
                 i += offset
                 f[i] = f[i].replace(l, v, 1)
         # TODO setup a hooks system for template functions to hook into
@@ -475,7 +474,6 @@ safe_globals = {'__builtins__': None,
                 'block': block,
                 'include': include,
                 'parse_py': parse_py,
-                'safe': safe,
                 'lxml': LXML()}
 
 # Python3
@@ -485,6 +483,9 @@ if hasattr(__builtin__, 'False'):
 if hasattr(__builtin__, 'True'):
     safe_globals['True'] = getattr(__builtin__, 'True')
 #
+
+fmt = DAMLFormatter(safe_globals)
+safe_globals['fmt'] = fmt
 
 def get_leading_whitespace(s):
     def _get():
@@ -626,7 +627,8 @@ def test(func):
     times = []
     for x in range(20):
         a = time()
-        func()
+        for y in range(100):
+            func()
         times.append(time()-a)
     print(min(times))
 
