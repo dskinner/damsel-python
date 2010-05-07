@@ -25,6 +25,28 @@ Genshi_text: 1.00 ms
 Django: 2.28 ms
 Genshi: 2.84 ms
 
+Notes on Security
+=================
+
+I am by no means an expert in this area. I would love to see this code reviewed
+by more knowledgable people (once the code-base has been refactored).
+The eval process is seperate from the document building process. Eval's
+ussually take place once. The exception is if a function is written that calls
+py_parse(which makes a call to safe_eval) during a safe_eval. This happens with
+builtins like `block` and `include` to process the documents python code. Never
+is an eval of any sort called on any variables or dynamic content unless a
+function is written otherwise. This would of course be a big NO-NO as one would
+open themselves up to all sorts of malicious abuse. When writing custom
+functions for the backend, avoid the use of py_parse unless you know what your
+doing. Essentially, there should be no way for variable content to actually
+call any function (and there isn't as far as I can tell due to its compile and
+single eval).
+
+XSS is another issue at hand. Currently, any HTML embedded in the DAML document
+will not be escaped and there is no need to mark it in a special way. Currently
+all output from py_parse is being escaped while work is being done to provide a
+means to mark variable-content as safe.
+
 Explanation of Syntax Choices
 =============================
 

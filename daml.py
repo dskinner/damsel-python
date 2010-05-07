@@ -75,7 +75,6 @@ from time import time
 from string import Formatter
 import sys
 import os.path
-from re import escape
 
 class LXML(object):
     """
@@ -106,6 +105,13 @@ def safe_open(f):
         raise Exeception()
     
     return open(os.path.join(template_dir, f))
+
+def safe(s):
+    """
+    do not escape html contained here
+    """
+    _s = parse_py(s.splitlines(), esc=False)
+    return _s
 
 def include(f):
     _f = safe_open(f).readlines()
@@ -144,7 +150,16 @@ def parse_call(i, l):
     else:
         return l
 
-def parse_py(f):
+def escape(s):
+    """
+    This will escape html output. This will get escaped a second time on
+    document output and be represented as &amp;gt; and &amp;lt; respectively.
+    The post processor will transform all &gt;'s and &lt;'s first and then
+    transform all &amp;'s to keep responses sanitized.
+    """
+    return s.replace('>', '&gt;').replace('<', '&lt;')
+
+def parse_py(f, esc=True):
     """
     """
     
@@ -179,7 +194,7 @@ def parse_py(f):
             continue
         if ' ' in l[a:b] or a > b: # check a>b for attributes that have :
             continue
-        print '@@@', l
+        
         c = l.index(')')+1
         queue.append((i, l[a:c], to_local(i, l[a+1:c])))
 
@@ -190,6 +205,7 @@ def parse_py(f):
         
     ###
     offset = 0
+    
     for e in queue:
         i = e[0]
         l = e[1]
@@ -199,17 +215,23 @@ def parse_py(f):
             l = '{'+l+'}'
         else:
             k = '''__{0}_{1}__'''.format(i, l[1:])
-
+        
+        
         if k in safe_globals:
+            
             v = safe_globals[k]
             if isinstance(v, (list, tuple)): # if iterable, then indent everything appropriately
                 indention = f[i+offset].replace(l, '', 1).rstrip('\r\n')
                 f.pop(i+offset)
                 offset -= 1
                 for x in v:
+                    if esc:
+                        x = escape(x)
                     offset += 1
                     f.insert(i+offset, indention+str(x)) # FIXME str() get around this?
             else:
+                if esc:
+                    v = escape(v)
                 i += offset
                 f[i] = f[i].replace(l, v, 1)
         # TODO setup a hooks system for template functions to hook into
@@ -453,6 +475,7 @@ safe_globals = {'__builtins__': None,
                 'block': block,
                 'include': include,
                 'parse_py': parse_py,
+                'safe': safe,
                 'lxml': LXML()}
 
 # Python3
@@ -471,7 +494,7 @@ def get_leading_whitespace(s):
             yield x
     return ''.join(_get())
 
-def parse_postprocessor(f):
+def parse_postprocessor(s):
     """
     For now, should look for html tags embedded in Element.text and
     Element.tail with some sort of marker that says to unescape this.
@@ -479,8 +502,11 @@ def parse_postprocessor(f):
     could be done before tostring and create proper Element's adjusting
     head/tail text and appending as necessary. Im guessing the latter
     would be slower.
+
+    NOTE this cant be done post-processor after tostring, theres no way to
+    know when something was marked safe.
     """
-    pass
+    return s.replace('&gt;', '>').replace('&lt;', '<').replace('&amp;', '&')
 
 def parse_preprocessor(f):
     """
@@ -496,6 +522,12 @@ def parse_preprocessor(f):
     what works fastest.
     
     TODO setup attributes to span multiple lines
+
+    FIXME theres a subtle bug here that has to do with '\n'.join()s that
+        causes havoc and headaches, look at
+        :safe {menu}
+        as an example. Didn't show up in :block since it establishes its
+        place in the global namespace manually.
     """
     _f = f
     offset = 0
@@ -586,6 +618,7 @@ def parse(f, t='hr', sandbox={}):
         b = heuristic_test(l)
     s = tostring(b[0][1])
     safe_globals = copy(_safe_globals)
+    s = parse_postprocessor(s)
     return s
 
 def test(func):

@@ -7,6 +7,7 @@ looking to cover during this release and the coming 0.2 tag.
 DAML 0.1 series
 ---------------
 
+* Tackle all sorts of security issues
 * Start using DAML live at the dasa.cc domain to uncover problems
 * Refactor current code base to create Parser instances.
 * Rewrite/refactor sandboxed evals to to maintain namespace specific to
