@@ -534,6 +534,7 @@ def parse_preprocessor(f):
     offset = 0
 
     multiline_func = None # [parent-indent, first-child-indent, parent-index, string-list]
+    mixed_content = None
     
     for i, x in enumerate(_f[:]):
         x = x.rstrip()
@@ -561,8 +562,56 @@ def parse_preprocessor(f):
         #
         d = x.lstrip()
         directive = d[0] # if i keep the preprocessor, stuff like this might be able to get saved for use by parser
+        
+        while mixed_content is not None:
+            mc_ws, mc_i = mixed_content
+            
+            ws = get_leading_whitespace(x)
+            
+            if directive == ':':
+                if d[1] == ' ':
+                    break
+                else:
+                    f.insert(mc_i, mc_ws+':__mixed_content__ = []') # find note below on mc_i
+                    offset += 1
+                    f.insert(i+offset, mc_ws+':list(__mixed_content__)')
+                    offset += 1
+
+                    mixed_content = None
+                    break
+                    # breaks out of if statement, make this a loop?
+            else:
+                if ws == mc_ws:
+                    f.insert(mc_i, mc_ws+':__mixed_content__ = []')
+                    offset += 1
+                    f.insert(i+offset, mc_ws+':list(__mixed_content__)')
+                    offset += 1
+
+                    mixed_content = None
+                    break
+                    # break out of if statement, make this a loop?
+                else:
+                    # convert to fmt.format()
+                    cmd_template = '{0}:{1}__mixed_content__.append(fmt.format("""{2}"""))'
+                    new_cmd = cmd_template.format(mc_ws, ' '*(len(ws)-len(mc_ws)), d)
+                    f.pop(i+offset)
+                    f.insert(i+offset, new_cmd)
+                    break
+        
+        
         if directive == ':':
-            if '(' not in d and '=' not in d:
+            if d[-1] == ':':
+                if mixed_content is None:
+                    ws = x.partition(':')[0]
+                    """
+                    since blank lines are getting dropped, we want to store the original offset value of
+                    the start of the mixed_content, and when calling it back, we do not want to +offset
+                    it as the offset count isn't relevant anymore
+                    """
+                    mixed_content = [ws, i+offset] # [orig-whitespace, orig-index] this just means a Possibility of mixed_content
+                    continue
+                    
+            elif '(' not in d and '=' not in d: # last rule is for if's and for's
                 f.pop(i+offset)
                 offset -= 1
 
@@ -589,8 +638,13 @@ def parse_preprocessor(f):
     if multiline_func is not None: # ugh, one last check, need better solution for this
         multiline_func[3].append("')\n")
         f.append('\\n'.join(multiline_func[3]))
-    
+
+    print '@@@@@@@@@@@@@@'
+    for x in f:
+        print x
+    print '@@@@@@@@@@@@@@'
     return f
+
 
 def tostring(o):
     """
