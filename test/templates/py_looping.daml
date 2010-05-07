@@ -20,6 +20,6 @@
             :l = []
             :for i, x in enumerate(items):
             :   l.append('%li{0} {1}'.format(is_last(i), x))
-            {l}
+            :list(l)
 
         #footer

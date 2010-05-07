@@ -564,7 +564,7 @@ def parse_preprocessor(f):
         directive = d[0] # if i keep the preprocessor, stuff like this might be able to get saved for use by parser
         
         while mixed_content is not None:
-            mc_ws, mc_i = mixed_content
+            mc_ws, mc_i, mc_confirm = mixed_content
             
             ws = get_leading_whitespace(x)
             
@@ -572,26 +572,29 @@ def parse_preprocessor(f):
                 if d[1] == ' ':
                     break
                 else:
-                    f.insert(mc_i, mc_ws+':__mixed_content__ = []') # find note below on mc_i
-                    offset += 1
-                    f.insert(i+offset, mc_ws+':list(__mixed_content__)')
-                    offset += 1
+                    if mc_confirm:
+                        f.insert(mc_i, mc_ws+':__mixed_content__ = []') # find note below on mc_i
+                        offset += 1
+                        f.insert(i+offset, mc_ws+':list(__mixed_content__)')
+                        offset += 1
 
                     mixed_content = None
                     break
                     # breaks out of if statement, make this a loop?
             else:
                 if ws == mc_ws:
-                    f.insert(mc_i, mc_ws+':__mixed_content__ = []')
-                    offset += 1
-                    f.insert(i+offset, mc_ws+':list(__mixed_content__)')
-                    offset += 1
+                    if mc_confirm:
+                        f.insert(mc_i, mc_ws+':__mixed_content__ = []')
+                        offset += 1
+                        f.insert(i+offset, mc_ws+':list(__mixed_content__)')
+                        offset += 1
 
                     mixed_content = None
                     break
                     # break out of if statement, make this a loop?
                 else:
                     # convert to fmt.format()
+                    mixed_content[2] = True
                     cmd_template = '{0}:{1}__mixed_content__.append(fmt.format("""{2}"""))'
                     new_cmd = cmd_template.format(mc_ws, ' '*(len(ws)-len(mc_ws)), d)
                     f.pop(i+offset)
@@ -608,7 +611,7 @@ def parse_preprocessor(f):
                     the start of the mixed_content, and when calling it back, we do not want to +offset
                     it as the offset count isn't relevant anymore
                     """
-                    mixed_content = [ws, i+offset] # [orig-whitespace, orig-index] this just means a Possibility of mixed_content
+                    mixed_content = [ws, i+offset, False] # [orig-whitespace, orig-index, confirm-mixed-content] this just means a Possibility of mixed_content
                     continue
                     
             elif '(' not in d and '=' not in d: # last rule is for if's and for's
