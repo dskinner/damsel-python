@@ -4,11 +4,12 @@
 .portal
     %ul
         :for x in subs:
+            %p {x}
         :   if x == 'vizi':
                 %li {x}VVV
         :   else:
                 %li
-                %a {x}
+                    %a {x}
     
     :if 't' == 't':
         %p HELLO

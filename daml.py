@@ -564,12 +564,13 @@ def parse_preprocessor(f):
         directive = d[0] # if i keep the preprocessor, stuff like this might be able to get saved for use by parser
         
         while mixed_content is not None:
-            mc_ws, mc_i, mc_confirm = mixed_content
+            mc_ws, mc_i, mc_confirm, fc_space = mixed_content
             
             ws = get_leading_whitespace(x)
             
             if directive == ':':
                 if d[1] == ' ':
+                    mixed_content[3] = None
                     break
                 else:
                     if mc_confirm:
@@ -595,8 +596,14 @@ def parse_preprocessor(f):
                 else:
                     # convert to fmt.format()
                     mixed_content[2] = True
-                    cmd_template = '{0}:{1}__mixed_content__.append(fmt.format("""{2}"""))'
-                    new_cmd = cmd_template.format(mc_ws, ' '*(len(ws)-len(mc_ws)), d)
+                    if fc_space is None:
+                        mixed_content[3] = fc_space = ' '*((len(ws)-len(mc_ws))-1)
+                        cmd_space = ''
+                    else:
+                        cmd_space = ' '*(len(ws)-len(fc_space)-len(mc_ws))
+                    cmd_template = '{0}:{1}__mixed_content__.append(fmt.format("""{2}{3}"""))'
+                    
+                    new_cmd = cmd_template.format(mc_ws, fc_space, cmd_space, d) #-1 to follow standard tabspaces
                     f.pop(i+offset)
                     f.insert(i+offset, new_cmd)
                     break
@@ -611,7 +618,7 @@ def parse_preprocessor(f):
                     the start of the mixed_content, and when calling it back, we do not want to +offset
                     it as the offset count isn't relevant anymore
                     """
-                    mixed_content = [ws, i+offset, False] # [orig-whitespace, orig-index, confirm-mixed-content] this just means a Possibility of mixed_content
+                    mixed_content = [ws, i+offset, False, None] # [orig-whitespace, orig-index, confirm-mixed-content, first-plaintext-indent] this just means a Possibility of mixed_content
                     continue
                     
             elif '(' not in d and '=' not in d: # last rule is for if's and for's
@@ -642,10 +649,6 @@ def parse_preprocessor(f):
         multiline_func[3].append("')\n")
         f.append('\\n'.join(multiline_func[3]))
 
-    print '@@@@@@@@@@@@@@'
-    for x in f:
-        print x
-    print '@@@@@@@@@@@@@@'
     return f
 
 
