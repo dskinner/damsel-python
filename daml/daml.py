@@ -90,8 +90,9 @@ class LXML(object):
     pass
 
 template_dir = ''
+dir_tags = {}
 
-def safe_open(f):
+def safe_open(f, dir_tag=None):
     """
     There doesn't appear to be a need to check for an escaped string sequence
     such as .\.\/ or any variant as none of pythons os methods appears to
@@ -104,12 +105,21 @@ def safe_open(f):
     file referenced it (include, extends, etc).
     """
     if '../' in f:
-        raise Exeception()
-    
-    return open(os.path.join(template_dir, f))
+        raise Exception('Cannot specify a relative path for opening a template.')
 
-def include(f):
-    _f = safe_open(f).readlines()
+    if dir_tag is not None:
+        if dir_tag in dir_tags:
+            td = dir_tags[dir_tag]
+        else:
+            raise Exception('Directory tag does not exist: {0}'.format(dir_tag))
+    else:
+        td = template_dir
+    
+    return open(os.path.join(td, f))
+
+def include(f, dir_tag=None):
+    _f = safe_open(f, dir_tag).readlines()
+    _f = parse_preprocessor(_f)
     _f = parse_py(_f)
     return _f
 
@@ -124,6 +134,8 @@ def safe_eval(s):
 
 def to_local(i, l):
     # i should rethink this, it can lead to trouble down the road
+    # TODO maybe i should generate a hash instead to index by and group it with the command
+    # this could work better with fewer issues, part of the refactoring
     return '''globals()["""__{0}_{1}__"""]={1}'''.format(i, l)
 
 def parse_call(i, l):
@@ -202,7 +214,7 @@ def parse_py(f):
         queue.append((i, l[a:c], to_local(i, l[a+1:c])))
 
     cmd_s = '\n'.join([x[2] for x in queue])
-    #print cmd_s
+    print cmd_s
     c = compile('fmt.namespace=globals();'+cmd_s, '<string>', 'exec')
     safe_eval(c)
     
@@ -583,7 +595,7 @@ def parse_preprocessor(f):
                     break
                     # breaks out of if statement, make this a loop?
             else:
-                if ws == mc_ws:
+                if ws <= mc_ws:
                     if mc_confirm:
                         f.insert(mc_i, mc_ws+':__mixed_content__ = []')
                         offset += 1
@@ -649,6 +661,20 @@ def parse_preprocessor(f):
         multiline_func[3].append("')\n")
         f.append('\\n'.join(multiline_func[3]))
 
+    if mixed_content is not None:
+        if mc_confirm:
+            f.insert(mc_i, mc_ws+':__mixed_content__ = []')
+            offset += 1
+            f.insert(i+offset+1, mc_ws+':list(__mixed_content__)') #offset +1 ? this is buggy, something to do with being end of document?
+            offset += 1
+
+        mixed_content = None
+
+    print '@@@@@@@@@@@@@@@@@@@@@@'
+    for x in f:
+        print x
+    print '@@@@@@@@@@@@@@@@@@@@@@'
+    
     return f
 
 

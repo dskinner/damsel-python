@@ -25,7 +25,7 @@ class DAMLFormatter(Formatter):
     def get_value(self, key, args, kwargs):
         if isinstance(key, (int, long)):
             #return args[key]
-            raise Exception('Passed int or long to DAML formatter.')
+            raise Exception('Used positional argument in formatter. Use keywords.')
         else:
             return self.namespace[key]
 

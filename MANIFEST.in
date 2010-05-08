@@ -1,3 +1,2 @@
-include daml.py
 include MIT-LICENSE
-recursive-include test *.html *.daml
+recursive-include daml *.html *.daml

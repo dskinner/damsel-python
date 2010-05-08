@@ -43,9 +43,9 @@ call any function (and there isn't as far as I can tell due to its compile and
 single eval).
 
 XSS is another issue at hand. Currently, any HTML embedded in the DAML document
-will not be escaped and there is no need to mark it in a special way. Currently
-all output from py_parse is being escaped while work is being done to provide a
-means to mark variable-content as safe.
+will not be escaped and there is no need to mark it in a special way. Using
+Formatter, one can declare {variable:safe} to not escape HTML content from a
+variable
 
 Explanation of Syntax Choices
 =============================
