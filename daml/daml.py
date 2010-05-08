@@ -214,7 +214,6 @@ def parse_py(f):
         queue.append((i, l[a:c], to_local(i, l[a+1:c])))
 
     cmd_s = '\n'.join([x[2] for x in queue])
-    print cmd_s
     c = compile('fmt.namespace=globals();'+cmd_s, '<string>', 'exec')
     safe_eval(c)
     
@@ -669,11 +668,6 @@ def parse_preprocessor(f):
             offset += 1
 
         mixed_content = None
-
-    print '@@@@@@@@@@@@@@@@@@@@@@'
-    for x in f:
-        print x
-    print '@@@@@@@@@@@@@@@@@@@@@@'
     
     return f
 
@@ -686,7 +680,7 @@ def tostring(o):
 
 ###################################
 from copy import copy
-
+import _parse
 def parse(f, t='hr', sandbox={}):
     global safe_globals
     _safe_globals = copy(safe_globals)
@@ -696,13 +690,16 @@ def parse(f, t='hr', sandbox={}):
     f = parse_preprocessor(f)
     f = parse_py(f)
     #parse document next
-    l = parse_doc(f)
+    #l = parse_doc(f)
+    l = _parse.parse_doc(f)
+    
     if t == 'r':
         b = relative_build(l)
     elif t == 'hr':
         b = hr_build(l)
     elif t == 'h':
         b = heuristic_test(l)
+    
     s = tostring(b[0][1])
     safe_globals = copy(_safe_globals)
     s = parse_postprocessor(s)
@@ -711,10 +708,9 @@ def parse(f, t='hr', sandbox={}):
 def test(func):
     from time import time
     times = []
-    for x in range(20):
+    for x in range(2000):
         a = time()
-        for y in range(100):
-            func()
+        func()
         times.append(time()-a)
     print(min(times))
 

@@ -4,6 +4,20 @@ Roadmap
 I've recently tagged 0.1 in the repo. Below are the various aspects I will be
 looking to cover during this release and the coming 0.2 tag.
 
+Refactoring Notes
+-----------------
+
+I have started the refactoring process by my initial results were less then
+stellar. Part of the reason DAML is as fast as it is right now is due to
+having little overhead for each processing instruction. Upon factoring out
+bits of code to improve readability, provide code-reuse, and all that jazz, I
+quickly was building a lot of overhead increasing compilation time. So instead
+I will be focusing my efforts and keeping DAML very procedural while looking
+to improve readability of various code elements by trying different techniques
+to achieve each step's goal of computation. Once this is done, I will start
+trying to fix the numerous bugs that have cropped up with recent syntax
+additions and I'm sure I'll fix some of those along the way too.
+
 DAML 0.1 series
 ---------------
 
