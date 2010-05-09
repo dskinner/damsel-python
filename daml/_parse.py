@@ -2,27 +2,14 @@
 from lxml import etree
 from collections import deque
 
-def get_leading_ws(s):
-    def _get():
-        for x in s:
-            if x != ' ':
-                break
-            yield x
-    return ''.join(_get())
-
-def get_leading_ws2(s):
-    count = 0
-    for c in s:
-        if c != ' ': break
-        count += 1
-    return ' ' * count
-
 def parse_doc(f):
     r = []
     plntxt = deque()
 
     for l in f:
         l = l.rstrip() # remove line break endings
+        if l == '': # ditch this in preprocessor?
+            continue
 
         # inspect directive, determine if plain text
         d = l.lstrip()
@@ -38,7 +25,9 @@ def parse_doc(f):
             plntxt.append((d.replace('\\', '', 1), ws))
             continue
         else:
-            ws = l.partition(directive)[0]
+            #ws = l.partition(directive)[0]
+            ws = l[:-len(d)]
+            #print `ws`
             plntxt.append((d, ws))
             continue
 
@@ -50,7 +39,6 @@ def parse_doc(f):
         while plntxt:
             text, ws = plntxt.popleft()
             j = -1
-
             while j:
                 if ws > r[j][0]:
                     r[j][1].text += ' '+text

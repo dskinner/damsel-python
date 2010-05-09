@@ -5,12 +5,12 @@
     %ul
         :for x in subs:
             %p {x}
-        :   if x == 'vizi':
+            :if x == 'vizi':
                 %li {x}VVV
-        :   else:
+            :else:
                 %li
                     %a {x}
-    
+
     :if 't' == 't':
         %p HELLO
     #footer

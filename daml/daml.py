@@ -708,9 +708,10 @@ def parse(f, t='hr', sandbox={}):
 def test(func):
     from time import time
     times = []
-    for x in range(2000):
+    for x in range(200):
         a = time()
-        func()
+        for y in range(100):
+            func()
         times.append(time()-a)
     print(min(times))
 
