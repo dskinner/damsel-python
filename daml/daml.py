@@ -78,7 +78,7 @@ from string import Formatter
 import sys
 import os.path
 
-from fmt import DAMLFormatter
+from fmt import DamlFormatter
 
 class LXML(object):
     """
@@ -495,7 +495,7 @@ if hasattr(__builtin__, 'True'):
     safe_globals['True'] = getattr(__builtin__, 'True')
 #
 
-fmt = DAMLFormatter(safe_globals)
+fmt = DamlFormatter(safe_globals)
 safe_globals['fmt'] = fmt
 
 def get_leading_whitespace(s):
@@ -680,7 +680,6 @@ def tostring(o):
 
 ###################################
 from copy import copy
-import _parse
 def parse(f, t='hr', sandbox={}):
     global safe_globals
     _safe_globals = copy(safe_globals)
@@ -690,8 +689,7 @@ def parse(f, t='hr', sandbox={}):
     f = parse_preprocessor(f)
     f = parse_py(f)
     #parse document next
-    #l = parse_doc(f)
-    l = _parse.parse_doc(f)
+    l = parse_doc(f)
     
     if t == 'r':
         b = relative_build(l)
@@ -710,8 +708,7 @@ def test(func):
     times = []
     for x in range(200):
         a = time()
-        for y in range(100):
-            func()
+        func()
         times.append(time()-a)
     print(min(times))
 

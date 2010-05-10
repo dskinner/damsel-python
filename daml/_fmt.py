@@ -8,7 +8,7 @@ class FormatSpecs(object):
     def escape(self, value):
         return value.replace('<', '&lt;').replace('>', '&gt;')
 
-class DAMLFormatter(Formatter):
+class DamlFormatter(Formatter):
     def __init__(self, namespace={}):
         Formatter.__init__(self)
         self.namespace = namespace

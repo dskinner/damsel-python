@@ -1,34 +1,26 @@
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 from lxml import etree
 from collections import deque
 
-def parse_doc(f):
+def _doc_parse(f):
     r = []
     plntxt = deque()
 
-    for l in f:
-        l = l.rstrip() # remove line break endings
-        if l == '': # ditch this in preprocessor?
-            continue
-
-        # inspect directive, determine if plain text
-        d = l.lstrip()
-        directive = d[0]
-        if directive == '%':
+    for ws, l in f:
+        if l[0] == '%':
+            l = l[1:]
+        elif l[0] == '#':
+            #l = l.replace('#', '%#', 1)
             pass
-        elif directive == '#':
-            l = l.replace('#', '%#', 1)
-        elif directive == '.':
-            l = l.replace('.', '%.', 1)
-        elif directive == "\\":
-            ws = l.partition('\\')[0]
-            plntxt.append((d.replace('\\', '', 1), ws))
+        elif l[0] == '.':
+            #l = l.replace('.', '%.', 1)
+            pass
+        elif l[0] == "\\":
+            plntxt.append((ws, l.replace('\\', '', 1)))
             continue
         else:
-            #ws = l.partition(directive)[0]
-            ws = l[:-len(d)]
-            #print `ws`
-            plntxt.append((d, ws))
+            plntxt.append((ws, l))
             continue
 
 
@@ -37,7 +29,7 @@ def parse_doc(f):
         # since nowhere in a doc should there be plain text indented to plain text
         #for x in plntxt:
         while plntxt:
-            text, ws = plntxt.popleft()
+            ws, text = plntxt.popleft()
             j = -1
             while j:
                 if ws > r[j][0]:
@@ -51,20 +43,20 @@ def parse_doc(f):
                     break
                 j -= 1
 
-        l = l.partition('%') # ('    ', '%', 'tag#id.class(attr=val) content')
+        #l = l.partition('%') # ('    ', '%', 'tag#id.class(attr=val) content')
 
         # determine tag attributes
         attr = None
-        if '(' in l[2]:
-            op_i = l[2].index('(')
-            if ' ' not in l[2][:op_i]: # there should be no spaces in %tag#id.class(...
-                cp_i = l[2].index(')')+1
-                attr = l[2][op_i:cp_i]
-                u = l[2].replace(attr, '').partition(' ')
+        if '(' in l:
+            op_i = l.index('(')
+            if ' ' not in l[:op_i]: # there should be no spaces in %tag#id.class(...
+                cp_i = l.index(')')+1
+                attr = l[op_i:cp_i]
+                u = l.replace(attr, '').partition(' ')
             else:
-                u = l[2].partition(' ')
+                u = l.partition(' ')
         else:
-            u = l[2].partition(' ')
+            u = l.partition(' ')
 
 
         # this is pretty sweet, basically it will always return the following format
@@ -97,5 +89,23 @@ def parse_doc(f):
                 k, tmp, v = x.partition('=')
                 e.attrib[k.strip()] = v.strip()
 
-        r.append((l[0], e)) # ('    ', etree.Element)
+        r.append((ws, e)) # ('    ', etree.Element)
     return r
+
+
+if __name__ == '__main__':
+    from _pre_parse import _pre_parse
+    from _py_parse import _py_parse
+    import sys
+
+    _f = sys.argv[1]
+    f = open(_f).readlines()
+    f = _pre_parse(f)
+    f = _py_parse(f)
+    f = _doc_parse(f)
+
+    for x in f:
+        print x
+
+
+

@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 
 def _pre_parse(f):
+    """
+    TODO normalization to the document to handle all kinds of fun whitespace
+    """
     result = []
 
     mf = None # multi-line func
@@ -16,6 +19,7 @@ def _pre_parse(f):
         
         ws = line.rstrip()[:-len(l)]
 
+        # handle multiline function
         if mf is not None:
             if ws <= mf[0]:
                 mf[1].append(')')
@@ -28,26 +32,30 @@ def _pre_parse(f):
                 mf[1].append(ws+l)
                 continue
 
-        ### Heeya
+        # handle mixed content
         if mc is not None:
-            if l[0] == ':':
-                if ws <= mc[0]:
-                    mc = None
-                else:
-                    pass
+            if ws <= mc[0]:
+                mc[1].append('globals()["__py_evals__"][{__i__}]=list(__mixed_content__)') # __i__ is formatted during _py_parse
+                mc[1] = '\n'.join(mc[1]) # prep for py_parse
+                mc = None
             else:
-                if ws <= mc[0]:
-                    mc = None
+                if l[0] == ':':
+                    l = l[1:]
                 else:
-                    pass
-        ###
+                    # TODO account for mixed-indention with mixed-plaintxt
+                    l = '__mixed_content__.append(fmt.format("""{0}"""))'.format(l)
+                
+                ws = ws[:-len(mc[0])]
+                mc[1].append(ws+l)
+                continue
 
+        # inspect for mixed content or multiline function
         if l[0] == ':':
-            if l[-1] == ':':
-                result.append([ws, l])
+            if l[-1] == ':': # mixed content
+                result.append([ws, [':__mixed_content__ = []', l[1:]]])
                 mc = result[-1]
                 continue
-            elif '(' not in l and '=' not in l:
+            elif '(' not in l and '=' not in l: # multiline function
                 l = l.replace(' ', '(', 1)
                 result.append([ws, [l]])
                 mf = result[-1]

@@ -9,8 +9,8 @@
                 %li {x}VVV
             :else:
                 %li
-                    %a {x}
+                %a {x}
 
     :if 't' == 't':
         %p HELLO
-    #footer
+    #footer {subs[0]}
