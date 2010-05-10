@@ -1,12 +1,13 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 from _pre_parse import _pre_parse
-from _py_parse import _py_parse
+from _py_parse import _py_parse, sandbox
 from _doc_parse import _doc_parse
 from _build import _build
 from lxml import etree
 
 def parse(f, context={}):
+    sandbox.update(context)
     f = _pre_parse(f)
     f = _py_parse(f)
     f = _doc_parse(f)

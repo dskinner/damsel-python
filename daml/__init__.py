@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from _ext import extensions
 from _parse import parse
 
 """

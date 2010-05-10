@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-from lxml import etree
+#from lxml.etree import Element
+from _element import Element
 from collections import deque
 
 def _doc_parse(f):
@@ -77,7 +78,7 @@ def _doc_parse(f):
         tag = [x.partition('.') for x in u[0].partition('#')]
 
         #
-        e = etree.Element(tag[0][0] or 'div')
+        e = Element(tag[0][0] or 'div')
         e.text = u[2]
 
         if tag[2][0] != '':
@@ -111,7 +112,9 @@ if __name__ == '__main__':
         times = []
         for x in range(2000):
             a = time()
-            r = _pre_parse(_f)
+            f = _pre_parse(_f)
+            f = _py_parse(f)
+            f = _doc_parse(f)
             times.append(time()-a)
         print min(times)
     else:
