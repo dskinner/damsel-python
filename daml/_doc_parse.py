@@ -97,15 +97,26 @@ if __name__ == '__main__':
     from _pre_parse import _pre_parse
     from _py_parse import _py_parse
     import sys
+    from time import time
 
     _f = sys.argv[1]
-    f = open(_f).readlines()
-    f = _pre_parse(f)
-    f = _py_parse(f)
-    f = _doc_parse(f)
+    t = sys.argv[2]
 
-    for x in f:
-        print x
+    if t == 'yes':
+        times = []
+        for x in range(2000):
+            f = open(_f).readlines()
+            a = time()
+            r = _pre_parse(f)
+            times.append(time()-a)
+        print min(times)
+    else:
+        _f = sys.argv[1]
+        f = open(_f).readlines()
+        f = _pre_parse(f)
+        f = _py_parse(f)
+        f = _doc_parse(f)
 
-
+        for x in f:
+            print x
 

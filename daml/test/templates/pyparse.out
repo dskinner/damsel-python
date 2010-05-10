@@ -1,0 +1,59 @@
+0.00102090835571
+         350013 function calls (338013 primitive calls) in 2.269 CPU seconds
+
+   Ordered by: cumulative time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.002    0.002    2.344    2.344 {execfile}
+        1    0.055    0.055    2.342    2.342 _py_parse.py:4(<module>)
+6000/2000    0.314    0.000    1.875    0.001 _py_parse.py:40(_py_parse)
+6000/2000    0.042    0.000    1.258    0.001 {eval}
+     4000    0.080    0.000    0.950    0.000 _py_parse.py:9(include)
+     6000    0.265    0.000    0.473    0.000 _pre_parse.py:4(_pre_parse)
+     4000    0.019    0.000    0.469    0.000 string.py:544(format)
+     4000    0.034    0.000    0.450    0.000 string.py:547(vformat)
+     6000    0.434    0.000    0.434    0.000 {compile}
+8000/4000    0.136    0.000    0.409    0.000 string.py:553(_vformat)
+     4000    0.037    0.000    0.099    0.000 _fmt.py:17(format_field)
+    18000    0.073    0.000    0.073    0.000 {method 'format' of 'str' objects}
+    34000    0.071    0.000    0.071    0.000 {method 'append' of 'list' objects}
+     4000    0.029    0.000    0.071    0.000 string.py:629(get_field)
+     6000    0.067    0.000    0.067    0.000 {open}
+     6000    0.064    0.000    0.064    0.000 {method 'readlines' of 'file' objects}
+    30000    0.062    0.000    0.062    0.000 {method 'strip' of 'str' objects}
+     8000    0.034    0.000    0.050    0.000 string.py:620(parse)
+    24000    0.049    0.000    0.049    0.000 {method 'rstrip' of 'str' objects}
+    24000    0.046    0.000    0.046    0.000 {len}
+     4000    0.026    0.000    0.046    0.000 _fmt.py:8(escape)
+    18000    0.043    0.000    0.043    0.000 {isinstance}
+     4000    0.020    0.000    0.033    0.000 _fmt.py:25(get_value)
+    14000    0.032    0.000    0.032    0.000 {method 'join' of 'str' objects}
+    14000    0.026    0.000    0.026    0.000 {globals}
+    12000    0.026    0.000    0.026    0.000 {method 'find' of 'str' objects}
+     8000    0.020    0.000    0.020    0.000 {method 'replace' of 'str' objects}
+    10000    0.018    0.000    0.018    0.000 {method 'append' of 'collections.deque' objects}
+    10000    0.018    0.000    0.018    0.000 {method 'popleft' of 'collections.deque' objects}
+     8000    0.016    0.000    0.016    0.000 {method '_formatter_parser' of 'str' objects}
+     6000    0.016    0.000    0.016    0.000 {method 'pop' of 'list' objects}
+     4000    0.015    0.000    0.015    0.000 {time.time}
+     6000    0.015    0.000    0.015    0.000 {method 'insert' of 'list' objects}
+     6000    0.012    0.000    0.012    0.000 {id}
+     4000    0.011    0.000    0.011    0.000 string.py:602(convert_field)
+     4000    0.009    0.000    0.009    0.000 {method '_formatter_field_name_split' of 'str' objects}
+     4000    0.009    0.000    0.009    0.000 {hasattr}
+     4000    0.008    0.000    0.008    0.000 {method 'add' of 'set' objects}
+     4000    0.008    0.000    0.008    0.000 {getattr}
+     4000    0.008    0.000    0.008    0.000 string.py:594(check_unused_args)
+        1    0.001    0.001    0.001    0.001 collections.py:1(<module>)
+        1    0.000    0.000    0.000    0.000 {min}
+        1    0.000    0.000    0.000    0.000 _fmt.py:2(<module>)
+        1    0.000    0.000    0.000    0.000 {range}
+        1    0.000    0.000    0.000    0.000 keyword.py:11(<module>)
+        1    0.000    0.000    0.000    0.000 <string>:1(<module>)
+        1    0.000    0.000    0.000    0.000 _fmt.py:12(__init__)
+        1    0.000    0.000    0.000    0.000 _fmt.py:11(DamlFormatter)
+        1    0.000    0.000    0.000    0.000 _pre_parse.py:4(<module>)
+        1    0.000    0.000    0.000    0.000 _fmt.py:4(FormatSpecs)
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+
+

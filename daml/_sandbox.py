@@ -7,7 +7,7 @@ except ImportError:
 
 from copy import copy
 
-from fmt import DamlFormatter
+from _fmt import DamlFormatter
 
 class LXML(object):
     """
@@ -20,7 +20,7 @@ class LXML(object):
 
 default_sandbox = { '__builtins__': None,
                     '__blocks__': {},
-                    '__py_evals__': {},
+                    '__py_evals__': {}, # need to index by filename, then line number
                     'dict': __builtin__.dict,
                     'enumerate': __builtin__.enumerate,
                     'fmt': DamlFormatter(),
@@ -28,14 +28,11 @@ default_sandbox = { '__builtins__': None,
                     'len': __builtin__.len,
                     'list': __builtin__.list,
                     'locals': __builtin__.locals,
-                    #'open': safe_open, # FIXME make a safe wrapper for opening additional theme files safely
                     'map': __builtin__.map,
                     'max': __builtin__.max,
                     'min': __builtin__.min,
+                    'open': __builtin__.open,
                     'range': __builtin__.range,
-                    #'block': block,
-                    #'include': include,
-                    #'parse_py': parse_py,
                     'lxml': LXML()}
 
 # Python3

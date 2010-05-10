@@ -51,13 +51,20 @@ if __name__ == '__main__':
     from _doc_parse import _doc_parse
     import sys
     from lxml import etree
+    from time import time
 
     _f = sys.argv[1]
-    f = open(_f).readlines()
-    f = _pre_parse(f)
-    f = _py_parse(f)
-    f = _doc_parse(f)
-    f = _build(f)
+    _f = open(_f).readlines()
+    times = []
+
+    for x in range(2000):
+        a = time()
+        f = _pre_parse(_f)
+        f = _py_parse(f)
+        f = _doc_parse(f)
+        f = _build(f)
+        times.append(time()-a)
+    print min(times)
 
     print etree.tostring(f[0][1])
 

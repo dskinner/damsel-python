@@ -1,0 +1,226 @@
+0.000214099884033
+         108011 function calls (107007 primitive calls) in 0.632 CPU seconds
+
+   Ordered by: cumulative time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    0.642    0.642 <string>:1(<module>)
+        1    0.008    0.008    0.642    0.642 {execfile}
+        1    0.015    0.015    0.634    0.634 daml.py:69(<module>)
+        1    0.018    0.018    0.497    0.497 daml.py:715(test)
+     2000    0.011    0.000    0.460    0.000 daml.py:738(_render)
+     2000    0.025    0.000    0.450    0.000 daml.py:706(test_parse)
+2002/2000    0.072    0.000    0.223    0.000 daml.py:174(parse_py)
+     2002    0.098    0.000    0.169    0.000 daml.py:523(parse_preprocessor)
+       16    0.000    0.000    0.101    0.006 re.py:229(_compile)
+       15    0.000    0.000    0.101    0.007 re.py:188(compile)
+       16    0.000    0.000    0.101    0.006 sre_compile.py:501(compile)
+        1    0.002    0.002    0.090    0.090 inspect.py:25(<module>)
+        1    0.001    0.001    0.080    0.080 tokenize.py:23(<module>)
+        7    0.000    0.000    0.075    0.011 {map}
+     2002    0.069    0.000    0.069    0.000 {compile}
+       16    0.000    0.000    0.051    0.003 sre_parse.py:669(parse)
+    78/16    0.002    0.000    0.051    0.003 sre_parse.py:307(_parse_sub)
+   145/19    0.014    0.000    0.050    0.003 sre_parse.py:385(_parse)
+       16    0.000    0.000    0.049    0.003 sre_compile.py:486(_code)
+   328/16    0.012    0.000    0.040    0.003 sre_compile.py:38(_compile)
+    18003    0.039    0.000    0.039    0.000 {method 'strip' of 'str' objects}
+2002/2000    0.009    0.000    0.036    0.000 daml.py:132(safe_eval)
+    18004    0.036    0.000    0.036    0.000 {method 'lstrip' of 'str' objects}
+    18009    0.035    0.000    0.035    0.000 {method 'rstrip' of 'str' objects}
+     2000    0.014    0.000    0.029    0.000 copy.py:65(copy)
+2002/2000    0.013    0.000    0.028    0.000 {eval}
+      144    0.003    0.000    0.015    0.000 sre_compile.py:184(_compile_charset)
+     4000    0.014    0.000    0.014    0.000 {time.time}
+      958    0.004    0.000    0.014    0.000 sre_parse.py:207(get)
+     1175    0.008    0.000    0.012    0.000 sre_parse.py:188(__next)
+     6283    0.012    0.000    0.012    0.000 {method 'append' of 'list' objects}
+      144    0.007    0.000    0.011    0.000 sre_compile.py:213(_optimize_charset)
+     2000    0.011    0.000    0.011    0.000 copy.py:112(_copy_with_constructor)
+     1463    0.007    0.000    0.011    0.000 sre_parse.py:136(__getitem__)
+        1    0.003    0.003    0.010    0.010 io.py:35(<module>)
+4809/4623    0.009    0.000    0.010    0.000 {len}
+       16    0.001    0.000    0.008    0.001 sre_compile.py:367(_compile_info)
+        6    0.005    0.001    0.008    0.001 collections.py:13(namedtuple)
+  476/166    0.005    0.000    0.007    0.000 sre_parse.py:146(getwidth)
+        1    0.000    0.000    0.006    0.006 _elementpath.py:52(<module>)
+     2038    0.006    0.000    0.006    0.000 {method 'join' of 'str' objects}
+        1    0.002    0.002    0.005    0.005 threading.py:1(<module>)
+     2000    0.005    0.000    0.005    0.000 {method 'update' of 'dict' objects}
+      873    0.003    0.000    0.005    0.000 sre_parse.py:201(match)
+     2007    0.005    0.000    0.005    0.000 {globals}
+     2219    0.005    0.000    0.005    0.000 {method 'get' of 'dict' objects}
+      707    0.003    0.000    0.004    0.000 sre_parse.py:132(__len__)
+     1539    0.004    0.000    0.004    0.000 {isinstance}
+      426    0.002    0.000    0.003    0.000 sre_parse.py:144(append)
+       21    0.002    0.000    0.002    0.000 sre_compile.py:264(_mk_bitmap)
+      150    0.001    0.000    0.002    0.000 sre_compile.py:360(_simple)
+        1    0.000    0.000    0.002    0.002 warnings.py:45(filterwarnings)
+       30    0.001    0.000    0.002    0.000 {all}
+      753    0.002    0.000    0.002    0.000 {min}
+       14    0.000    0.000    0.002    0.000 abc.py:78(__new__)
+        1    0.001    0.001    0.001    0.001 dis.py:1(<module>)
+      244    0.001    0.000    0.001    0.000 collections.py:43(<genexpr>)
+       90    0.001    0.000    0.001    0.000 sre_parse.py:263(_escape)
+      328    0.001    0.000    0.001    0.000 sre_parse.py:96(__init__)
+        1    0.000    0.000    0.001    0.001 opcode.py:5(<module>)
+       14    0.000    0.000    0.001    0.000 abc.py:81(<genexpr>)
+      420    0.001    0.000    0.001    0.000 sre_compile.py:24(_identityfunction)
+        1    0.000    0.000    0.001    0.001 re.py:134(match)
+      386    0.001    0.000    0.001    0.000 {ord}
+        1    0.001    0.001    0.001    0.001 collections.py:1(<module>)
+        2    0.000    0.000    0.001    0.000 daml.py:120(include)
+      185    0.001    0.000    0.001    0.000 {getattr}
+       15    0.000    0.000    0.000    0.000 {built-in method __new__ of type object at 0x82357c0}
+       47    0.000    0.000    0.000    0.000 sre_parse.py:231(_class_escape)
+        1    0.000    0.000    0.000    0.000 __init__.py:71(search_function)
+      214    0.000    0.000    0.000    0.000 {method 'isalnum' of 'str' objects}
+        1    0.000    0.000    0.000    0.000 threading.py:744(__init__)
+       49    0.000    0.000    0.000    0.000 sre_parse.py:89(closegroup)
+      150    0.000    0.000    0.000    0.000 sre_parse.py:140(__setitem__)
+       49    0.000    0.000    0.000    0.000 sre_parse.py:78(opengroup)
+        1    0.000    0.000    0.000    0.000 {__import__}
+        2    0.000    0.000    0.000    0.000 string.py:544(format)
+       16    0.000    0.000    0.000    0.000 sre_parse.py:184(__init__)
+        2    0.000    0.000    0.000    0.000 string.py:547(vformat)
+       32    0.000    0.000    0.000    0.000 sre_compile.py:480(isstring)
+      4/2    0.000    0.000    0.000    0.000 string.py:553(_vformat)
+      113    0.000    0.000    0.000    0.000 opcode.py:27(def_op)
+        1    0.000    0.000    0.000    0.000 threading.py:426(__init__)
+      100    0.000    0.000    0.000    0.000 {max}
+        1    0.000    0.000    0.000    0.000 ascii.py:8(<module>)
+        1    0.000    0.000    0.000    0.000 io.py:1371(TextIOWrapper)
+        1    0.000    0.000    0.000    0.000 threading.py:359(Event)
+        2    0.000    0.000    0.000    0.000 threading.py:176(Condition)
+        1    0.000    0.000    0.000    0.000 threading.py:366(__init__)
+        2    0.000    0.000    0.000    0.000 threading.py:181(__init__)
+       23    0.000    0.000    0.000    0.000 {method 'extend' of 'list' objects}
+        1    0.000    0.000    0.000    0.000 gzip.py:4(<module>)
+       19    0.000    0.000    0.000    0.000 tokenize.py:44(group)
+       30    0.000    0.000    0.000    0.000 collections.py:61(<genexpr>)
+        4    0.000    0.000    0.000    0.000 threading.py:59(__init__)
+       49    0.000    0.000    0.000    0.000 {method 'remove' of 'list' objects}
+        1    0.000    0.000    0.000    0.000 threading.py:376(set)
+       11    0.000    0.000    0.000    0.000 opcode.py:31(name_op)
+       16    0.000    0.000    0.000    0.000 {_sre.compile}
+       17    0.000    0.000    0.000    0.000 {range}
+        3    0.000    0.000    0.000    0.000 daml.py:95(safe_open)
+        1    0.000    0.000    0.000    0.000 token.py:3(<module>)
+       22    0.000    0.000    0.000    0.000 {method 'replace' of 'str' objects}
+        1    0.000    0.000    0.000    0.000 _fmt.py:2(<module>)
+        2    0.000    0.000    0.000    0.000 _fmt.py:17(format_field)
+       30    0.000    0.000    0.000    0.000 collections.py:60(<genexpr>)
+       31    0.000    0.000    0.000    0.000 {method 'items' of 'dict' objects}
+        7    0.000    0.000    0.000    0.000 opcode.py:35(jrel_op)
+        1    0.000    0.000    0.000    0.000 __future__.py:48(<module>)
+       27    0.000    0.000    0.000    0.000 {method 'startswith' of 'str' objects}
+       30    0.000    0.000    0.000    0.000 {method '__contains__' of 'frozenset' objects}
+       30    0.000    0.000    0.000    0.000 {method 'isdigit' of 'str' objects}
+        2    0.000    0.000    0.000    0.000 _fmt.py:8(escape)
+       13    0.000    0.000    0.000    0.000 {method 'format' of 'str' objects}
+       26    0.000    0.000    0.000    0.000 {method 'add' of 'set' objects}
+       16    0.000    0.000    0.000    0.000 sre_parse.py:73(__init__)
+        6    0.000    0.000    0.000    0.000 {repr}
+        3    0.000    0.000    0.000    0.000 {open}
+        2    0.000    0.000    0.000    0.000 string.py:629(get_field)
+        3    0.000    0.000    0.000    0.000 daml.py:141(parse_call)
+        4    0.000    0.000    0.000    0.000 daml.py:171(to_fmt)
+        3    0.000    0.000    0.000    0.000 {method 'readlines' of 'file' objects}
+       14    0.000    0.000    0.000    0.000 {hasattr}
+        1    0.000    0.000    0.000    0.000 __init__.py:49(normalize_encoding)
+        7    0.000    0.000    0.000    0.000 {method 'split' of 'str' objects}
+        1    0.000    0.000    0.000    0.000 {dir}
+        1    0.000    0.000    0.000    0.000 threading.py:414(Thread)
+        6    0.000    0.000    0.000    0.000 {locals}
+        4    0.000    0.000    0.000    0.000 daml.py:135(to_local)
+        1    0.000    0.000    0.000    0.000 threading.py:290(notifyAll)
+        4    0.000    0.000    0.000    0.000 string.py:620(parse)
+        1    0.000    0.000    0.000    0.000 ascii.py:41(getregentry)
+        3    0.000    0.000    0.000    0.000 posixpath.py:59(join)
+       12    0.000    0.000    0.000    0.000 {_sre.getlower}
+        1    0.000    0.000    0.000    0.000 io.py:294(IOBase)
+        2    0.000    0.000    0.000    0.000 tokenize.py:46(maybe)
+        2    0.000    0.000    0.000    0.000 opcode.py:39(jabs_op)
+        1    0.000    0.000    0.000    0.000 threading.py:272(notify)
+        1    0.000    0.000    0.000    0.000 gzip.py:35(GzipFile)
+        1    0.000    0.000    0.000    0.000 traceback.py:1(<module>)
+        2    0.000    0.000    0.000    0.000 _fmt.py:25(get_value)
+        7    0.000    0.000    0.000    0.000 __future__.py:75(__init__)
+        1    0.000    0.000    0.000    0.000 keyword.py:11(<module>)
+        1    0.000    0.000    0.000    0.000 tokenize.py:45(any)
+        6    0.000    0.000    0.000    0.000 {sys._getframe}
+        1    0.000    0.000    0.000    0.000 <string>:1(Attribute)
+        1    0.000    0.000    0.000    0.000 <string>:1(ArgSpec)
+        1    0.000    0.000    0.000    0.000 codecs.py:77(__new__)
+        1    0.000    0.000    0.000    0.000 <string>:1(Traceback)
+        6    0.000    0.000    0.000    0.000 {method 'pop' of 'list' objects}
+        1    0.000    0.000    0.000    0.000 <string>:1(ArgInfo)
+        1    0.000    0.000    0.000    0.000 <string>:1(ModuleInfo)
+        1    0.000    0.000    0.000    0.000 <string>:1(Arguments)
+        1    0.000    0.000    0.000    0.000 io.py:1183(BufferedRandom)
+        4    0.000    0.000    0.000    0.000 {method 'insert' of 'list' objects}
+        1    0.000    0.000    0.000    0.000 io.py:792(_BytesIO)
+        1    0.000    0.000    0.000    0.000 {built-in method match}
+        3    0.000    0.000    0.000    0.000 {built-in method acquire}
+        1    0.000    0.000    0.000    0.000 io.py:715(_BufferedIOMixin)
+        1    0.000    0.000    0.000    0.000 io.py:1117(BufferedRWPair)
+        4    0.000    0.000    0.000    0.000 {method '_formatter_parser' of 'str' objects}
+        1    0.000    0.000    0.000    0.000 threading.py:510(_set_ident)
+        3    0.000    0.000    0.000    0.000 {thread.allocate_lock}
+        1    0.000    0.000    0.000    0.000 io.py:1247(TextIOBase)
+        1    0.000    0.000    0.000    0.000 threading.py:221(_is_owned)
+        1    0.000    0.000    0.000    0.000 io.py:905(BufferedReader)
+        2    0.000    0.000    0.000    0.000 {method 'setter' of 'property' objects}
+        2    0.000    0.000    0.000    0.000 string.py:602(convert_field)
+        1    0.000    0.000    0.000    0.000 threading.py:179(_Condition)
+        1    0.000    0.000    0.000    0.000 io.py:1295(IncrementalNewlineDecoder)
+        1    0.000    0.000    0.000    0.000 io.py:1030(BufferedWriter)
+        2    0.000    0.000    0.000    0.000 {method 'index' of 'str' objects}
+        1    0.000    0.000    0.000    0.000 _fmt.py:12(__init__)
+        2    0.000    0.000    0.000    0.000 {method '_formatter_field_name_split' of 'str' objects}
+        1    0.000    0.000    0.000    0.000 io.py:621(FileIO)
+        1    0.000    0.000    0.000    0.000 threading.py:362(_Event)
+        1    0.000    0.000    0.000    0.000 io.py:566(RawIOBase)
+        2    0.000    0.000    0.000    0.000 {built-in method release}
+        1    0.000    0.000    0.000    0.000 threading.py:99(_RLock)
+        1    0.000    0.000    0.000    0.000 io.py:898(BytesIO)
+        1    0.000    0.000    0.000    0.000 threading.py:299(_Semaphore)
+        2    0.000    0.000    0.000    0.000 string.py:594(check_unused_args)
+        1    0.000    0.000    0.000    0.000 daml.py:737(render_test)
+        1    0.000    0.000    0.000    0.000 _fmt.py:4(FormatSpecs)
+        1    0.000    0.000    0.000    0.000 tokenize.py:147(StopTokenizing)
+        1    0.000    0.000    0.000    0.000 ascii.py:13(Codec)
+        1    0.000    0.000    0.000    0.000 ascii.py:24(IncrementalDecoder)
+        1    0.000    0.000    0.000    0.000 __future__.py:74(_Feature)
+        1    0.000    0.000    0.000    0.000 _fmt.py:11(DamlFormatter)
+        1    0.000    0.000    0.000    0.000 io.py:267(_DocDescriptor)
+        2    0.000    0.000    0.000    0.000 {thread.get_ident}
+        1    0.000    0.000    0.000    0.000 ascii.py:34(StreamConverter)
+        1    0.000    0.000    0.000    0.000 threading.py:57(_Verbose)
+        1    0.000    0.000    0.000    0.000 {issubclass}
+        1    0.000    0.000    0.000    0.000 io.py:72(BlockingIOError)
+        1    0.000    0.000    0.000    0.000 threading.py:347(_BoundedSemaphore)
+        1    0.000    0.000    0.000    0.000 __init__.py:1(<module>)
+        1    0.000    0.000    0.000    0.000 tokenize.py:178(Untokenizer)
+        1    0.000    0.000    0.000    0.000 ascii.py:20(IncrementalEncoder)
+        1    0.000    0.000    0.000    0.000 io.py:643(BufferedIOBase)
+        1    0.000    0.000    0.000    0.000 {method 'translate' of 'str' objects}
+        1    0.000    0.000    0.000    0.000 threading.py:713(_Timer)
+        1    0.000    0.000    0.000    0.000 threading.py:783(_DummyThread)
+        1    0.000    0.000    0.000    0.000 io.py:276(OpenWrapper)
+        1    0.000    0.000    0.000    0.000 ascii.py:28(StreamWriter)
+        1    0.000    0.000    0.000    0.000 threading.py:742(_MainThread)
+        1    0.000    0.000    0.000    0.000 threading.py:64(_note)
+        1    0.000    0.000    0.000    0.000 daml.py:83(LXML)
+        1    0.000    0.000    0.000    0.000 inspect.py:620(BlockFinder)
+        1    0.000    0.000    0.000    0.000 tokenize.py:145(TokenError)
+        1    0.000    0.000    0.000    0.000 inspect.py:618(EndOfBlock)
+        1    0.000    0.000    0.000    0.000 io.py:1850(StringIO)
+        1    0.000    0.000    0.000    0.000 sre_parse.py:213(seek)
+        1    0.000    0.000    0.000    0.000 ascii.py:31(StreamReader)
+        1    0.000    0.000    0.000    0.000 sre_parse.py:211(tell)
+        1    0.000    0.000    0.000    0.000 threading.py:752(_set_daemon)
+        1    0.000    0.000    0.000    0.000 io.py:290(UnsupportedOperation)
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+
+

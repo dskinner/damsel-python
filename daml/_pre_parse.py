@@ -35,7 +35,7 @@ def _pre_parse(f):
         # handle mixed content
         if mc is not None:
             if ws <= mc[0]:
-                mc[1].append('globals()["__py_evals__"][{__i__}]=list(__mixed_content__)') # __i__ is formatted during _py_parse
+                mc[1].append('globals()[{__i__}]=list(__mixed_content__)') # __i__ is formatted during _py_parse
                 mc[1] = '\n'.join(mc[1]) # prep for py_parse
                 mc = None
             else:
@@ -68,8 +68,21 @@ def _pre_parse(f):
 
 if __name__ == '__main__':
     import sys
+    from time import time
+    
     _f = sys.argv[1]
-    f = open(_f).readlines()
-    r = _pre_parse(f)
-    for x in r:
-        print x
+    t = sys.argv[2]
+
+    if t == 'yes':
+        times = []
+        for x in range(2000):
+            f = open(_f).readlines()
+            a = time()
+            r = _pre_parse(f)
+            times.append(time()-a)
+        print min(times)
+    else:
+        f = open(_f).readlines()
+        r = _pre_parse(f)
+        for x in r:
+            print x

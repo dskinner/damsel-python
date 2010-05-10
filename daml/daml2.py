@@ -1,72 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-FEATURES TO IMPLEMENT
----------------------
-* Looking over django-mako to get an idea of whats involved with plugging into
-  django. Looks like theres all kinds of crazy tidbits to read up on. I would
-  prefer this to be able to replace any/all current functionality in
-  django-templates while also providing the option to be flexible and go
-  back and forth. If I write anything to plug this into django, I want it to
-  be complete.
-* TODO replace all split()s with partition()
-* setup string.Formatter custom namespace
-* reserve keywords for safe_locals such as "encoding", "doctype", etc,
-  and make it known in coming documentation
-* declare a doctype at top of document and charset, pass on to etree.tostring
-* FIXME need to create a safe way to open files with :include()
-* static html instead of quick tags
-* line escaping for text using \
-* attribute syntax (attr=val) can stretch multiple lines
-  implement in preprocessor?
-* evaluate the NEED for a preprocessor..
-  
-IDEAS
------
-* tag/ self closing tags? does it matter? lxml etree handling this
-* whitespace control with > and < does this matter? relevant? etree again
-  handling pre elements could be trouble and relevant
-* forward slash / for html comments, or how about just writing html comments...
-  hmm but wrapping indented sections of code, now we're talkin
-* /[if IE] oh yeah, need this
-* comments specific to the doc that are not rendered anywhere, and indented
-  sections are included as part of the comment
-* not sure how best to handle this,
-  :for x in range(3):
-      %p {x}
-* whitespace preservation?
-* :javascript directive?
-* escaping/unescaping html
-* pass namespace of controller method to formatter, that would kick fucking ass
-  @publisher(_locals=True)
-  def index(self):
-      cat = 'meow'
-  ---
-  %p {cat}
-  ---
-* conditionals inside of attribute tags (attr=val) somehow something nice.. would probably
-  fit in with - for syntax
-  :r = range(4)
-  - for i in r
-      %li({if i+1 == len(r): class=last}) i
-  I've never liked looking at code like this, maybe something more appropriate that already is functional
-  is embedding functions inline
-  :r = range(4)
-  :is_last = lambda x: len(r) == x+1 and 'class="last"' or ''
-  :for i, x in enumerate(r):
-      %p(attr=val,:is_last(i)) {x}
-  of course the plain text indent doesn't work yet..
 
-FIXMEH's
---------
-look for the fixme's atm
-FIXME process_plntxt after parse "for-loop" finishes for plain text located
-FIXME im sure theres erroneous errors related to ' " in the code everywhere
-    create unit tests and find the problems if they are there
-FIXME bug with new Formatter usage means format_spec declarations will cause
-    :directives() on the same line to not process correctly
-
-"""
 try:
     import __builtin__
 except ImportError:
@@ -114,13 +48,13 @@ def safe_open(f, dir_tag=None):
             raise Exception('Directory tag does not exist: {0}'.format(dir_tag))
     else:
         td = template_dir
-    
+
     return open(os.path.join(td, f))
 
 def include(f, dir_tag=None):
     _f = safe_open(f, dir_tag).readlines()
-    _f = parse_preprocessor(_f)
-    _f = parse_py(_f)
+    _f = _pre_parse(_f)
+    _f = _py_parse(_f)
     return _f
 
 def block(s):
@@ -143,7 +77,7 @@ def parse_call(i, l):
         return l
     if l[0] == ' ': # a continued code block
         return l
-    
+
     if '(' in l:
         a = l.index('(')
     else:
@@ -171,10 +105,10 @@ def escape(s):
 def to_fmt(s):
     return "fmt.format('''{0}''')".format(s)
 
-def parse_py(f):
+def _py_parse(f):
     """
     """
-    
+
     queue = []
     for i, l in enumerate(f):
         l = l.strip()
@@ -197,7 +131,7 @@ def parse_py(f):
                 if x[1] is not None:
                     queue.append((i, x[1], to_local(i, x[1])))
         '''
-        
+
         # look to see if :directive is embedded in line
         if ':' in l:
             a = l.index(':')
@@ -209,31 +143,31 @@ def parse_py(f):
             continue
         if ' ' in l[a:b] or a > b: # check a>b for attributes that have :
             continue
-        
+
         c = l.index(')')+1
         queue.append((i, l[a:c], to_local(i, l[a+1:c])))
 
     cmd_s = '\n'.join([x[2] for x in queue])
     c = compile('fmt.namespace=globals();'+cmd_s, '<string>', 'exec')
     safe_eval(c)
-    
+
     ###
-    
+
     offset = 0
-    
+
     for e in queue:
         i = e[0]
         l = e[1]
-        
+
         if l[0] != ':':
             k = '''__{0}_{1}__'''.format(i, to_fmt(l))
             #l = '{'+l+'}'
         else:
             k = '''__{0}_{1}__'''.format(i, l[1:])
-        
-        
+
+
         if k in safe_globals:
-            
+
             v = safe_globals[k]
             if isinstance(v, (list, tuple)): # if iterable, then indent everything appropriately
                 indention = f[i+offset].replace(l, '', 1).rstrip('\r\n')
@@ -267,7 +201,7 @@ def parse_py(f):
             f[i] = f[i].replace(l, '', 1)
     return f
 
-def parse_doc(f):
+def _doc_parse(f):
     r = []
     plntxt = []
 
@@ -297,7 +231,7 @@ def parse_doc(f):
             plntxt.append(l)
             continue
 
-        
+
         # check plntxt queue
         # everything in queue should be same indention width
         # since nowhere in a doc should there be plain text indented to plain text
@@ -305,7 +239,7 @@ def parse_doc(f):
             text = x.strip()
             ws = ' '*(len(x)-len(text))
             j = -1
-            
+
             while j:
                 if ws > r[j][0]:
                     r[j][1].text += ' '+text
@@ -317,9 +251,9 @@ def parse_doc(f):
                         r[j][1].tail += ' '+text
                     break
                 j -= 1
-            
+
         plntxt = []
-        
+
         l = l.partition('%') # ('    ', '%', 'tag#id.class(attr=val) content')
 
         # determine tag attributes
@@ -349,10 +283,10 @@ def parse_doc(f):
         # and this should be effin fast comparitively (to regex, other builtin string operations)
         tag = [x.partition('.') for x in u[0].partition('#')]
 
-        # 
+        #
         e = etree.Element(tag[0][0] or 'div')
         e.text = u[2]
-        
+
         if tag[2][0] != '':
             e.attrib['id'] = tag[2][0]
 
@@ -365,37 +299,11 @@ def parse_doc(f):
             for x in attr[1:-1].split(','):
                 k, v = x.split('=', 1)
                 e.attrib[k.strip()] = v.strip()
-        
+
         r.append((l[0], e)) # ('    ', etree.Element)
     return r
 
-def heuristic_test(parsed):
-    """
-    This returns a step-count based on indention. The step-count represents
-    the number of steps upward an element needs to move to find its parent.
-    This is only accurate for counts of more and same. Less can not be divined
-    """
-    m = []
-    more = 0
-    same = 0
-
-    prev = parsed[0][0]
-    for d in parsed[1:]:
-        if d[0] > prev:
-            m.append(1)
-            more += 1
-            same = 0
-        elif d[0] == prev:
-            m.append(2+same) # (m->s) == 2
-            same += 1
-        elif d[0] < prev:
-            m.append(more+same+1)
-            more = 0
-            same = 0
-        prev = d[0]
-    return m
-
-def hr_build(parsed):
+def _build(parsed):
     """
     As tags indent, it is easy to identify the parent. It is simply the last
     element processed. If indention is the same, it is simply the last elements
@@ -418,9 +326,9 @@ def hr_build(parsed):
     for i, d in enumerate(parsed):
         if i is 0:
             continue
-        
+
         ws = d[0]
-        
+
         if ws > prev:
             r[i-1][1].append(r[i][1])   # ('    ', Element)[1].append(...)
             m[ws] = i
@@ -436,35 +344,6 @@ def hr_build(parsed):
                     m.pop(k)
             m[ws] = i
         prev = ws
-    return r
-
-def relative_build(parsed):
-    """
-    Stable parsing of document, but slightly slower then hr_build which should
-    should be stable now too.
-    """
-    r = [x for x in parsed if not isinstance(x, str)]
-    m = {}
-    prev = parsed[0][0]
-    for i, d in enumerate(parsed[1:]):
-        i += 1
-        k, v = d
-        if k in m:
-            j = m[k]
-            parent = r[j][1].getparent()
-            child = r[i][1]
-            parent.append(child)
-            m[k] = i
-        else:
-            m[k] = i
-            parent = r[i-1][1]
-            child = r[i][1]
-            parent.append(child)
-        if d[0] < prev:
-            for k in m.keys():
-                if k > d[0]:
-                    m.pop(k)
-        prev = d[0]
     return r
 
 safe_locals = {}
@@ -484,7 +363,6 @@ safe_globals = {'__builtins__': None,
                 'range': __builtin__.range,
                 'block': block,
                 'include': include,
-                'parse_py': parse_py,
                 'lxml': LXML()}
 
 # Python3
@@ -506,7 +384,7 @@ def get_leading_whitespace(s):
             yield x
     return ''.join(_get())
 
-def parse_postprocessor(s):
+def _post_parse(s):
     """
     For now, should look for html tags embedded in Element.text and
     Element.tail with some sort of marker that says to unescape this.
@@ -520,7 +398,7 @@ def parse_postprocessor(s):
     """
     return s.replace('&gt;', '>').replace('&lt;', '<').replace('&amp;', '&')
 
-def parse_preprocessor(f):
+def _pre_parse(f):
     """
     The intention of this is to clean up and format the document before being
     handed to parse_py. This is to allow for a non-pythonic syntax in the
@@ -532,7 +410,7 @@ def parse_preprocessor(f):
     TODO Due to the nature of this, it might be best implemented with regex
     over the course of the whole document. Perform various speed tests to see
     what works fastest.
-    
+
     TODO setup attributes to span multiple lines
 
     FIXME theres a subtle bug here that has to do with '\n'.join()s that
@@ -546,14 +424,14 @@ def parse_preprocessor(f):
 
     multiline_func = None # [parent-indent, first-child-indent, parent-index, string-list]
     mixed_content = None
-    
+
     for i, x in enumerate(_f[:]):
         x = x.rstrip()
         if x == '':
             f.pop(i+offset)
             offset -= 1
             continue
-        
+
         # check queue if we need to append this line
         if multiline_func is not None:
             #check indention and append appropriately
@@ -569,16 +447,16 @@ def parse_preprocessor(f):
                 f.insert(multiline_func[2]+1, '\\n'.join(multiline_func[3])) #insert after, not before
                 offset += 1
                 multiline_func = None
-        
+
         #
         d = x.lstrip()
         directive = d[0] # if i keep the preprocessor, stuff like this might be able to get saved for use by parser
-        
+
         while mixed_content is not None:
             mc_ws, mc_i, mc_confirm, fc_space = mixed_content
-            
+
             ws = get_leading_whitespace(x)
-            
+
             if directive == ':':
                 if d[1] == ' ':
                     mixed_content[3] = None
@@ -613,13 +491,13 @@ def parse_preprocessor(f):
                     else:
                         cmd_space = ' '*(len(ws)-len(fc_space)-len(mc_ws))
                     cmd_template = '{0}:{1}__mixed_content__.append(fmt.format("""{2}{3}"""))'
-                    
+
                     new_cmd = cmd_template.format(mc_ws, fc_space, cmd_space, d) #-1 to follow standard tabspaces
                     f.pop(i+offset)
                     f.insert(i+offset, new_cmd)
                     break
-        
-        
+
+
         if directive == ':':
             if d[-1] == ':':
                 if mixed_content is None:
@@ -631,22 +509,22 @@ def parse_preprocessor(f):
                     """
                     mixed_content = [ws, i+offset, False, None] # [orig-whitespace, orig-index, confirm-mixed-content, first-plaintext-indent] this just means a Possibility of mixed_content
                     continue
-                    
+
             elif '(' not in d and '=' not in d: # last rule is for if's and for's
                 f.pop(i+offset)
                 offset -= 1
 
                 y = d.partition(' ')
                 ws = x.partition(':')[0]
-                
+
                 multiline_func = [ \
                     ws,    # original whitespace
                     None,                   # first childs whitespace
                     i+offset,               # original index
                     [ws+y[0]+"('"+y[2]]]             # build string
-                
+
                 continue
-            
+
             elif d[:9] == ':extends(': #factor this out, should only run at top of document, not every effin line
                 nf = safe_open(x.split("'")[1]).readlines() # FIXME safe_open
                 nf = parse_preprocessor(nf) # for multi-depth :extends(...)
@@ -655,7 +533,7 @@ def parse_preprocessor(f):
                 for y in nf:
                     offset += 1
                     f.insert(i+offset, y)
-    
+
     if multiline_func is not None: # ugh, one last check, need better solution for this
         multiline_func[3].append("')\n")
         f.append('\\n'.join(multiline_func[3]))
@@ -668,7 +546,7 @@ def parse_preprocessor(f):
             offset += 1
 
         mixed_content = None
-    
+
     return f
 
 
@@ -676,31 +554,23 @@ def tostring(o):
     """
     """
     return etree.tostring(o, **safe_globals['lxml'].__dict__)
-    
+
 
 ###################################
 from copy import copy
 def parse(f, t='hr', sandbox={}):
     global safe_globals
     _safe_globals = copy(safe_globals)
-    safe_globals['lxml'] = LXML()
     safe_globals.update(sandbox)
     # process eval stuff first
-    f = parse_preprocessor(f)
-    f = parse_py(f)
-    #parse document next
-    l = parse_doc(f)
-    
-    if t == 'r':
-        b = relative_build(l)
-    elif t == 'hr':
-        b = hr_build(l)
-    elif t == 'h':
-        b = heuristic_test(l)
-    
+    f = _pre_parse(f)
+    f = _py_parse(f)
+    l = _doc_parse(f)
+    b = _build(l)
+
     s = tostring(b[0][1])
     safe_globals = copy(_safe_globals)
-    s = parse_postprocessor(s)
+    s = _post_parse(s)
     return s
 
 
@@ -724,6 +594,4 @@ if __name__ == '__main__':
             safe_globals = copy(_safe_globals)
         print min(times)
     else:
-        _safe_globals = copy(safe_globals)
-        #safe_globals['lxml'] = LXML()
-        parse_py(parse_preprocessor(f))
+        print parse(f)
