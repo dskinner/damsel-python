@@ -7,7 +7,11 @@ def _doc_parse(f):
     r = []
     plntxt = deque()
 
-    for ws, l in f:
+    for line in f:
+        line = line.rstrip()
+        l = line.lstrip()
+        ws = line[:-len(l)]
+        
         if l[0] == '%':
             l = l[1:]
         elif l[0] == '#':
@@ -100,23 +104,21 @@ if __name__ == '__main__':
     from time import time
 
     _f = sys.argv[1]
+    _f = open(_f).readlines()
     t = sys.argv[2]
 
-    if t == 'yes':
+    if t == 'y':
         times = []
         for x in range(2000):
-            f = open(_f).readlines()
             a = time()
-            r = _pre_parse(f)
+            r = _pre_parse(_f)
             times.append(time()-a)
         print min(times)
     else:
-        _f = sys.argv[1]
-        f = open(_f).readlines()
-        f = _pre_parse(f)
+        f = _pre_parse(_f)
         f = _py_parse(f)
         f = _doc_parse(f)
 
         for x in f:
-            print x
+            print `x`
 

@@ -16,6 +16,26 @@ def include(f):
     f = _py_parse(f)
     return f
 
+class Block(list):
+    def __init__(self, name):
+        self._name = name
+        self._used = False
+        
+    def __iter__(self):
+        if self._used is False:
+            self._used = True
+            return iter(sandbox['__blocks__'][self._name])
+        else:
+            return iter(())
+
+def block(s):
+    s = s.splitlines()
+    s = _py_parse(s)
+    b = Block(s[0])
+    print 'MAKING BLOCK', s[0]
+    sandbox['__blocks__'][s[0]] = s[1:]
+    return b
+
 sandbox = { '__builtins__': None,
             '__blocks__': {},
             '__py_evals__': {}, # need to index by filename, then line number
@@ -31,18 +51,18 @@ sandbox = { '__builtins__': None,
             'min': __builtin__.min,
             'open': __builtin__.open,
             'range': __builtin__.range,
-            'include': include}
-
-def block(s):
-    s = s.splitlines()
-    s = _py_parse(s)
-    globals()['__blocks__'][s[0]] = [s[1:], False] # [content, been-used-yet?]
+            'include': include,
+            'block': block}
 
 def _py_parse(f):
     queue = deque()
     _id = id(f)
     
-    for i, (ws, l) in enumerate(f):
+    for i, line in enumerate(f):
+        line = line.rstrip()
+        l = line.strip()
+        ws = line[:-len(l)]
+        
         if l[0] == ':':
             a = l.find('(')
             b = l.find('=')
@@ -83,28 +103,26 @@ def _py_parse(f):
     py_str = '\n'.join([x[1] for x in queue])
     
     eval(compile('fmt.namespace=globals()\n'+py_str, '<string>', 'exec'), sandbox)
-
+    
     offset = 0
     while queue:
         i, l = queue.popleft()
-        
         k = '__{0}_{1}__'.format(_id, i)
+        
         if k in sandbox:
             r = sandbox[k]
-            
+
             if isinstance(r, list):
-                ws, tmp = f.pop(i+offset)
+                tmp = f.pop(i+offset).rstrip()
+                ws = tmp[:-len(tmp.lstrip())]
                 for x in r:
-                    if isinstance(x, list):
-                        y_ws, y = x
-                        f.insert(i+offset, (ws+y_ws, y))
-                        offset += 1
-                    else:
-                        f.insert(i+offset, (ws, x))
-                        offset += 1
+                    f.insert(i+offset, ws+x)
+                    offset += 1
                 offset -= 1
             else:
-                f[i+offset][1] = r
+                tmp = f.pop(i+offset)
+                ws = tmp[:-len(tmp.lstrip())]
+                f.insert(i+offset, ws+r)
         else:
             f.pop(i+offset)
             offset -= 1
@@ -113,27 +131,24 @@ def _py_parse(f):
 
 
 if __name__ == '__main__':
-    #from _pre_parse import _pre_parse
     import sys
     from time import time
     
     _f = sys.argv[1]
+    _f = open(_f).readlines()
     t = sys.argv[2]
-    f = open(_f).readlines()
 
-    if t == 'yes':
+    if t == 'y':
         times = []
         for x in range(2000):
             a = time()
-            _py_parse(_pre_parse(f))
+            _py_parse(_pre_parse(_f))
             times.append(time()-a)
         print min(times)
     else:
-        
-        f = open(_f).readlines()
-        f = _pre_parse(f)
+        f = _pre_parse(_f)
         f = _py_parse(f)
 
         for x in f:
-            print x
+            print `x`
 

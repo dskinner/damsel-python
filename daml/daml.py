@@ -668,7 +668,7 @@ def parse_preprocessor(f):
             offset += 1
 
         mixed_content = None
-    
+
     return f
 
 
@@ -726,4 +726,4 @@ if __name__ == '__main__':
     else:
         _safe_globals = copy(safe_globals)
         #safe_globals['lxml'] = LXML()
-        parse_py(parse_preprocessor(f))
+        print parse(f)

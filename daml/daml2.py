@@ -59,7 +59,7 @@ def include(f, dir_tag=None):
 
 def block(s):
     s = s.splitlines()
-    s = parse_py(s)
+    s = _py_parse(s)
     safe_globals['__blocks__'][s[0]] = [s[1:], False] # [content, been-used-yet?]
     return
 
@@ -168,7 +168,7 @@ def _py_parse(f):
 
         if k in safe_globals:
 
-            v = safe_globals[k]
+            v = safe_globals[k] or ''
             if isinstance(v, (list, tuple)): # if iterable, then indent everything appropriately
                 indention = f[i+offset].replace(l, '', 1).rstrip('\r\n')
                 f.pop(i+offset)
@@ -398,6 +398,76 @@ def _post_parse(s):
     """
     return s.replace('&gt;', '>').replace('&lt;', '<').replace('&amp;', '&')
 
+
+def _pre_parse2(f):
+    """
+    TODO normalization to the document to handle all kinds of fun whitespace
+    """
+
+    mf = None # multi-line func
+    mf_ws = None # first-childs indention
+
+    mc = None # mixed content
+    offset = 0
+    for i, line in enumerate(f[:]):
+        l = line.strip()
+        if l == '':
+            f.pop(i+offset)
+            offset -= 1
+            continue
+
+        ws = line.rstrip()[:-len(l)]
+
+        # handle multiline function
+        if mf is not None:
+            if ws <= mf[0]:
+                mf[1].append("''')")
+                mf[1] = '\n'.join(mf[1])
+                f[f.index(mf)] = ''.join(mf)
+                mf = None
+                mf_ws = None
+            else:
+                mf_ws = mf_ws or ws
+                ws = ws[:-len(mf_ws)]
+                mf[1].append(ws+l)
+                f.pop(i+offset)
+                offset -= 1
+                continue
+
+        # handle mixed content
+        if mc is not None:
+            if ws <= mc[0]:
+                mc[1].append('globals()[{__i__}]=list(__mixed_content__)') # __i__ is formatted during _py_parse
+                mc[1] = '\n'.join(mc[1]) # prep for py_parse
+                mc = None
+            else:
+                if l[0] == ':':
+                    l = l[1:]
+                else:
+                    # TODO account for mixed-indention with mixed-plaintxt
+                    l = '__mixed_content__.append(fmt.format("""{0}"""))'.format(l)
+
+                ws = ws[:-len(mc[0])]
+                mc[1].append(ws+l)
+                continue
+
+        # inspect for mixed content or multiline function
+        if l[0] == ':':
+            if l[-1] == ':': # mixed content
+                result.append([ws, [':__mixed_content__ = []', l[1:]]])
+                mc = result[-1]
+                continue
+            elif '(' not in l and '=' not in l: # multiline function
+                l = l.replace(' ', "('''", 1)
+                f.pop(i+offset)
+                f.insert(i+offset, [ws, [l]])
+                mf = f[i+offset]
+                continue
+    for x in f:
+        print `x`
+    return f
+
+
 def _pre_parse(f):
     """
     The intention of this is to clean up and format the document before being
@@ -419,47 +489,49 @@ def _pre_parse(f):
         as an example. Didn't show up in :block since it establishes its
         place in the global namespace manually.
     """
-    _f = f
     offset = 0
 
-    multiline_func = None # [parent-indent, first-child-indent, parent-index, string-list]
-    mixed_content = None
+    mf = None # [parent-indent, first-child-indent, parent-index, string-list]
+    mc = None
 
-    for i, x in enumerate(_f[:]):
-        x = x.rstrip()
-        if x == '':
+    for i, line in enumerate(f[:]):
+        l = line.rstrip()
+        if l == '':
             f.pop(i+offset)
             offset -= 1
             continue
-
+        
+        d = l.strip()
+        ws = l[-len(d)]
+        
         # check queue if we need to append this line
-        if multiline_func is not None:
+        if mf is not None:
             #check indention and append appropriately
-            ws = get_leading_whitespace(x) # should keep up with this data and never call this func again
-            if ws > multiline_func[0]:
+            #ws = get_leading_whitespace(l) # should keep up with this data and never call this func again
+            if ws > mf[0]:
                 f.pop(i+offset)
                 offset -= 1
-                if multiline_func[1] is None:
-                    multiline_func[1] = ws
-                multiline_func[3].append(x[len(multiline_func[1]):])
+                if mf[1] is None:
+                    mf[1] = ws
+                mf[3].append(l[len(mf[1]):])
             else: # handle and clear queue once indention decreases to right place
-                multiline_func[3].append("')\n")
-                f.insert(multiline_func[2]+1, '\\n'.join(multiline_func[3])) #insert after, not before
+                mf[3].append("')\n")
+                f.insert(mf[2]+1, '\\n'.join(mf[3])) #insert after, not before
                 offset += 1
-                multiline_func = None
+                mf = None
 
         #
-        d = x.lstrip()
+        
         directive = d[0] # if i keep the preprocessor, stuff like this might be able to get saved for use by parser
 
-        while mixed_content is not None:
-            mc_ws, mc_i, mc_confirm, fc_space = mixed_content
+        while mc is not None:
+            mc_ws, mc_i, mc_confirm, fc_space = mc
 
-            ws = get_leading_whitespace(x)
+            #ws = get_leading_whitespace(l)
 
             if directive == ':':
                 if d[1] == ' ':
-                    mixed_content[3] = None
+                    mc[3] = None
                     break
                 else:
                     if mc_confirm:
@@ -479,14 +551,14 @@ def _pre_parse(f):
                         f.insert(i+offset, mc_ws+':list(__mixed_content__)')
                         offset += 1
 
-                    mixed_content = None
+                    mc = None
                     break
                     # break out of if statement, make this a loop?
                 else:
                     # convert to fmt.format()
-                    mixed_content[2] = True
+                    mc[2] = True
                     if fc_space is None:
-                        mixed_content[3] = fc_space = ' '*((len(ws)-len(mc_ws))-1)
+                        mc[3] = fc_space = ' '*((len(ws)-len(mc_ws))-1)
                         cmd_space = ''
                     else:
                         cmd_space = ' '*(len(ws)-len(fc_space)-len(mc_ws))
@@ -500,14 +572,14 @@ def _pre_parse(f):
 
         if directive == ':':
             if d[-1] == ':':
-                if mixed_content is None:
-                    ws = x.partition(':')[0]
+                if mc is None:
+                    #ws = l.partition(':')[0]
                     """
                     since blank lines are getting dropped, we want to store the original offset value of
                     the start of the mixed_content, and when calling it back, we do not want to +offset
                     it as the offset count isn't relevant anymore
                     """
-                    mixed_content = [ws, i+offset, False, None] # [orig-whitespace, orig-index, confirm-mixed-content, first-plaintext-indent] this just means a Possibility of mixed_content
+                    mc = [ws, i+offset, False, None] # [orig-whitespace, orig-index, confirm-mixed-content, first-plaintext-indent] this just means a Possibility of mixed_content
                     continue
 
             elif '(' not in d and '=' not in d: # last rule is for if's and for's
@@ -515,9 +587,9 @@ def _pre_parse(f):
                 offset -= 1
 
                 y = d.partition(' ')
-                ws = x.partition(':')[0]
+                #ws = l.partition(':')[0]
 
-                multiline_func = [ \
+                mf = [ \
                     ws,    # original whitespace
                     None,                   # first childs whitespace
                     i+offset,               # original index
@@ -526,7 +598,7 @@ def _pre_parse(f):
                 continue
 
             elif d[:9] == ':extends(': #factor this out, should only run at top of document, not every effin line
-                nf = safe_open(x.split("'")[1]).readlines() # FIXME safe_open
+                nf = safe_open(l.split("'")[1]).readlines() # FIXME safe_open
                 nf = parse_preprocessor(nf) # for multi-depth :extends(...)
                 f.pop(i+offset)
                 offset -= 1
@@ -534,18 +606,18 @@ def _pre_parse(f):
                     offset += 1
                     f.insert(i+offset, y)
 
-    if multiline_func is not None: # ugh, one last check, need better solution for this
-        multiline_func[3].append("')\n")
-        f.append('\\n'.join(multiline_func[3]))
+    if mf is not None: # ugh, one last check, need better solution for this
+        mf[3].append("')\n")
+        f.append('\\n'.join(mf[3]))
 
-    if mixed_content is not None:
+    if mc is not None:
         if mc_confirm:
             f.insert(mc_i, mc_ws+':__mixed_content__ = []')
             offset += 1
             f.insert(i+offset+1, mc_ws+':list(__mixed_content__)') #offset +1 ? this is buggy, something to do with being end of document?
             offset += 1
 
-        mixed_content = None
+        mc = None
 
     return f
 
@@ -563,7 +635,9 @@ def parse(f, t='hr', sandbox={}):
     _safe_globals = copy(safe_globals)
     safe_globals.update(sandbox)
     # process eval stuff first
-    f = _pre_parse(f)
+    #f = _pre_parse(f)
+    f = _pre_parse2(f)
+    #print f
     f = _py_parse(f)
     l = _doc_parse(f)
     b = _build(l)

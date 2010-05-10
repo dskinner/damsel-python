@@ -55,16 +55,22 @@ if __name__ == '__main__':
 
     _f = sys.argv[1]
     _f = open(_f).readlines()
-    times = []
+    t = sys.argv[2]
 
-    for x in range(2000):
-        a = time()
+    if t == 'y':
+        times = []
+        for x in range(2000):
+            a = time()
+            f = _pre_parse(_f)
+            f = _py_parse(f)
+            f = _doc_parse(f)
+            f = _build(f)
+            times.append(time()-a)
+        print min(times)
+    else:
         f = _pre_parse(_f)
         f = _py_parse(f)
         f = _doc_parse(f)
         f = _build(f)
-        times.append(time()-a)
-    print min(times)
-
-    print etree.tostring(f[0][1])
+        print etree.tostring(f[0][1])
 
