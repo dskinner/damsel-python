@@ -19,7 +19,7 @@ def _post(s):
     NOTE this cant be done post-processor after tostring, theres no way to
     know when something was marked safe.
     """
-    return s.replace('&gt;', '>').replace('&lt;', '<').replace('&amp;', '&')
+    return '<!DOCTYPE html>'+s.replace('&gt;', '>').replace('&lt;', '<').replace('&amp;', '&')
 
 def parse(f, context={}):
     _py_parse.sandbox = _sandbox.new()
