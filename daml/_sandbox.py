@@ -6,7 +6,7 @@ except ImportError:
     import builtins as __builtin__ #Python 3.0
 
 from copy import copy
-
+import os.path
 from _fmt import DamlFormatter
 
 class LXML(object):
@@ -18,9 +18,12 @@ class LXML(object):
     """
     pass
 
+def _open(f):
+    return open(os.path.join(_open.template_dir, f))
+_open.template_dir = ''
+
 default_sandbox = { '__builtins__': None,
                     '__blocks__': {},
-                    '__py_evals__': {}, # need to index by filename, then line number
                     'dict': __builtin__.dict,
                     'enumerate': __builtin__.enumerate,
                     'fmt': DamlFormatter(),
@@ -31,9 +34,8 @@ default_sandbox = { '__builtins__': None,
                     'map': __builtin__.map,
                     'max': __builtin__.max,
                     'min': __builtin__.min,
-                    'open': __builtin__.open,
-                    'range': __builtin__.range,
-                    'lxml': LXML()}
+                    'open': _open,
+                    'range': __builtin__.range}
 
 # Python3
 if hasattr(__builtin__, 'False'):

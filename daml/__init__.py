@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-
-from _parse import parse
-
 """
 import daml
+daml._sandbox._open.template_dir = 'omg/seriously'
 daml.parse('index.daml', {'content': 'Hello World!'})
 """
+
+from _parse import parse
 

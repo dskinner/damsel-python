@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
+from _sandbox import _open
 
 def _pre_parse(f):
     """
@@ -16,7 +17,7 @@ def _pre_parse(f):
     for i, line in enumerate(f[:]):
         ### this needs a better way
         if i == 0 and line[:9] == ':extends(':
-            _f = open(line.split("'")[1]).readlines()
+            _f = _open(line.split("'")[1]).readlines()
             r = _pre_parse(_f)
             f.pop(0)
             offset -= 1

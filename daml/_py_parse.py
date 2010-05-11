@@ -3,12 +3,10 @@
 
 from collections import deque
 from _pre_parse import _pre_parse
-import __builtin__
-from _fmt import DamlFormatter
-from time import time
+from _sandbox import _open
 
 def include(f):
-    f = open(f).readlines()
+    f = _open(f).readlines()
     f = _pre_parse(f)
     f = _py_parse(f)
     return f
@@ -34,23 +32,9 @@ def block(s):
     sandbox['__blocks__'][s[0]] = b
     return b
 
-sandbox = { '__builtins__': None,
-            '__blocks__': {},
-            '__py_evals__': {}, # need to index by filename, then line number
-            'dict': __builtin__.dict,
-            'enumerate': __builtin__.enumerate,
-            'fmt': DamlFormatter(),
-            'globals': __builtin__.globals,
-            'len': __builtin__.len,
-            'list': __builtin__.list,
-            'locals': __builtin__.locals,
-            'map': __builtin__.map,
-            'max': __builtin__.max,
-            'min': __builtin__.min,
-            'open': __builtin__.open,
-            'range': __builtin__.range,
-            'include': include,
-            'block': block}
+ext = {'block': block, 'include': include}
+
+sandbox = {}
 
 def _py_parse(f):
     queue = deque()
