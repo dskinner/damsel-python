@@ -2,24 +2,25 @@ DAML
 ====
 
 This project is a work in progress. Refer to test/templates/ for available syntax.
+Follow development at http://github.com/dasacc22/DAML
 
 To run unit tests:
 #> python test/
 
-To parse a document from command line:
-#> python daml.py my_template.daml daml # to get resulting string, uses hr_build
-#> python daml.py my_template.daml hr # run primitive speed test on hr_build method
-#> python daml.py my_template.daml r # run primitive speed test on relative_build method
+To use:
+import daml
+daml._sandbox._open.template_dir = 'omg/seriously'
+daml.parse('index.daml', {'content': 'Hello World'}
 
 Speed Tests
 ===========
 
 I used the speed test mentioned on Mako's website which is a benchmark found
-in the Genshi repository. This are the current results as of Wed, 5 May and I
+in the Genshi repository. This are the current results as of Wed, 11 May and I
 am listing this to show that DAML is quite fast for all that it's doing.
 
 Mako: 0.37 ms
-Daml: 0.46 ms
+Daml: 0.48 ms
 Cheetah: 0.63 ms
 Genshi_text: 1.00 ms
 Django: 2.28 ms
@@ -32,7 +33,7 @@ I am by no means an expert in this area. I would love to see this code reviewed
 by more knowledgable people (once the code-base has been refactored).
 The eval process is seperate from the document building process. Eval's
 ussually take place once. The exception is if a function is written that calls
-py_parse(which makes a call to safe_eval) during a safe_eval. This happens with
+py_parse(which makes a call to a sandboxed eval) during a safe_eval. This happens with
 builtins like `block` and `include` to process the documents python code. Never
 is an eval of any sort called on any variables or dynamic content unless a
 function is written otherwise. This would of course be a big NO-NO as one would
@@ -42,10 +43,10 @@ doing. Essentially, there should be no way for variable content to actually
 call any function (and there isn't as far as I can tell due to its compile and
 single eval).
 
-XSS is another issue at hand. Currently, any HTML embedded in the DAML document
+XSS is another issue. Currently, any HTML embedded in the DAML document
 will not be escaped and there is no need to mark it in a special way. Using
 Formatter, one can declare {variable:safe} to not escape HTML content from a
-variable
+variable. From there, any {variable} declared will be auto-escaped.
 
 Explanation of Syntax Choices
 =============================
@@ -60,11 +61,9 @@ some significant differences from there on. Specifically, I have chosen
 syntaxes that are either, (a) already familiar with python users, or (b) found
 to my liking in the HAML syntax as specified by their documentation.
 
-Specifically on point (b), I was unhappy with the variation of syntax in HAML
-for doing different things. Such as applying text filters, calling ruby code,
-and some other various bits. As I went over the documentation and started
+As I went over the documentation and started
 making choices for how to implement these various pieces, one of the first
-choices I made was to unify much of the syntax. Now on to the actual syntax.
+choices I made was to unify much of the syntax.
 
 The DAML Syntax
 ===============
@@ -100,10 +99,8 @@ For example:
             %a
 
 Text has a few limitations at the moment which will be resolved shortly enough.
-These limitations are white-space control, line escaping and embedded html.
-Currently all html will be escaped but various measures will be implemented to
-provide granular control over escaping. Let's look at some examples of using
-text in the document.
+These limitations are white-space control and line escaping. Let's look at some
+examples of using text in the document.
 
 %html
     %head
@@ -120,7 +117,7 @@ text in the document.
 
             This text tails the %div.embedded and just as well,
             features multiline text that is aligned appropriately
-            to the previous.
+            to the <strong>previous<strong>.
 
         %p It's worth noting that
             %em new tags
@@ -144,6 +141,7 @@ To call any piece of python code, one simply uses the : directive.
 The : directive can also be embedded in a line, but *only* for calling a
 function. So for example, you can create blocks of python code as such
 
+  # this example is currently broken
   :l = []
   :for x in range(10):
   :    l.append(x)
@@ -166,29 +164,20 @@ result somewhere
 
 Also note you can define a regular function as well, for example:
 
+  # this may be broken too
   :def greet(x):
   :    return 'Hello, {0}'.format(x)
 
 The choice to follow python syntax for the
-recent string.Formatter seemed like the most logical choice. Currently due to
-speed issues, using the syntax is just that, and does not actually make use of
-string.Formatter. The intention though is for it to use string.Formatter so one
-can leverage a pre-existing knowledge of string formatting and make use of all
-features available from the standard library.
-
-Currently, the variable declaration syntax is limited until I work out some
-speed issues I am having with string.Formatter but never-the-less, here are
-some examples.
+recent string.Formatter seemed like the most logical choice. Daml uses a
+custom formatter that has access to the sandbox namespace and implements
+two specs for related to escaping/or-not html.
 
   :title = 'Hello World!'
-  :user = 'John Doe'
+  :tag = 'this <strong> rocks'
 
   %h1 {title}
-  %p Welcome to the site, {user}. We hope you enjoy.
-
-This works find at the moment, but eventually, you can expect to leverage
-all that is string.Formatter and have it function essentially as you would ever
-expect it to.
+  %p Welcome to the site, {tag:safe}. We hope you enjoy.
 
 Also now available are multiline function calls, where those multiple lines are
 plain text. The first use of this is a django style :block directive. Take the
@@ -212,7 +201,7 @@ look like this
 
 :block('\nheader\n%h1 Default Header\n.tagline Default Tagline\n')
 
-and so on. You could also write the above if you preferred. This, with a few
+and so on. This, with a few
 other additions, will allow it to be easy to create custom text filters in
 your server side code, so for example,
 
@@ -229,9 +218,27 @@ example given that looks like this
 :block header
     %h1 OVERRIDE
 
+Also available now is the ability to mixed plain text content with python.
+So for example
+
+:subs = ['www', 'js', 'gitview', 'vizi', 'music']
+
+.portal
+    %ul
+        :for x in subs:
+            %li
+                %a(href=http://{x}.dasa.cc) {x}
+
+    :if 't' == 't':
+        %p HELLO
+
+Currently this may feel a little odd. Essentially, content is aligned with its
+nearest directive. So the %li would be aligned with the :for, and the %a then
+with the %li. This syntax no doubt has its limitations as it has not been
+thoroughly tested yet.
+
 and as long as there aren't any bugs in the code ;) it works as expected. Keep
 in mind this is still under heavy development and very young. There are
-examples of this in the unit tests, the templates can be found under
-test/templates.
+more examples under daml/test/templates.
 
 Still more to come..

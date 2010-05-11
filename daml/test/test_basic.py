@@ -9,7 +9,8 @@ class TestBasic(unittest.TestCase):
             'basic_indent': None,
             'basic_variable_indent': None,
             'tag_hashes': None,
-            'multiline_text': None,}
+            'multiline_text': None,
+            'basic_html': None}
 
         for k, v in self.t.items():
             # template file
@@ -35,6 +36,11 @@ class TestBasic(unittest.TestCase):
 
     def test_multiline_text(self):
         parsed, expected = self.t['multiline_text']
+        parsed = parse(parsed)
+        self.assertEqual(parsed.strip(), expected.strip())
+
+    def test_basic_html(self):
+        parsed, expected = self.t['basic_html']
         parsed = parse(parsed)
         self.assertEqual(parsed.strip(), expected.strip())
 

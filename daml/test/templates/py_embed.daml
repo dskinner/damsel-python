@@ -1,0 +1,5 @@
+:greet = lambda x: 'Hello, {0}'.format(x)
+
+%html
+    %body
+        %p A message. :greet('Joe'). How are you?

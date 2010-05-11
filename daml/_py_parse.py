@@ -106,6 +106,13 @@ def _py_parse(f):
                 offset -= 1
             else:
                 tmp = f.pop(i+offset)
+                
+                tmp2 = tmp.strip()
+                if tmp2[0] != '': #ugh
+                    tmp3 = ':'+l.split('=')[1].strip() #really ugh
+                    if tmp3[:4] != ':fmt': # oh geez
+                        r = tmp2.replace(tmp3, r)
+                
                 ws = tmp[:-len(tmp.lstrip())]
                 f.insert(i+offset, ws+r)
         else:
@@ -118,6 +125,7 @@ def _py_parse(f):
 if __name__ == '__main__':
     import sys
     from time import time
+    import _sandbox
     
     _f = sys.argv[1]
     _f = open(_f).readlines()
@@ -127,10 +135,14 @@ if __name__ == '__main__':
         times = []
         for x in range(2000):
             a = time()
+            sandbox = _sandbox.new()
+            sandbox.update(ext)
             _py_parse(_pre_parse(_f))
             times.append(time()-a)
         print min(times)
     else:
+        sandbox = _sandbox.new()
+        sandbox.update(ext)
         f = _pre_parse(_f)
         f = _py_parse(f)
 

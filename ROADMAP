@@ -1,26 +1,13 @@
 Roadmap
 =======
 
-I've recently tagged 0.1 in the repo. Below are the various aspects I will be
+I've recently tagged 0.1.2 in the repo. Below are the various aspects I will be
 looking to cover during this release and the coming 0.2 tag.
-
-Refactoring Notes
------------------
-
-I have started the refactoring process by my initial results were less then
-stellar. Part of the reason DAML is as fast as it is right now is due to
-having little overhead for each processing instruction. Upon factoring out
-bits of code to improve readability, provide code-reuse, and all that jazz, I
-quickly was building a lot of overhead increasing compilation time. So instead
-I will be focusing my efforts and keeping DAML very procedural while looking
-to improve readability of various code elements by trying different techniques
-to achieve each step's goal of computation. Once this is done, I will start
-trying to fix the numerous bugs that have cropped up with recent syntax
-additions and I'm sure I'll fix some of those along the way too.
 
 DAML 0.1 series
 ---------------
 
+* Work out various speed enhancements
 * Tackle all sorts of security issues
 * Start using DAML live at the dasa.cc domain to uncover problems
 * Refactor current code base to create Parser instances.
@@ -28,22 +15,19 @@ DAML 0.1 series
   transformation at-hand while still being reasonably fast.
 * Try to uncover any and all issues related to characters in source document
   that will cause the parser to error
-* Implement basic feature sets such as embedded html that will not be escaped
-  if written in the source document and also declaring python variables
-  containing html as safe. Any other basic features that arise during use.
 * Debate whether or not to change attribute syntax to reflect css selector
   syntax more closely, specifically #header[attr=val][attr2=val2] or a
   variation of such.
 * Possibly need to choose a new name? daml.org extends xml. This is a fuzzy
   line of sorts.
+* Look at precompiling templates and prepping sandbox with template content
+  that isn't dynamic (functions)
 
 DAML 0.2 series
 ---------------
 
-* Implement more complex features such as embedded daml syntax under for loops
-  and if statements. Any other complex feature set that comes up. Test and
-  debug throughout feature set.
 * Setup basic cherrypy Tool for getting cherrypy users easily started.
+* bug test the hell out of everything
 
 DAML 0.3 series
 ---------------
