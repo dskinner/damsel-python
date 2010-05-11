@@ -3,7 +3,7 @@ from distutils.core import setup
 
 setup(
     name='DAML',
-    version='0.1.1',
+    version='0.1.2',
     author='Daniel Skinner',
     author_email='dasacc22@gmail.com',
     url='http://daml.dasa.cc',
