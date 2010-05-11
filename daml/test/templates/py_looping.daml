@@ -2,8 +2,7 @@
     %body
         :items = ['a', 'b', 'c', 'd']
 
-        :def is_last(i):
-        :   return len(items) is i+1 and '(class=last)' or ''
+        :is_last = lambda i: len(items) is i+1 and '(class=last)' or ''
 
         %h2 Loop Method 1 (not really a loop.. python builtin map)
 
@@ -14,12 +13,5 @@
         %h2 Loop Method 2 (python list comprehension)
         %ul
             :['%li{0} {1}'.format(is_last(i), x) for i, x in enumerate(items)]
-
-        %h2 Loop Method 3 (A work in progress to reduce statements)
-        %ul
-            :l = []
-            :for i, x in enumerate(items):
-            :   l.append('%li{0} {1}'.format(is_last(i), x))
-            :list(l)
 
         #footer

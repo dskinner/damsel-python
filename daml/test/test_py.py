@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os.path
 import unittest
-import daml
+from _parse import parse
 
 class TestPy(unittest.TestCase):
     def setUp(self):
@@ -13,28 +13,28 @@ class TestPy(unittest.TestCase):
 
         for k, v in self.t.items():
             # template file
-            a = open(os.path.join('test/templates', k+'.daml')).readlines()
+            a = open(os.path.join('', k+'.daml')).readlines()
             # expected output
-            b = open(os.path.join('test/templates', k+'.html')).read()
+            b = open(os.path.join('', k+'.html')).read()
             self.t[k] = (a, b)
 
     def test_py_include(self):
         parsed, expected = self.t['py_include']
-        parsed = daml.parse(parsed)
+        parsed = parse(parsed)
         self.assertEqual(parsed.strip(), expected.strip())
 
     def test_py_looping(self):
         parsed, expected = self.t['py_looping']
-        parsed = daml.parse(parsed)
+        parsed = parse(parsed)
         self.assertEqual(parsed.strip(), expected.strip())
 
     def test_py_block_default(self):
         parsed, expected = self.t['py_block_default']
-        parsed = daml.parse(parsed)
+        parsed = parse(parsed)
         self.assertEqual(parsed.strip(), expected.strip())
 
     def test_py_extends(self):
         parsed, expected = self.t['py_extends']
-        parsed = daml.parse(parsed)
+        parsed = parse(parsed)
         self.assertEqual(parsed.strip(), expected.strip())
 

@@ -1,4 +1,4 @@
-:include('py_block_default.daml')
+:extends('py_block_default.daml')
 
 :block header
     #header

@@ -8,32 +8,30 @@ from _fmt import DamlFormatter
 from time import time
 
 def include(f):
-    """
-    FIXME this, and all functions need to be made to go to globals() either in pre_parse or in py_parse
-    """
     f = open(f).readlines()
     f = _pre_parse(f)
     f = _py_parse(f)
     return f
 
 class Block(list):
-    def __init__(self, name):
+    def __init__(self, name, value):
         self._name = name
+        self._value = value
         self._used = False
         
     def __iter__(self):
-        if self._used is False:
-            self._used = True
-            return iter(sandbox['__blocks__'][self._name])
+        b = sandbox['__blocks__'][self._name]
+        if b._used is False:
+            b._used = True
+            return iter(sandbox['__blocks__'][self._name]._value)
         else:
             return iter(())
 
 def block(s):
     s = s.splitlines()
     s = _py_parse(s)
-    b = Block(s[0])
-    print 'MAKING BLOCK', s[0]
-    sandbox['__blocks__'][s[0]] = s[1:]
+    b = Block(s[0], s[1:])
+    sandbox['__blocks__'][s[0]] = b
     return b
 
 sandbox = { '__builtins__': None,

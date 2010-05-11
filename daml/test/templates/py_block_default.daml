@@ -7,5 +7,3 @@
 
         :block footer
             #footer.bottom this is some footer content
-
-        #end

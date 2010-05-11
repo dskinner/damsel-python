@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-#from lxml.etree import Element
-from _element import Element
+from lxml.etree import Element
+#from _element import Element
 from collections import deque
 
 def _doc_parse(f):
@@ -34,13 +34,13 @@ def _doc_parse(f):
         # since nowhere in a doc should there be plain text indented to plain text
         #for x in plntxt:
         while plntxt:
-            ws, text = plntxt.popleft()
+            _ws, text = plntxt.popleft()
             j = -1
             while j:
-                if ws > r[j][0]:
+                if _ws > r[j][0]:
                     r[j][1].text += ' '+text
                     break
-                elif ws == r[j][0]:
+                elif _ws == r[j][0]:
                     if r[j][1].tail is None: # faster than init'ing tail on element creation everytime
                         r[j][1].tail = text
                     else:

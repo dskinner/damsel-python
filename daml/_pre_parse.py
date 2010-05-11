@@ -12,6 +12,17 @@ def _pre_parse(f):
     mc = None # mixed content
     offset = 0
     for i, line in enumerate(f[:]):
+        ### this needs a better way
+        if i == 0 and line[:9] == ':extends(':
+            _f = open(line.split("'")[1]).readlines()
+            r = _pre_parse(_f)
+            f.pop(0)
+            offset -= 1
+            for x in r:
+                offset += 1
+                f.insert(i+offset, x)
+        ###
+        
         l = line.strip()
         if l == '':
             f.pop(i+offset)
@@ -41,6 +52,7 @@ def _pre_parse(f):
             if ws <= mc[0]:
                 mc[1].append('globals()[{__i__}]=list(__mixed_content__)') # __i__ is formatted during _py_parse
                 mc[1] = '\n'.join(mc[1]) # prep for py_parse
+                f[f.index(mc)] = mc[0]+mc[1]
                 mc = None
             else:
                 if l[0] == ':':
@@ -55,9 +67,11 @@ def _pre_parse(f):
 
         # inspect for mixed content or multiline function
         if l[0] == ':':
-            if l[-1] == ':': # mixed content
-                result.append([ws, [':__mixed_content__ = []', l[1:]]])
-                mc = result[-1]
+            if l[-1] == ':' and l[:4] != ':def': # mixed content
+                f.pop(i+offset)
+                f.insert(i+offset, [ws, [':__mixed_content__ = []', l[1:]]])
+                #result.append([ws, [':__mixed_content__ = []', l[1:]]])
+                mc = f[i+offset]
                 continue
             elif '(' not in l and '=' not in l: # multiline function
                 l = l.replace(' ', "('''", 1)
