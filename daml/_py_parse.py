@@ -72,10 +72,11 @@ def _py_parse(f):
                 :title = 'woah'
                 """
                 l = l[1:]
-            elif '{__i__}' in l:
-                l = l.replace('{__i__}', '"__{0}_{1}__"'.format(_id, i), 1)[1:]
             else:
                 l = 'globals()["__{0}_{1}__"] = {2}'.format(_id, i, l[1:])
+            
+            if '{__i__}' in l:
+                l = l.replace('{__i__}', '"__{0}_{1}__"'.format(_id, i), 1)
             queue.append((i, l))
             continue
 

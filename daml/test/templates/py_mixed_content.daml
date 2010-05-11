@@ -1,16 +1,10 @@
 :subs = ['www', 'js', 'gitview', 'vizi', 'music']
-:a = lambda x: '%a(href=http://{0}.dasa.cc/) {0}'.format(x)
 
 .portal
     %ul
         :for x in subs:
-            %p {x}
-            :if x == 'vizi':
-                %li {x}VVV
-            :else:
-                %li
-                %a {x}
+            %li
+                %a(href=http://{x}.dasa.cc) {x}
 
     :if 't' == 't':
         %p HELLO
-    #footer {subs[0]}

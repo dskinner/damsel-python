@@ -9,3 +9,6 @@ class Template(object):
 
     def render(self):
         pass
+
+    def parse(self):
+        pass

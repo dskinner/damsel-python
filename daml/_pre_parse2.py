@@ -1,16 +1,18 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from collections import deque
+
 def _pre_parse(f):
     """
     TODO normalization to the document to handle all kinds of fun whitespace
     """
+    queue = deque()
     
     mf = None # multi-line func
     mf_ws = None # first-childs indention
 
     mc = None # mixed content
-    mc_ws = None # first plaintxt indention
     
     offset = 0
     for i, line in enumerate(f[:]):
@@ -30,7 +32,7 @@ def _pre_parse(f):
             f.pop(i+offset)
             offset -= 1
             continue
-        
+
         ws = line.rstrip()[:-len(l)]
 
         # handle multiline function
@@ -38,6 +40,7 @@ def _pre_parse(f):
             if ws <= mf[0]:
                 mf[1].append("''')")
                 mf[1] = '\n'.join(mf[1])
+                queue.append((f.index(mf), mf[1]))
                 f[f.index(mf)] = ''.join(mf)
                 mf = None
                 mf_ws = None
@@ -54,28 +57,28 @@ def _pre_parse(f):
             if ws <= mc[0]:
                 mc[1].append('globals()[{__i__}]=list(__mixed_content__)') # __i__ is formatted during _py_parse
                 mc[1] = '\n'.join(mc[1]) # prep for py_parse
+                queue.append((f.index(mc), mc[1]))
                 f[f.index(mc)] = mc[0]+mc[1]
                 mc = None
             else:
                 if l[0] == ':':
-                    mc_ws = None
-                    ws = ws[:-len(mc[0])]
                     l = l[1:]
                 else:
-                    mc_ws = mc_ws or ws
-                    _ws = ws[:-len(mc_ws)]
-                    ws = mc_ws[:-len(mc[0])]
                     # TODO account for mixed-indention with mixed-plaintxt
-                    l = '__mixed_content__.append(fmt.format("""{0}{1}"""))'.format(_ws, l)
+                    l = '__mixed_content__.append(fmt.format("""{0}"""))'.format(l)
 
-                
+                ws = ws[:-len(mc[0])]
                 mc[1].append(ws+l)
-                f.pop(i+offset)
-                offset -= 1
                 continue
 
         # inspect for mixed content or multiline function
-        if l[0] == ':':
+        if l[0] == '.':
+            f[i+offset] = line.replace('.', '%.', 1)
+            continue
+        elif l[0] == '#':
+            f[i+offset] = line.replace('#', '%#', 1)
+            continue
+        elif l[0] == ':':
             if l[-1] == ':' and l[:4] != ':def': # mixed content
                 f.pop(i+offset)
                 f.insert(i+offset, [ws, [':__mixed_content__ = []', l[1:]]])
@@ -96,12 +99,7 @@ def _pre_parse(f):
         f[f.index(mf)] = ''.join(mf)
         mf = None
         mf_ws = None
-    # handle mixed content at document end
-    if mc is not None:
-        mc[1].append('globals()[{__i__}]=list(__mixed_content__)') # __i__ is formatted during _py_parse
-        mc[1] = '\n'.join(mc[1]) # prep for py_parse
-        f[f.index(mc)] = mc[0]+mc[1]
-        mc = None
+    
     return f
 
 
@@ -123,4 +121,4 @@ if __name__ == '__main__':
     else:
         r = _pre_parse(_f)
         for x in r:
-            print x
+            print `x`
