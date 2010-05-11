@@ -27,6 +27,7 @@ class Block(list):
 
 def block(s):
     s = s.splitlines()
+    s = _pre_parse(s)
     s = _py_parse(s)
     b = Block(s[0], s[1:])
     sandbox['__blocks__'][s[0]] = b
@@ -86,8 +87,16 @@ def _py_parse(f):
     py_str = '\n'.join([x[1] for x in queue])
     if py_str == '':
         return f
-    
-    eval(compile('fmt.namespace=globals()\n'+py_str, '<string>', 'exec'), sandbox)
+
+    try:
+        eval(compile('fmt.namespace=globals()\n'+py_str, '<string>', 'exec'), sandbox)
+    except Exception as e:
+        print '=================='
+        print 'Compilation String'
+        print '=================='
+        print py_str
+        print '------------------'
+        raise e
     
     offset = 0
     while queue:
