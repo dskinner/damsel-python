@@ -99,6 +99,8 @@ def _py_parse(f):
         queue.append((i, 'globals()["__{0}_{1}__"] = {2}'.format(_id, i, l[a+1:c]))) # FIXME embedded needs a line number among other things
 
     py_str = '\n'.join([x[1] for x in queue])
+    if py_str == '':
+        return f
     
     eval(compile('fmt.namespace=globals()\n'+py_str, '<string>', 'exec'), sandbox)
     
