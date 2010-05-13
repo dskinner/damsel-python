@@ -34,6 +34,7 @@ def parse(f, context={}):
 
 if __name__ == '__main__':
     import sys
+    import codecs
     f = sys.argv[1]
-    f = open(f).readlines()
+    f = codecs.open(f, 'r', encoding='utf-8').read().splitlines()
     print parse(f)

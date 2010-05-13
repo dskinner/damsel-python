@@ -109,9 +109,12 @@ def _pre_parse(f):
 if __name__ == '__main__':
     import sys
     from time import time
+    import codecs
     
-    _f = sys.argv[1]
-    _f = open(_f).readlines()
+    __f = sys.argv[1]
+    #_f = open(__f).readlines()
+    # its faster to .read().splitlines() rather then .readlines()
+    _f = codecs.open(__f, 'r', encoding='utf-8').read().splitlines()
     t = sys.argv[2]
 
     if t == 'y':

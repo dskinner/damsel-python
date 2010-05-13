@@ -53,9 +53,10 @@ if __name__ == '__main__':
     import sys
     from lxml import etree
     from time import time
+    import codecs
 
     _f = sys.argv[1]
-    _f = open(_f).readlines()
+    _f = codecs.open(_f, 'r', encoding='utf-8').read().splitlines()
     t = sys.argv[2]
 
     if t == 'y':
