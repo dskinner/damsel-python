@@ -29,11 +29,11 @@ Speed Tests
 ===========
 
 I used the speed test mentioned on Mako's website which is a benchmark found
-in the Genshi repository. These are the current results as of Wed, 11 May and I
+in the Genshi repository. These are the current results as of Mon, 17 May and I
 am listing this to show that DAML is quite fast for all that it's doing. (basic.py)
 
 | Mako: 0.37 ms
-| Daml: 0.48 ms
+| Daml: 0.41 ms
 | Cheetah: 0.63 ms
 | Genshi_text: 1.00 ms
 | Django: 2.28 ms

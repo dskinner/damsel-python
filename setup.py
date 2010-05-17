@@ -5,13 +5,13 @@ from Cython.Distutils import build_ext
 
 setup(
     name='DAML',
-    version='0.1.2',
+    version='0.1.3',
     author='Daniel Skinner',
     author_email='dasacc22@gmail.com',
     url='http://daml.dasa.cc',
     license = "MIT License",
     packages = ["daml"],
-    requires = ["lxml"],
+    requires = ["lxml", "cython"],
     description='Python implementation of HAML, extended.',
     long_description = """\
 Features CSS selectors and indention for declaring page layout. Embed
@@ -32,5 +32,5 @@ Follow development at http://github.com/dasacc22/DAML
         "Environment :: Web Environment",
         ],
     cmdclass = {'build_ext': build_ext},
-    ext_modules = [Extension("_cext", ["daml/_cext.pyx"])]
+    ext_modules = [Extension("daml._cext", ["daml/_cext.pyx"])]
     )
