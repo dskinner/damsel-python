@@ -2,6 +2,7 @@
 import os.path
 import unittest
 from _parse import parse
+import codecs
 
 class TestBasic(unittest.TestCase):
     def setUp(self):
@@ -14,7 +15,7 @@ class TestBasic(unittest.TestCase):
 
         for k, v in self.t.items():
             # template file
-            a = open(os.path.join('', k+'.daml')).readlines()
+            a = codecs.open(os.path.join('', k+'.daml'), encoding='utf-8').readlines()
             # expected output
             b = open(os.path.join('', k+'.html')).read()
             self.t[k] = (a, b)

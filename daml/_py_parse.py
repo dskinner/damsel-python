@@ -4,6 +4,8 @@
 from collections import deque
 from _pre_parse import _pre_parse
 from _sandbox import _open
+from _cext import parse_ws, sub_str
+
 
 def include(f):
     f = _open(f).readlines()
@@ -16,7 +18,7 @@ class Block(list):
         self._name = name
         self._value = value
         self._used = False
-        
+
     def __iter__(self):
         b = sandbox['__blocks__'][self._name]
         if b._used is False:
@@ -40,12 +42,10 @@ sandbox = {}
 def _py_parse(f):
     queue = deque()
     _id = id(f)
-    
+
     for i, line in enumerate(f):
-        line = line.rstrip()
-        l = line.strip()
-        ws = line[:-len(l)]
-        
+        ws, l = parse_ws(line)
+
         if l[0] == ':':
             a = l.find('(')
             b = l.find('=')
@@ -59,7 +59,7 @@ def _py_parse(f):
                 l = l[1:]
             else:
                 l = 'globals()["__{0}_{1}__"] = {2}'.format(_id, i, l[1:])
-            
+
             if '{__i__}' in l:
                 l = l.replace('{__i__}', '"__{0}_{1}__"'.format(_id, i), 1)
             queue.append((i, l))
@@ -97,37 +97,38 @@ def _py_parse(f):
         print py_str
         print '------------------'
         raise e
-    
+
     offset = 0
     while queue:
         i, l = queue.popleft()
         k = '__{0}_{1}__'.format(_id, i)
-        
+
         if k in sandbox:
             r = sandbox[k]
 
             if isinstance(r, list):
                 tmp = f.pop(i+offset).rstrip()
                 ws = tmp[:-len(tmp.lstrip())]
+                #ws, tmp = parse_ws(f.pop(i+offset))
                 for x in r:
                     f.insert(i+offset, ws+x)
                     offset += 1
                 offset -= 1
             else:
                 tmp = f.pop(i+offset)
-                
+
                 tmp2 = tmp.strip()
                 if tmp2[0] != '': #ugh
                     tmp3 = ':'+l.split('=')[1].strip() #really ugh
                     if tmp3[:4] != ':fmt': # oh geez
                         r = tmp2.replace(tmp3, r)
-                
+
                 ws = tmp[:-len(tmp.lstrip())]
                 f.insert(i+offset, ws+r)
         else:
             f.pop(i+offset)
             offset -= 1
-    
+
     return f
 
 
@@ -135,7 +136,7 @@ if __name__ == '__main__':
     import sys
     from time import time
     import _sandbox
-    
+
     _f = sys.argv[1]
     _f = open(_f).readlines()
     t = sys.argv[2]

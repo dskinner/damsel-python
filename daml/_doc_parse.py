@@ -1,38 +1,28 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-from lxml.etree import Element
-#from _element import Element
+from lxml.etree import Element, SubElement
 from collections import deque
 
+from _cext import parse_ws, parse_attr, parse_tag, split_space
+
 def _doc_parse(f):
-    r = []
+    r = [('', Element('html'))]
     plntxt = deque()
 
-    for line in f:
-        line = line.rstrip()
-        l = line.lstrip()
-        ws = line[:-len(l)]
-        
-        if l[0] == '%':
-            l = l[1:]
-        elif l[0] == '#':
-            #l = l.replace('#', '%#', 1)
-            pass
-        elif l[0] == '.':
-            #l = l.replace('.', '%.', 1)
-            pass
-        elif l[0] == "\\":
-            plntxt.append((ws, l.replace('\\', '', 1)))
-            continue
-        else:
+    prev = ''
+
+    for line in f[1:]:
+        ws, l = parse_ws(line)
+
+        if l[0] not in ['%', '#', '.']:
             plntxt.append((ws, l))
             continue
-
 
         # check plntxt queue
         # everything in queue should be same indention width
         # since nowhere in a doc should there be plain text indented to plain text
         #for x in plntxt:
+
         while plntxt:
             _ws, text = plntxt.popleft()
             j = -1
@@ -48,54 +38,41 @@ def _doc_parse(f):
                     break
                 j -= 1
 
-        #l = l.partition('%') # ('    ', '%', 'tag#id.class(attr=val) content')
-
         # determine tag attributes
-        attr = None
-        if '(' in l:
-            op_i = l.index('(')
-            if ' ' not in l[:op_i]: # there should be no spaces in %tag#id.class(...
-                cp_i = l.index(')')+1
-                attr = l[op_i:cp_i]
-                u = l.replace(attr, '').partition(' ')
-            else:
-                u = l.partition(' ')
-        else:
-            u = l.partition(' ')
+        u, attr = parse_attr(l)
+        u = split_space(u)
 
-
-        # this is pretty sweet, basically it will always return the following format
-        #   [('tag', '', 'class'), ('#', '', ''), ('id', '.', 'class')]
-        # no matter the string order of elements, for example
-        #   tag#id.class.class
-        #   tag.class#id.class
-        #   tag.class.class#id
-        #   #id.class.class
-        #   #id
-        # for all of these examples, tag will always be [0][0], id will always be [2][0]
-        # and class will always be [0][2]+[2][2]
-        # and this should be effin fast comparitively (to regex, other builtin string operations)
-        tag = [x.partition('.') for x in u[0].partition('#')]
-
+        _tag, _id, _class = parse_tag(u[0])
         #
-        e = Element(tag[0][0] or 'div')
-        e.text = u[2]
+        if ws > prev:
+            e_root = r[-1][1]
+        if ws == prev:
+            e_root = r[-1][1].getparent()
+        if ws < prev:
+            j = -1
+            while j:
+                if r[j][0] == ws:
+                    e_root = r[j][1].getparent()
+                    break
+                j -= 1
+        prev = ws
 
-        if tag[2][0] != '':
-            e.attrib['id'] = tag[2][0]
+        e = SubElement(e_root, _tag or 'div')
+        e.text = u[1][1:]
 
-        # TODO is this the fastest way to process classes and attributes?
-        _class = tag[0][2] + ' ' + tag[2][2]
-        if _class != ' ':
-            e.attrib['class'] = _class.replace('.', ' ').strip()
+        if _id:
+            e.attrib['id'] = _id
 
-        if attr is not None:
+        if _class:
+            e.attrib['class'] = _class
+
+        if attr:
             for x in attr[1:-1].split(','):
                 k, tmp, v = x.partition('=')
                 e.attrib[k.strip()] = v.strip()
 
-        r.append((ws, e)) # ('    ', etree.Element)
-    return r
+        r.append((ws, e))
+    return r[0][1]
 
 
 if __name__ == '__main__':

@@ -1,18 +1,19 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 from _sandbox import _open
+from _cext import parse_ws, sub_str
 
 def _pre_parse(f):
     """
     TODO normalization to the document to handle all kinds of fun whitespace
     """
-    
+
     mf = None # multi-line func
     mf_ws = None # first-childs indention
 
     mc = None # mixed content
     mc_ws = None # first plaintxt indention
-    
+
     offset = 0
     for i, line in enumerate(f[:]):
         ### this needs a better way
@@ -25,14 +26,12 @@ def _pre_parse(f):
                 offset += 1
                 f.insert(i+offset, x)
         ###
-        
-        l = line.strip()
-        if l == '':
+
+        ws, l = parse_ws(line)
+        if not l:
             f.pop(i+offset)
             offset -= 1
             continue
-        
-        ws = line.rstrip()[:-len(l)]
 
         # handle multiline function
         if mf is not None:
@@ -44,7 +43,8 @@ def _pre_parse(f):
                 mf_ws = None
             else:
                 mf_ws = mf_ws or ws
-                ws = ws[:-len(mf_ws)]
+                #ws = ws[:-len(mf_ws)]
+                ws = sub_str(ws, mf_ws)
                 mf[1].append(ws+l)
                 f.pop(i+offset)
                 offset -= 1
@@ -64,12 +64,14 @@ def _pre_parse(f):
                     l = l[1:]
                 else:
                     mc_ws = mc_ws or ws
-                    _ws = ws[:-len(mc_ws)]
-                    ws = mc_ws[:-len(mc[0])]
+                    #_ws = ws[:-len(mc_ws)]
+                    _ws = sub_str(ws, mc_ws)
+                    #ws = mc_ws[:-len(mc[0])]
+                    ws = sub_str(mc_ws, mc[0])
                     # TODO account for mixed-indention with mixed-plaintxt
                     l = '__mixed_content__.append(fmt.format("""{0}{1}"""))'.format(_ws, l)
 
-                
+
                 mc[1].append(ws+l)
                 f.pop(i+offset)
                 offset -= 1
@@ -80,11 +82,10 @@ def _pre_parse(f):
             if l[-1] == ':' and l[:4] != ':def': # mixed content
                 f.pop(i+offset)
                 f.insert(i+offset, [ws, [':__mixed_content__ = []', l[1:]]])
-                #result.append([ws, [':__mixed_content__ = []', l[1:]]])
                 mc = f[i+offset]
                 continue
             elif '(' not in l and '=' not in l: # multiline function
-                l = l.replace(' ', "('''", 1)
+                l = l.replace(' ', "(u'''", 1)
                 f.pop(i+offset)
                 f.insert(i+offset, [ws, [l]])
                 mf = f[i+offset]
@@ -110,7 +111,7 @@ if __name__ == '__main__':
     import sys
     from time import time
     import codecs
-    
+
     __f = sys.argv[1]
     #_f = open(__f).readlines()
     # its faster to .read().splitlines() rather then .readlines()

@@ -8,6 +8,7 @@ except ImportError:
 from copy import copy
 import os.path
 from _fmt import DamlFormatter
+import codecs
 
 class LXML(object):
     """
@@ -19,7 +20,7 @@ class LXML(object):
     pass
 
 def _open(f):
-    return open(os.path.join(_open.template_dir, f))
+    return codecs.open(os.path.join(_open.template_dir, f), encoding='utf-8')
 _open.template_dir = ''
 
 default_sandbox = { '__builtins__': None,

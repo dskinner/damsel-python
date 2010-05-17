@@ -2,6 +2,7 @@
 import os.path
 import unittest
 from _parse import parse
+import codecs
 
 class TestPy(unittest.TestCase):
     def setUp(self):
@@ -15,7 +16,7 @@ class TestPy(unittest.TestCase):
 
         for k, v in self.t.items():
             # template file
-            a = open(os.path.join('', k+'.daml')).readlines()
+            a = codecs.open(os.path.join('', k+'.daml'), encoding='utf-8').readlines()
             # expected output
             b = open(os.path.join('', k+'.html')).read()
             self.t[k] = (a, b)
@@ -39,7 +40,7 @@ class TestPy(unittest.TestCase):
         parsed, expected = self.t['py_extends']
         parsed = parse(parsed)
         self.assertEqual(parsed.strip(), expected.strip())
-    
+
     def test_py_mixed_content(self):
         parsed, expected = self.t['py_mixed_content']
         parsed = parse(parsed)
@@ -49,5 +50,5 @@ class TestPy(unittest.TestCase):
         parsed, expected = self.t['py_embed']
         parsed = parse(parsed)
         self.assertEqual(parsed.strip(), expected.strip())
-    
+
 

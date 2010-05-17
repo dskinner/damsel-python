@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 from distutils.core import setup
+from distutils.extension import Extension
+from Cython.Distutils import build_ext
 
 setup(
     name='DAML',
@@ -29,4 +31,6 @@ Follow development at http://github.com/dasacc22/DAML
         "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
         "Environment :: Web Environment",
         ],
+    cmdclass = {'build_ext': build_ext},
+    ext_modules = [Extension("_cext", ["daml/_cext.pyx"])]
     )
