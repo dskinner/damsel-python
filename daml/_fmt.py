@@ -16,8 +16,11 @@ class DamlFormatter(Formatter):
 
     def format_field(self, value, format_spec):
         # default to escape
+        if isinstance(value, (int, float)):
+            return format(value, format_spec)
+
         format_spec = format_spec or 'escape'
-        
+
         if hasattr(self.format_specs, format_spec):
             return getattr(self.format_specs, format_spec)(value)
         return format(value, format_spec)

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 def parse_ws(unicode s):
     cdef Py_ssize_t i
     cdef Py_UNICODE c

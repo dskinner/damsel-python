@@ -110,10 +110,15 @@ def _py_parse(f):
                 tmp = f.pop(i+offset).rstrip()
                 ws = tmp[:-len(tmp.lstrip())]
                 #ws, tmp = parse_ws(f.pop(i+offset))
+                r = [ws+x for x in r]
+                f = f[:i+offset] + r + f[i+offset:]
+                offset += len(r)-1
+                '''
                 for x in r:
                     f.insert(i+offset, ws+x)
                     offset += 1
                 offset -= 1
+                '''
             else:
                 tmp = f.pop(i+offset)
 

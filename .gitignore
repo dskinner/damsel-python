@@ -1,4 +1,4 @@
-bench/*
+daml/bench/*
 *.pyc
 *.pyo
 MANIFEST
