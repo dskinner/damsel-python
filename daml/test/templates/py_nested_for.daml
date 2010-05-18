@@ -7,7 +7,7 @@
 
         %h1 Nested For-Loops
 
-        :is_last = lambda i: (len(table) == i+1) and '.last' or ''
-
         %table
-            %p :str(len(table))
+            :for row in table:
+                %tr
+                :[' %td {0}'.format(x) for x in row.values()]

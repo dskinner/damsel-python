@@ -39,12 +39,12 @@ am listing this to show that DAML is quite fast for all that it's doing. (basic.
 | Django: 2.28 ms
 | Genshi: 2.84 ms
 
-Today, Mon, 17 May I ran the big_table.py benchmark on Daml and got a pretty
-decent time of 147ms. Though I almost immediately realized why this kind of
-evaluation was taking this long (iterating and handling list returns in the
-slowest way possible) and fixed it immediately. Now, these are the results.
+Mon, 18 May I ran the big_table.py benchmark on Daml and started digging into
+the details more. I found an error that caused the parsing to occur for only
+the first iteration and thus, erroneous results. I'll have to look more into
+this. For now, here are the current results.
 
-| Daml                                           27.21 ms
+| Daml                                          147.21 ms
 | Mako Template                                  53.76 ms
 | Genshi tag builder                            483.61 ms
 | Genshi template                               289.81 ms
