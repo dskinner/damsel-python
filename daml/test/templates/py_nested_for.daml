@@ -1,0 +1,13 @@
+%html
+    %head
+        %title Nested For-Loops
+
+    %body
+        :table = [dict(a=1, b=2, c=3, d=4) for x in range(4)]
+
+        %h1 Nested For-Loops
+
+        :is_last = lambda i: (len(table) == i+1) and '.last' or ''
+
+        %table
+            %p :str(len(table))

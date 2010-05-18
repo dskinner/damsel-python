@@ -62,6 +62,9 @@ def _pre_parse(f):
                     mc_ws = None
                     ws = ws[:-len(mc[0])]
                     l = l[1:]
+                    # is this a list comprehension?
+                    if l[0] == '[' and l[-1] == ']':
+                        l = '__mixed_content__.extend({0})'.format(l)
                 else:
                     mc_ws = mc_ws or ws
                     #_ws = ws[:-len(mc_ws)]
