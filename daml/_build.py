@@ -48,7 +48,7 @@ if __name__ == '__main__':
     from _pre_parse import _pre_parse
     import _py_parse
     #from _doc_parse import _doc_parse
-    from _cext import _doc_parse
+    from _cdoc import _doc_parse
     from _parse import parse, _post
     import _sandbox
     import sys

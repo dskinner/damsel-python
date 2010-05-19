@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 from _sandbox import _open
-from _cext import parse_ws, sub_str
+from _cdoc import parse_ws, sub_str
 
 def _pre_parse(f):
     """

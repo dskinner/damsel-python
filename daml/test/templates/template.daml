@@ -1,13 +1,8 @@
-:title='Just a test'
-:user='joe'
-:items=['Number %d' % num for num in range(1, 15)]
-
 %html
     %head
         %title {title}
     %body
-        :greet = lambda x: "%p Hello, {0}".format(x)
-
+        :include('header.daml')
 
         :greet = lambda x: "%p Hello, {0}".format(x)
         :greet(user)
@@ -19,5 +14,6 @@
         %h2 Loop
         %ul
             :for i, item in enumerate(items):
-                %li item
-        #footer
+                %li {item}
+
+        :include('footer.daml')

@@ -1,6 +1,8 @@
 daml/bench/*
 *.pyc
 *.pyo
+*.so
+*.c
 MANIFEST
 dist/*
 build/*

@@ -32,5 +32,5 @@ Follow development at http://github.com/dasacc22/DAML
         "Environment :: Web Environment",
         ],
     cmdclass = {'build_ext': build_ext},
-    ext_modules = [ Extension("daml._cext", ["daml/_cext.pyx"])]
+    ext_modules = [ Extension("daml._cdoc", ["daml/_cdoc.pyx"])]
     )
