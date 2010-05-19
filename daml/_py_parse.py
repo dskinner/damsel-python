@@ -107,6 +107,8 @@ def _py_parse(f):
             r = sandbox[k]
 
             if isinstance(r, list):
+                if isinstance(r[0], list):
+                    r = [a for b in r for a in b]
                 tmp = f.pop(i+offset).rstrip()
                 ws = tmp[:-len(tmp.lstrip())]
                 #ws, tmp = parse_ws(f.pop(i+offset))

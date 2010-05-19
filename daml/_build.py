@@ -47,7 +47,8 @@ def _build(parsed):
 if __name__ == '__main__':
     from _pre_parse import _pre_parse
     import _py_parse
-    from _doc_parse import _doc_parse
+    #from _doc_parse import _doc_parse
+    from _cext import _doc_parse
     from _parse import parse, _post
     import _sandbox
     import sys
@@ -55,11 +56,12 @@ if __name__ == '__main__':
     from time import time
     import codecs
 
-    _f = sys.argv[1]
-    _f = codecs.open(_f, 'r', encoding='utf-8').read().splitlines()
+    sys_f = sys.argv[1]
+    _f = codecs.open(sys_f, 'r', encoding='utf-8').read().splitlines()
     t = sys.argv[2]
 
     if t == 'y':
+        init_times = []
         pre_times = []
         py_times = []
         doc_times = []
@@ -67,9 +69,11 @@ if __name__ == '__main__':
         tostring_times = []
         post_times = []
 
-        for x in range(2000):
+        for x in range(10):
+            a = time()
             _py_parse.sandbox = _sandbox.new()
             _py_parse.sandbox.update(_py_parse.ext)
+            init_times.append(time()-a)
 
             a = time()
             f = _pre_parse(_f)
@@ -95,22 +99,35 @@ if __name__ == '__main__':
             s = _post(s)
             post_times.append(time()-a)
 
+        print 'init', min(init_times)
         print '_pre_parse', min(pre_times)
         print '_py_parse ', min(py_times)
         print '_doc_parse', min(doc_times)
         #print '_build    ', min(build_times)
         print 'tostring  ', min(tostring_times)
         print '_post     ', min(post_times)
-        print s
+        #print s
     elif t == 'a':
         times = []
         for x in range(2000):
+
             a = time()
+
+            _py_parse.sandbox = _sandbox.new()
+            _py_parse.sandbox.update(_py_parse.ext)
+
             f = _pre_parse(_f)
-            f = _py_parse(f)
+            f = _py_parse._py_parse(f)
             f = _doc_parse(f)
             s = etree.tostring(f)
             s = _post(s)
+            times.append(time()-a)
+        print min(times)
+    elif t == 'p':
+        times = []
+        for x in range(2000):
+            a = time()
+            parse(_f)
             times.append(time()-a)
         print min(times)
     else:

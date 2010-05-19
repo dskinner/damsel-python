@@ -7,6 +7,7 @@ def _pre_parse(f):
     """
     TODO normalization to the document to handle all kinds of fun whitespace
     """
+    f = f[:] # this fixes errors for benchmarks with multiple iterative runs
 
     mf = None # multi-line func
     mf_ws = None # first-childs indention

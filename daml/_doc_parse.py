@@ -1,65 +1,60 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 from lxml.etree import Element, SubElement
-from collections import deque
 
-from _cext import parse_ws, parse_attr, parse_tag, split_space
 
 def _doc_parse(f):
-    r = [('', Element('html'))]
-    plntxt = deque()
+    r = {'': Element('html')}
+    plntxt = {}
 
     prev = ''
 
     for line in f[1:]:
         ws, l = parse_ws(line)
 
-        if l[0] not in ['%', '#', '.']:
-            plntxt.append((ws, l))
+        ### plntxt queue
+        if not_directive(l[0]):
+            if ws in plntxt:
+                plntxt[ws].append(l)
+            else:
+                plntxt[ws] = [l]
             continue
 
-        # check plntxt queue
-        # everything in queue should be same indention width
-        # since nowhere in a doc should there be plain text indented to plain text
-        #for x in plntxt:
+        if plntxt:
+            for _ws, text in plntxt.items():
+                text = ' '.join(text)
+                el = r[prev]
+                if _ws > prev:
+                    el.text += ' '+text
+                else: # _ws == prev
+                    el.tail = el.tail and el.tail+' '+text or text
 
-        while plntxt:
-            _ws, text = plntxt.popleft()
-            j = -1
-            while j:
-                if _ws > r[j][0]:
-                    r[j][1].text += ' '+text
-                    break
-                elif _ws == r[j][0]:
-                    if r[j][1].tail is None: # faster than init'ing tail on element creation everytime
-                        r[j][1].tail = text
-                    else:
-                        r[j][1].tail += ' '+text
-                    break
-                j -= 1
-
+            plntxt = {}
+        ###
+        # continue 27.03ms
         # determine tag attributes
         u, attr = parse_attr(l)
+        # continue 34.01ms
         u = split_space(u)
-
-        _tag, _id, _class = parse_tag(u[0])
+        # continue 36.84ms
+        _tag, _id, _class = parse_tag2(u[0])
+        # continue 49.54ms
         #
         if ws > prev:
-            e_root = r[-1][1]
+            e_root = r[prev]
         if ws == prev:
-            e_root = r[-1][1].getparent()
+            e_root = r[prev].getparent()
         if ws < prev:
-            j = -1
-            while j:
-                if r[j][0] == ws:
-                    e_root = r[j][1].getparent()
-                    break
-                j -= 1
-        prev = ws
+            e_root = r[ws].getparent()
 
+            for _ws in r.keys():
+                if _ws > ws:
+                    r.pop(_ws)
+        # continue 68.10ms
         e = SubElement(e_root, _tag or 'div')
+        # continue 102.65ms
         e.text = u[1][1:]
-
+        # continue 120.50ms
         if _id:
             e.attrib['id'] = _id
 
@@ -70,9 +65,11 @@ def _doc_parse(f):
             for x in attr[1:-1].split(','):
                 k, tmp, v = x.partition('=')
                 e.attrib[k.strip()] = v.strip()
-
-        r.append((ws, e))
-    return r[0][1]
+        # continue 123.57ms
+        r[ws] = e
+        prev = ws
+        # continue 132.72ms
+    return r['']
 
 
 if __name__ == '__main__':

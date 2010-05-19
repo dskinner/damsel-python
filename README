@@ -28,36 +28,10 @@ do feel free to play around with it :)
 Speed Tests
 ===========
 
-I used the speed test mentioned on Mako's website which is a benchmark found
-in the Genshi repository. These are the current results as of Mon, 17 May and I
-am listing this to show that DAML is quite fast for all that it's doing. (basic.py)
-
-| Mako: 0.37 ms
-| Daml: 0.41 ms
-| Cheetah: 0.63 ms
-| Genshi_text: 1.00 ms
-| Django: 2.28 ms
-| Genshi: 2.84 ms
-
-Mon, 18 May I ran the big_table.py benchmark on Daml and started digging into
-the details more. I found an error that caused the parsing to occur for only
-the first iteration and thus, erroneous results. I'll have to look more into
-this. For now, here are the current results.
-
-| Daml                                          147.21 ms
-| Mako Template                                  53.76 ms
-| Genshi tag builder                            483.61 ms
-| Genshi template                               289.81 ms
-| Genshi text template                          201.49 ms
-| Genshi template + tag builder                 526.75 ms
-| ElementTree                                   276.59 ms
-| cElementTree                                  176.67 ms
-| Djange template                               565.92 ms
-
-It should be noted the actual output as of right now is errorneous due to
-a pre_parser bug and nesting for loops. The error is that td's are not attached
-to the tr parent, but rather the table. When this bug is fixed, it will not
-have an impact on the performance seen above.
+I've taken out the speed tests for now. I found an error with iterative speed
+tests and daml. I have fixed the error since but now I need to go through the
+code (specifically _py_parse which needs some love) and see what I can find
+to improve.
 
 Notes on Security
 =================
