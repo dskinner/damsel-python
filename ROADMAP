@@ -26,12 +26,4 @@ DAML 0.1 series
 DAML 0.2 series
 ---------------
 
-* Setup basic cherrypy Tool for getting cherrypy users easily started.
-* bug test the hell out of everything
-
-DAML 0.3 series
----------------
-
-* Work on django integration and implementing various features django provides
-  into DAML so that, if one chooses, they can use this instead of built-in
-  django templates, while not losing functionality.
+* Start work on web service to write and process daml templates.
