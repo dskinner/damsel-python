@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 from lxml.etree import Element, SubElement
 
+'''
+TODO stop assuming the first element of a document is an <html> element
+'''
 
 def _doc_parse(f):
     r = {'': Element('html')}
