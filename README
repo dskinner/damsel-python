@@ -1,6 +1,26 @@
 This project is a work in progress. Refer to test/templates/ for available syntax.
 Follow development at http://github.com/dasacc22/DAML
 
+Building
+========
+
+daml depends on lxml so install as per your distribution, for example
+
+#> sudo aptitude install python-lxml
+or
+#> sudo easy_install lxml
+
+After satisfying lxml dependancy, build and install globally with the following
+
+#> sudo python setup.py install
+
+or if you wish to not install globally, you can build the C extensions in place
+and use from directory
+
+#> python setup.py build_ext -i
+
+Running
+=======
 To run unit tests:
 
 .. sourcecode:: bash
