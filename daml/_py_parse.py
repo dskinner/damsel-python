@@ -16,11 +16,23 @@ def include(f):
     return f
 
 class Block(list):
+    '''
+    block() calls may appear multiple times in a daml document refering to the
+    same name such as "header". This is part of extending a regular document
+    and so when iterating over block calls, _py_parse may access "header"
+    multiple times to insert result into document later intended for
+    _doc_parse.
+    
+    Thus the self._used value is intended to keep up with if the result
+    has been attached to the document, where the first instance of "header"
+    describes where the content should be located, and the last instance
+    of "header" describes what the content should be.
+    '''
     def __init__(self, name, value):
         self._name = name
         self._value = value
         self._used = False
-
+        
     def __iter__(self):
         b = sandbox['__blocks__'][self._name]
         if b._used is False:
@@ -235,6 +247,16 @@ def _py_parse(f, precompile=True):
         if k in sandbox:
             r = sandbox[k]
 
+            if isinstance(r, Block):
+                #print '\n!!!!!!!R!!!!!!!'
+                r = [x for x in r]
+                #print r
+                #print '\n@@@@@@@S@@@@@@@'
+                #for x in sandbox['__blocks__']:
+                #    print [y for y in x]
+                if len(r) is 0:
+                    continue
+            
             if isinstance(r, list):
                 if isinstance(r[0], list):
                     r = [a for b in r for a in b]
