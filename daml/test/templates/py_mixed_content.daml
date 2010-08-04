@@ -1,10 +1,11 @@
 :subs = ['www', 'js', 'gitview', 'vizi', 'music']
 
-.portal
-    %ul
-        :for x in subs:
-            %li
-                %a(href=http://{x}.dasa.cc) {x}
+%html
+    .portal
+        %ul
+            :for x in subs:
+                %li
+                    %a(href=http://{x}.dasa.cc) {x}
 
-    :if 't' == 't':
-        %p HELLO
+        :if 't' == 't':
+            %p HELLO

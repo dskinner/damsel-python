@@ -3,6 +3,10 @@
 
 from lxml import etree
 
+'''
+TODO stop assuming the first element of a document is an <html> element
+'''
+
 def _build(parsed):
     """
     As tags indent, it is easy to identify the parent. It is simply the last
