@@ -12,7 +12,8 @@ class TestPy(unittest.TestCase):
             'py_block_default': None,
             'py_extends': None,
             'py_mixed_content': None,
-            'py_embed': None}
+            'py_embed': None,
+            'py_ifelse': None}
 
         for k, v in self.t.items():
             # template file
@@ -48,6 +49,11 @@ class TestPy(unittest.TestCase):
 
     def test_py_embed(self):
         parsed, expected = self.t['py_embed']
+        parsed = parse(parsed)
+        self.assertEqual(parsed.strip(), expected.strip())
+
+    def test_py_ifelse(self):
+        parsed, expected = self.t['py_ifelse']
         parsed = parse(parsed)
         self.assertEqual(parsed.strip(), expected.strip())
 

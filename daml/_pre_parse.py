@@ -53,7 +53,7 @@ def _pre_parse(f):
 
         # handle mixed content
         if mc is not None:
-            if ws <= mc[0]:
+            if ws <= mc[0] and l[0:5] != ':else': #TODO get 'else' check out of here possibly?
                 mc[1].append('globals()[{__i__}]=list(__mixed_content__)') # __i__ is formatted during _py_parse
                 mc[1] = '\n'.join(mc[1]) # prep for py_parse
                 f[f.index(mc)] = mc[0]+mc[1]

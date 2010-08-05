@@ -248,17 +248,12 @@ def _py_parse(f, precompile=True):
             r = sandbox[k]
 
             if isinstance(r, Block):
-                #print '\n!!!!!!!R!!!!!!!'
                 r = [x for x in r]
-                #print r
-                #print '\n@@@@@@@S@@@@@@@'
-                #for x in sandbox['__blocks__']:
-                #    print [y for y in x]
                 if len(r) is 0:
                     continue
             
             if isinstance(r, list):
-                if isinstance(r[0], list):
+                if len(r) is not 0 and isinstance(r[0], list):
                     r = [a for b in r for a in b]
                 tmp = f.pop(i+offset).rstrip()
                 ws = tmp[:-len(tmp.lstrip())]
