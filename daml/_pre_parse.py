@@ -53,16 +53,16 @@ def _pre_parse(f):
 
         # handle mixed content
         if mc is not None:
-            if ws <= mc[0] and l[0:5] != ':else': #TODO get 'else' check out of here possibly?
+            if ws <= mc[0] and l[0:4] != 'else': #TODO get 'else' check out of here possibly?
                 mc[1].append('globals()[{__i__}]=list(__mixed_content__)') # __i__ is formatted during _py_parse
                 mc[1] = '\n'.join(mc[1]) # prep for py_parse
                 f[f.index(mc)] = mc[0]+mc[1]
                 mc = None
             else:
-                if l[0] == ':':
+                if l[0] not in ['#', '.', '%']:
                     mc_ws = None
                     ws = ws[:-len(mc[0])]
-                    l = l[1:]
+                    #l = l[1:]
                     # is this a list comprehension?
                     if l[0] == '[' and l[-1] == ']':
                         l = '__mixed_content__.extend({0})'.format(l)
@@ -82,10 +82,11 @@ def _pre_parse(f):
                 continue
 
         # inspect for mixed content or multiline function
-        if l[0] == ':':
+        #if l[0] == ':':
+        if l[0] not in ['#', '.', '%']:
             if l[-1] == ':' and l[:4] != ':def': # mixed content
                 f.pop(i+offset)
-                f.insert(i+offset, [ws, [':__mixed_content__ = []', l[1:]]])
+                f.insert(i+offset, [ws, [':__mixed_content__ = []', l]])
                 mc = f[i+offset]
                 continue
             elif '(' not in l and '=' not in l: # multiline function

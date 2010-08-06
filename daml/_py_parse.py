@@ -7,7 +7,6 @@ import _sandbox
 from _sandbox import _open
 from _cdoc import parse_ws, sub_str
 from time import time
-from mako import pyparser
 
 def include(f):
     f = _open(f).readlines()
@@ -206,7 +205,7 @@ def _py_parse(f, precompile=True):
 
     for i, line in enumerate(f):
         ws, l = parse_ws(line)
-
+        print 'checking', l
         if l[0] == ':':
             l = parse_cmd(l, _id, i)
             queue.append((i, l))
@@ -225,6 +224,9 @@ def _py_parse(f, precompile=True):
 
 
     py_str = '\n'.join([x[1] for x in queue])
+    print '!!!'
+    print py_str
+    print '@@@'
     if py_str == '':
         return f
 

@@ -1,0 +1,17 @@
+l = ['a', 'b', 'c', 'd']
+
+%html
+    %body
+        %h1 Hello World
+        %ul
+
+            for x in l:
+                %li Always appears
+                if x is not 1:
+                    %li {x}
+
+        %p This is some text \
+            that keeps on going \
+            and going and going and \
+            going
+        %span
