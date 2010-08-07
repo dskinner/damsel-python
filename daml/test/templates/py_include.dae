@@ -1,12 +1,12 @@
-:title = 'Hello World!'
+title = 'Hello World!'
 
 %html
     %head
         %title {title}
     %body
-        :include('header.daml')
+        include('header.dae')
 
         #content
             %p Site content here...
 
-        :include('footer.daml')
+        include('footer.dae')

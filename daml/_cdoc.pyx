@@ -14,7 +14,11 @@ def parse_ws(unicode s):
     return u'', s.rstrip()
 
 def sub_str(unicode a, unicode b):
-    return a[:-len(b)]
+    cdef Py_ssize_t i
+    i = len(b)
+    if i == 0:
+        return a
+    return a[:-i]
 
 def _doc_parse(f):
     cdef unicode ws, _ws, l, attr, _tag, _id, _class

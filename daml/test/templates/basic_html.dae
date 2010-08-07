@@ -1,0 +1,10 @@
+test = 'this <strong> rocks'
+
+%html
+    %body
+        %h1 Test HTML inserted into document and from variables
+        %p {test}        
+        %p this should <em>pass</em> through \
+            as straight <strong>html</strong> with no \
+            escaping
+        %p {test:safe}

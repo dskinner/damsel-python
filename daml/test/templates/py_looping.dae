@@ -1,0 +1,17 @@
+%html
+    %body
+        items = ['a', 'b', 'c', 'd']
+
+        is_last = lambda i: len(items) is i+1 and '(class=last)' or ''
+
+        %h2 Loop Method 1 (not really a loop.. python builtin map)
+
+        li = lambda x: '%li {0}'.format(x)
+        %ul
+            map(li, items)
+
+        %h2 Loop Method 2 (python list comprehension)
+        %ul
+            ['%li{0} {1}'.format(is_last(i), x) for i, x in enumerate(items)]
+
+        #footer

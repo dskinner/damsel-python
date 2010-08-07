@@ -1,0 +1,11 @@
+%body
+    if True:
+        %span hi
+        a = 'blue'
+        %span {blue}
+    %foot
+        if False:
+            %span booya
+            a = 'red'
+            %span {red}
+    %bottom

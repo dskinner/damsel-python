@@ -15,7 +15,7 @@ class TestBasic(unittest.TestCase):
 
         for k, v in self.t.items():
             # template file
-            a = codecs.open(os.path.join('', k+'.daml'), encoding='utf-8').readlines()
+            a = codecs.open(os.path.join('', k+'.dae'), encoding='utf-8').readlines()
             # expected output
             b = open(os.path.join('', k+'.html')).read()
             self.t[k] = (a, b)

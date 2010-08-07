@@ -39,13 +39,20 @@ class Block(list):
             return iter(sandbox['__blocks__'][self._name]._value)
         else:
             return iter(())
+    
+    def __repr__(self):
+        return `self._value`
 
 def block(s):
     s = s.splitlines()
+    n = s[0]
+    s = s[1:]
     s = _pre_parse(s)
     s = _py_parse(s)
-    b = Block(s[0], s[1:])
-    sandbox['__blocks__'][s[0]] = b
+    #b = Block(s[0], s[1:])
+    #sandbox['__blocks__'][s[0]] = b
+    b = Block(n, s)
+    sandbox['__blocks__'][n] = b
     return b
 
 ext = {'block': block, 'include': include}
@@ -205,7 +212,6 @@ def _py_parse(f, precompile=True):
 
     for i, line in enumerate(f):
         ws, l = parse_ws(line)
-        print 'checking', l
         if l[0] == ':':
             l = parse_cmd(l, _id, i)
             queue.append((i, l))
@@ -224,9 +230,6 @@ def _py_parse(f, precompile=True):
 
 
     py_str = '\n'.join([x[1] for x in queue])
-    print '!!!'
-    print py_str
-    print '@@@'
     if py_str == '':
         return f
 
@@ -242,6 +245,7 @@ def _py_parse(f, precompile=True):
         raise e
 
     offset = 0
+    
     while queue:
         i, l = queue.popleft()
         k = '__{0}_{1}__'.format(_id, i)
@@ -251,8 +255,6 @@ def _py_parse(f, precompile=True):
 
             if isinstance(r, Block):
                 r = [x for x in r]
-                if len(r) is 0:
-                    continue
             
             if isinstance(r, list):
                 if len(r) is not 0 and isinstance(r[0], list):
@@ -271,7 +273,6 @@ def _py_parse(f, precompile=True):
                 '''
             else:
                 tmp = f.pop(i+offset)
-
                 tmp2 = tmp.strip()
                 if tmp2[0] != '': #ugh
                     tmp3 = ':'+l.split('=')[1].strip() #really ugh
@@ -316,6 +317,6 @@ if __name__ == '__main__':
         f = _pre_parse(_f)
         f = _py_parse(f)
 
-        for x in f:
-            print `x`
+        for i, x in enumerate(f):
+            print i, `x`
 

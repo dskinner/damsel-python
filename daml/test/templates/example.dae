@@ -1,17 +1,35 @@
 l = ['a', 'b', 'c', 'd']
-
+a = 'HI'
 %html
     %body
-        %h1 Hello World
+        :block title
+            %h1 Hello World
+                %span we rule!
+
         %ul
 
             for x in l:
                 %li Always appears
-                if x is not 1:
+                if x is not 'c':
                     %li {x}
 
         %p This is some text \
-            that keeps on going \
+            that keeps on {a} going \
             and going and going and \
-            going
+            going till something
+            
+            if 'blue' is 'blue':
+                %span hi
+                t = 'blue'
+                %span INVADERS {t}
+                    %strong testing
+
+                if False:
+                    %span Im not here
+                else:
+                    %span but I am!
+
+            \here is the tail end \
+            of some more lame text yo
+
         %span

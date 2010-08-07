@@ -2,9 +2,9 @@
     %body
         .main
         
-            :if False:
+            if False:
                 #true
-            :else:
+            else:
                 #false
                 
         .footer

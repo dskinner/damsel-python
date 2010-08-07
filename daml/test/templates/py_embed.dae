@@ -1,4 +1,4 @@
-:greet = lambda x: 'Hello, {0}'.format(x)
+greet = lambda x: 'Hello, {0}'.format(x)
 
 %html
     %body

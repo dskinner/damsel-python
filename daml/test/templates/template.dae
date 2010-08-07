@@ -1,0 +1,19 @@
+%html
+    %head
+        %title {title}
+    %body
+        include('header.dae')
+
+        greet = lambda x: "%p Hello, {0}".format(x)
+        greet(user)
+        greet('me')
+        greet('world')
+
+        is_last = lambda x: (len(items) == x+1) and '(class=last)' or ''
+
+        %h2 Loop
+        %ul
+            for i, item in enumerate(items):
+                %li {item}
+
+        include('footer.daml')

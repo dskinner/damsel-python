@@ -1,0 +1,5 @@
+extends('example.dae')
+
+:block title
+    %h1 OVERRIDE
+

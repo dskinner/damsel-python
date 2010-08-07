@@ -1,8 +1,8 @@
-:extends('py_block_default.daml')
+extends('py_block_default.daml')
 
-:block header
+block header
     #header
         %h1 OVERRIDE
 
-        :if True:
+        if True:
             %span heres a tagline

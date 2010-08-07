@@ -1,6 +1,6 @@
-:item = 'Translucent Bulbs'
-:tag = 'this <div> rocks'
-:say = lambda x: 'Who says, {0}'.format(x)
+item = 'Translucent Bulbs'
+tag = 'this <div> rocks'
+say = lambda x: 'Who says, {0}'.format(x)
 
 %html
     %body

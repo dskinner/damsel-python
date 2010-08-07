@@ -4,36 +4,38 @@ from _sandbox import _open
 from _cdoc import parse_ws, sub_str
 
 def _pre_parse(f):
-    """
-    TODO normalization to the document to handle all kinds of fun whitespace
-    """
     f = f[:] # this fixes errors for benchmarks with multiple iterative runs
-
-    mf = None # multi-line func
-    mf_ws = None # first-childs indention
-
+    
+    offset = 0
+    mark_esc = None
+    
     mc = None # mixed content
     mc_ws = None # first plaintxt indention
-
-    offset = 0
+    
+    mf = None # multiline function
+    mf_ws = None
+    
     for i, line in enumerate(f[:]):
         ### this needs a better way
-        if i == 0 and line[:9] == ':extends(':
+        if i == 0 and line[:8] == 'extends(':
             _f = _open(line.split("'")[1]).readlines()
-            r = _pre_parse(_f)
             f.pop(0)
             offset -= 1
+            
+            r = _pre_parse(_f)
             for x in r:
                 offset += 1
                 f.insert(i+offset, x)
+            continue
         ###
-
+        
         ws, l = parse_ws(line)
+        
         if not l:
             f.pop(i+offset)
             offset -= 1
             continue
-
+        
         # handle multiline function
         if mf is not None:
             if ws <= mf[0]:
@@ -50,52 +52,70 @@ def _pre_parse(f):
                 f.pop(i+offset)
                 offset -= 1
                 continue
-
-        # handle mixed content
+        
+        #handle mixed content
         if mc is not None:
-            if ws <= mc[0] and l[0:4] != 'else': #TODO get 'else' check out of here possibly?
+            if ws <= mc[0] and l[0:4] != 'else':
                 mc[1].append('globals()[{__i__}]=list(__mixed_content__)') # __i__ is formatted during _py_parse
-                mc[1] = '\n'.join(mc[1]) # prep for py_parse
-                f[f.index(mc)] = mc[0]+mc[1]
+                mc[1] = '\n'.join(mc[1]) # build string to prep for py_parse
+                f[f.index(mc)] = mc[0]+mc[1] # tack in original ws
                 mc = None
+                mc_ws = None # do not remove!
             else:
-                if l[0] not in ['#', '.', '%']:
+                if l[0] not in ['#', '.', '%']: # more python in other-words
                     mc_ws = None
-                    ws = ws[:-len(mc[0])]
-                    #l = l[1:]
+                    ws = sub_str(ws, mc[0])
                     # is this a list comprehension?
                     if l[0] == '[' and l[-1] == ']':
                         l = '__mixed_content__.extend({0})'.format(l)
                 else:
                     mc_ws = mc_ws or ws
-                    #_ws = ws[:-len(mc_ws)]
                     _ws = sub_str(ws, mc_ws)
-                    #ws = mc_ws[:-len(mc[0])]
                     ws = sub_str(mc_ws, mc[0])
                     # TODO account for mixed-indention with mixed-plaintxt
                     l = '__mixed_content__.append(fmt.format("""{0}{1}"""))'.format(_ws, l)
-
 
                 mc[1].append(ws+l)
                 f.pop(i+offset)
                 offset -= 1
                 continue
-
-        # inspect for mixed content or multiline function
-        #if l[0] == ':':
-        if l[0] not in ['#', '.', '%']:
-            if l[-1] == ':' and l[:4] != ':def': # mixed content
-                f.pop(i+offset)
-                f.insert(i+offset, [ws, [':__mixed_content__ = []', l]])
-                mc = f[i+offset]
-                continue
-            elif '(' not in l and '=' not in l: # multiline function
-                l = l.replace(' ', "(u'''", 1)
-                f.pop(i+offset)
-                f.insert(i+offset, [ws, [l]])
-                mf = f[i+offset]
-                continue
-
+        
+        if mark_esc is not None:
+            f[mark_esc] += l.replace('\\', '')
+            f.pop(i+offset)
+            offset -= 1
+            
+            if l[-1] != '\\':
+                mark_esc = None
+            continue
+        
+        if l[0] not in [':', '%', '#', '.', '\\']:
+            f.pop(i+offset)
+            f.insert(i+offset, ws+':'+l)
+            #continue
+        
+        # inspect for mixed content
+        if l[-1] == ':':
+            f.pop(i+offset)
+            # replace line with list where [0] is orig ws and [1] is string list to be built
+            f.insert(i+offset, [ws, [':__mixed_content__ = []', l]])
+            mc = f[i+offset]
+            continue
+        
+        # inspect for multiline function
+        if l[0] == ':':
+            l = l.replace(' ', "(u'''", 1)
+            f.pop(i+offset)
+            f.insert(i+offset, [ws, [l]])
+            mf = f[i+offset]
+            continue
+        
+        if l[-1] == '\\':
+            mark_esc = i+offset
+            f[mark_esc] = f[mark_esc].replace('\\', '')
+        else:
+            mark_esc = None
+        
     # handle multiline function at document end
     if mf is not None:
         mf[1].append("''')")

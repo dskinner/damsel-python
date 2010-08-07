@@ -1,0 +1,13 @@
+%html
+    %head
+        %title Nested For-Loops
+
+    %body
+        table = [dict(a=1, b=2, c=3, d=4) for x in range(4)]
+
+        %h1 Nested For-Loops
+
+        %table
+            for row in table:
+                %tr
+                [' %td {0}'.format(x) for x in row.values()]
