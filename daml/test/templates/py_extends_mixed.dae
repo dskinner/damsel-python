@@ -1,8 +1,0 @@
-extends('py_block_default.daml')
-
-block header
-    #header
-        %h1 OVERRIDE
-
-        if True:
-            %span heres a tagline

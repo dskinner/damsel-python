@@ -32,4 +32,5 @@ a = 'HI'
             \here is the tail end \
             of some more lame text yo
 
-        %span
+        %span[key=val1][key2=val2]
+

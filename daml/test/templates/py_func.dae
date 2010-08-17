@@ -1,0 +1,8 @@
+def test(a):
+    return 'this is {0}'.format(a)
+
+
+%html
+    %body
+        test('hello_world')
+        %span

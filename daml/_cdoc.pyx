@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 cdef object Element, SubElement
 from lxml.etree import Element, SubElement
-from _cext cimport parse_ws2, parse_attr, split_space, split_pound, split_period, parse_tag, parse_tag2, parse_tag, not_directive
+from _cext cimport parse_ws2, parse_attr, split_space, split_pound, split_period, parse_tag, parse_tag2, parse_tag, not_directive, parse_attr2
 
 
 def parse_ws(unicode s):
@@ -21,7 +21,7 @@ def sub_str(unicode a, unicode b):
     return a[:-i]
 
 def _doc_parse(f):
-    cdef unicode ws, _ws, l, attr, _tag, _id, _class
+    cdef unicode ws, _ws, l, _tag, _id, _class
     cdef object e, e_root
 
     r = {u'': Element(u'html')}
@@ -53,13 +53,14 @@ def _doc_parse(f):
         ###
 
 
-        u, attr = parse_attr(l)
-
+        #u, attr = parse_attr(l)
+        u, attr = parse_attr2(l)
+        
         u = split_space(u)
 
         _tag, _id, _class = parse_tag(u[0])
 
-        #
+        # 
         if ws > prev:
             e_root = r[prev]
         if ws == prev:
@@ -80,11 +81,14 @@ def _doc_parse(f):
 
         if _class:
             e.attrib[u'class'] = _class
-
+        '''
         if attr:
             for x in attr[1:-1].split(u','):
                 k, tmp, v = x.partition(u'=')
                 e.attrib[k.strip()] = v.strip()
+        '''
+        if attr is not None:
+            e.attrib.update(attr)
         # continue 123.57ms
         r[ws] = e
         prev = ws

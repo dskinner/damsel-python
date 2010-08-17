@@ -2,7 +2,7 @@
     %body
         items = ['a', 'b', 'c', 'd']
 
-        is_last = lambda i: len(items) is i+1 and '(class=last)' or ''
+        is_last = lambda i: len(items) is i+1 and '[class=last]' or ''
 
         %h2 Loop Method 1 (not really a loop.. python builtin map)
 

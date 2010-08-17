@@ -8,10 +8,10 @@ from _sandbox import _open
 from _cdoc import parse_ws, sub_str
 from time import time
 
-def include(f):
-    f = _open(f).readlines()
+def include(_f):
+    f = _open(_f).readlines()
     f = _pre_parse(f)
-    f = _py_parse(f)
+    f = _py_parse(f, _f)
     return f
 
 class Block(list):
@@ -56,7 +56,7 @@ def block(s):
     return b
 
 ext = {'block': block, 'include': include}
-
+ 
 sandbox = {}
 
 DECLARATION = 0
@@ -93,120 +93,7 @@ def parse_inline(s):
     c = s.index(')')+1
     return s[a+1:c]
 
-class PyParse(object):
-    def __init__(self, doc):
-        self.doc = doc
-        self._id = id(self.doc)
-
-        self.sandbox = _sandbox.new()
-        self.sandbox.update(ext)
-        self.sandbox['include'] = self.include
-
-        self.queue = deque()
-
-        self.precompile()
-        self._eval()
-        self.update_doc()
-
-    def include(self, f):
-        f = _open(f).readlines()
-        f = _pre_parse(f)
-        f = PyParse(f)
-        return f.doc
-
-    def parse_cmd(self, i, s):
-        _type = OTHER
-        a = s.find('(')
-        b = s.find('=')
-        if b != -1 and (b < a or a == -1):
-            s = s[1:]
-            _type = DECLARATION
-        else:
-            s = 'globals()["__{0}_{1}__"] = {2}'.format(self._id, i, s[1:])
-
-        if '{__i__}' in s:
-            _type = OTHER
-            s = s.replace('{__i__}', '"__{0}_{1}__"'.format(self._id, i), 1)
-
-        return (i, u' '+s.replace('\n', '\n '), _type)
-
-    def precompile(self):
-        for i, line in enumerate(self.doc):
-            ws, l = parse_ws(line)
-
-            if l[0] == ':':
-                parsed = self.parse_cmd(i, l)
-                self.queue.append((-1, u'try:', OTHER))
-                self.queue.append(parsed)
-                self.queue.append((-1, u'except: pass', OTHER))
-                continue
-
-            if '{' in l:
-                self.queue.append((-1, u'try:', OTHER))
-                self.queue.append((i, u' '+u'globals()["__{0}_{1}__"] = fmt.format("""{2}""")'.format(self._id, i, l.replace('\n', '\n ')), OTHER))
-                self.queue.append((-1, u'except: pass', OTHER))
-                continue
-
-            # look to see if :func() is embedded in line
-            _inline = parse_inline(l)
-            if _inline is None:
-                continue
-            else:
-                self.queue.append((-1, 'try:', OTHER))
-                self.queue.append((i, ' '+u'globals()["__{0}_{1}__"] = {2}'.format(self._id, i, _inline), OTHER))
-                self.queue.append((-1, 'except: pass', OTHER))
-
-    def _eval(self):
-        py_str = '\n'.join([x[1] for x in self.queue])
-        eval(compile('fmt.namespace=globals()\n'+py_str, '<string>', 'exec'), self.sandbox)
-
-    def update_doc(self):
-        offset = 0
-        while self.queue:
-            i, l, _type = self.queue.popleft()
-            if _type == DECLARATION:
-                self.doc.pop(i+offset)
-                offset -= 1
-                continue
-            k = '__{0}_{1}__'.format(self._id, i)
-
-            if k in self.sandbox:
-                r = self.sandbox[k]
-
-                if isinstance(r, list):
-                    if isinstance(r[0], list):
-                        r = [a for b in r for a in b]
-                    tmp = self.doc.pop(i+offset).rstrip()
-                    ws = tmp[:-len(tmp.lstrip())]
-                    #ws, tmp = parse_ws(f.pop(i+offset))
-                    r = [ws+x for x in r]
-                    self.doc = self.doc[:i+offset] + r + self.doc[i+offset:]
-                    offset += len(r)-1
-                    '''
-                    for x in r:
-                        f.insert(i+offset, ws+x)
-                        offset += 1
-                    offset -= 1
-                    '''
-                else:
-                    tmp = self.doc.pop(i+offset)
-
-                    tmp2 = tmp.strip()
-                    if tmp2[0] != '': #ugh
-                        tmp3 = ':'+l.split('=')[1].strip() #really ugh
-                        if tmp3[:4] != ':fmt': # oh geez
-                            r = tmp2.replace(tmp3, r)
-
-                    ws = tmp[:-len(tmp.lstrip())]
-                    self.doc.insert(i+offset, ws+r)
-            elif i != -1:
-                #self.doc.pop(i+offset)
-                #offset -= 1
-                pass
-
-
-
-def _py_parse(f, precompile=True):
+def _py_parse(f, file_name='<string>'):
     queue = deque()
     _id = id(f)
 
@@ -234,7 +121,7 @@ def _py_parse(f, precompile=True):
         return f
 
     try:
-        cc = compile('fmt.namespace=globals()\n'+py_str, '<string>', 'exec')
+        cc = compile('fmt.namespace=globals()\n'+py_str, file_name, 'exec')
         eval(cc, sandbox)
     except Exception as e:
         print '=================='

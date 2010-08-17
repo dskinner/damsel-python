@@ -8,16 +8,19 @@ from _build import _build
 import _sandbox
 from lxml import etree
 from time import time
+import codecs
 
 def _post(s):
     return '<!DOCTYPE html>'+s.replace('&gt;', '>').replace('&lt;', '<').replace('&amp;', '&')
 
-def parse(f, context={}):
+def parse(_f, context={}):
+    #f = codecs.open(_f, 'r', encoding='utf-8').read().splitlines()
+    f = _sandbox._open(_f).read().splitlines()
     _py_parse.sandbox = _sandbox.new()
     _py_parse.sandbox.update(_py_parse.ext)
     _py_parse.sandbox.update(context)
     f = _pre_parse(f)
-    f = _py_parse._py_parse(f)
+    f = _py_parse._py_parse(f, _f)
     f = _doc_parse(f)
     #f = _build(f)
 
@@ -46,8 +49,19 @@ class Template(object):
 if __name__ == '__main__':
     import sys
     import codecs
-    f = sys.argv[1]
+    from time import time
+    _f = sys.argv[1]
     t = sys.argv[2]
 
-    f = codecs.open(f, 'r', encoding='utf-8').read().splitlines()
-    print parse(f)
+    f = codecs.open(_f, 'r', encoding='utf-8').read().splitlines()
+    if t is 'y':
+        times=[]
+        for x in range(100):
+            a = time()
+            r = parse(f)
+            times.append(time()-a)
+        print min(times)
+    else:
+        print parse(f)
+
+
