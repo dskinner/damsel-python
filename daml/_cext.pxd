@@ -136,7 +136,7 @@ cdef inline tuple parse_tag(unicode s):
     r = [split_period(x) for x in split_pound(s)]
     return r[0][0][1:], r[1][0][1:], (r[0][1]+r[1][1]).replace(u'.', u' ')[1:]
 
-cdef inline bool not_directive(unicode c):
+cdef inline bint not_directive(unicode c):
     cdef Py_UNICODE x = u'%'
     cdef Py_UNICODE y = u'#'
     cdef Py_UNICODE z = u'.'

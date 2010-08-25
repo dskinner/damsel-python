@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 cdef object Element, SubElement
 from lxml.etree import Element, SubElement
 from _cext cimport parse_ws2, parse_attr, split_space, split_pound, split_period, parse_tag, parse_tag2, parse_tag, not_directive, parse_attr2
