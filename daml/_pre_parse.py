@@ -62,7 +62,7 @@ def _pre_parse(f):
                 mc = None
                 mc_ws = None # do not remove!
             else:
-                if l[0] not in ['#', '.', '%']: # more python in other-words
+                if l[0] not in ['<', '#', '.', '%']: # more python in other-words
                     mc_ws = None
                     ws = sub_str(ws, mc[0])
                     # is this a list comprehension?
@@ -89,7 +89,7 @@ def _pre_parse(f):
                 mark_esc = None
             continue
         
-        if l[0] not in [':', '%', '#', '.', '\\']:
+        if l[0] not in [':', '<', '%', '#', '.', '\\']:
             f.pop(i+offset)
             f.insert(i+offset, ws+':'+l)
             #continue
