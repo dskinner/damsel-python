@@ -55,13 +55,19 @@ def block(s):
     sandbox['__blocks__'][n] = b
     return b
 
-def script(s):
+def js(s):
     s = s.splitlines()
     n = s[0]
     s = s[1:]
     return ['%script[src={0}{1}]'.format(n, x) for x in s]
 
-ext = {'block': block, 'include': include, 'script': script}
+def css(s):
+    s = s.splitlines()
+    n = s[0]
+    s = s[1:]
+    return ['%link[rel=stylesheet][href={0}{1}]'.format(n, x) for x in s]
+
+ext = {'block': block, 'include': include, 'js': js, 'css': css}
 
 sandbox = {}
 
