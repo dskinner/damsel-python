@@ -36,6 +36,15 @@ def _pre_parse(f):
             offset -= 1
             continue
         
+        a = l.partition(' ')
+        if a[2] != '' and a[0][0] in ['%', '.', '#'] and (a[2][0] in ['%', '.', '#'] or a[2][-1] == ':'):
+            f.pop(i+offset)
+            f.insert(i+offset, ws+a[0])
+            offset += 1
+            ws += ' '
+            l = a[2]
+            f.insert(i+offset, ws+l)
+        
         # handle multiline function
         if mf is not None:
             if ws <= mf[0]:
@@ -97,7 +106,6 @@ def _pre_parse(f):
         if ':' in l:
             f.pop(i+offset)
             f.insert(i+offset, ws+l.replace(':', '\n '+ws))
-            print 'raargh!'
         
         # inspect for mixed content
         if l[-1] == ':':
