@@ -1,0 +1,10 @@
+%html
+    %body
+        #wrapper:#container
+            #top
+                %h2:%a[href=/] Hello World
+                %ul.company_info
+                    %li:%a[href=/] Home
+                    %li:%a[href=/contact] Contact
+                    %li:%a[href=/about] About Us
+                    %li %a[href=/more] More Info

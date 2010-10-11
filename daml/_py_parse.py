@@ -55,8 +55,14 @@ def block(s):
     sandbox['__blocks__'][n] = b
     return b
 
-ext = {'block': block, 'include': include}
- 
+def script(s):
+    s = s.splitlines()
+    n = s[0]
+    s = s[1:]
+    return ['%script[src={0}{1}]'.format(n, x) for x in s]
+
+ext = {'block': block, 'include': include, 'script': script}
+
 sandbox = {}
 
 DECLARATION = 0

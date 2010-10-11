@@ -15,7 +15,7 @@ class TestBasic(unittest.TestCase):
 
         for k, v in self.t.items():
             # template file
-            a = k+'.dae'
+            a = k+'.daml'
             # expected output
             b = open(os.path.join('', k+'.html')).read()
             self.t[k] = (a, b)

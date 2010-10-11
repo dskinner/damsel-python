@@ -94,6 +94,11 @@ def _pre_parse(f):
             f.insert(i+offset, ws+':'+l)
             #continue
         
+        if ':' in l:
+            f.pop(i+offset)
+            f.insert(i+offset, ws+l.replace(':', '\n '+ws))
+            print 'raargh!'
+        
         # inspect for mixed content
         if l[-1] == ':':
             f.pop(i+offset)
