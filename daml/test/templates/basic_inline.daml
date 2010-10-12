@@ -3,6 +3,7 @@ if True:
 
 %html
     %body
+        #filler #side1 #box1
         #wrapper #container
             #top
                 %h2 %a[href=/] Hello World

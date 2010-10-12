@@ -53,15 +53,15 @@ if __name__ == '__main__':
     _f = sys.argv[1]
     t = sys.argv[2]
 
-    f = codecs.open(_f, 'r', encoding='utf-8').read().splitlines()
+    #f = codecs.open(_f, 'r', encoding='utf-8').read().splitlines()
     if t is 'y':
         times=[]
         for x in range(100):
             a = time()
-            r = parse(f)
+            r = parse(_f)
             times.append(time()-a)
         print min(times)
     else:
-        print parse(f)
+        print parse(_f)
 
 
