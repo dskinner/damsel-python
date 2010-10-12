@@ -1,0 +1,11 @@
+$(function() {{
+    bar = 'asdf'
+    
+    var x = "{bar}";
+    for (x in l) {{
+        console.log(x);
+    }}
+    var Class = function() {{
+        this.x = 'A';
+    }}
+}});

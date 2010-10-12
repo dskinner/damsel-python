@@ -4,9 +4,9 @@ title = 'Hello World!'
     %head
         %title {title}
     %body
-        include('header.dae')
+        include('header.daml')
 
         #content
             %p Site content here...
 
-        include('footer.dae')
+        include('footer.daml')

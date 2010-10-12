@@ -1,4 +1,4 @@
-extends('py_block_default.dae')
+extends('py_block_default.daml')
 
 :block header
     #header

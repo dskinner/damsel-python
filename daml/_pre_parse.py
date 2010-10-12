@@ -3,7 +3,7 @@
 from _sandbox import _open
 from _cdoc import parse_ws, sub_str
 
-def _pre_parse(f):
+def _pre_parse(f, implicit=True):
     f = f[:] # this fixes errors for benchmarks with multiple iterative runs
     
     offset = 0
@@ -38,7 +38,7 @@ def _pre_parse(f):
         
         while True:
             a = l.partition(' ')
-            if a[2] != '' and a[0][0] in ['%', '.', '#'] and (a[2][0] in ['%', '.', '#'] or a[2][-1] == ':'):
+            if a[2] != '' and a[0][0] in ['%', '.', '#', ':'] and (a[2][0] in ['%', '.', '#', ':'] or a[2][-1] == ':'):
                 f.pop(i+offset)
                 f.insert(i+offset, ws+a[0])
                 offset += 1
@@ -101,7 +101,7 @@ def _pre_parse(f):
                 mark_esc = None
             continue
         
-        if l[0] not in [':', '<', '%', '#', '.', '\\']:
+        if implicit and l[0] not in [':', '<', '%', '#', '.', '{', '\\']:
             f.pop(i+offset)
             f.insert(i+offset, ws+':'+l)
             #continue
