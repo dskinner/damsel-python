@@ -4,7 +4,7 @@ Follow development at http://github.com/dasacc22/DAML
 Building
 ========
 
-daml depends on lxml so install as per your distribution, for example
+daml depends on Cython >= 0.13 and lxml so install as per your distribution, for example
 
 #> sudo aptitude install python-lxml
 or
