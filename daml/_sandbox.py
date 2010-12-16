@@ -27,8 +27,10 @@ default_sandbox = { '__builtins__': None,
                     '__blocks__': {},
                     'dict': __builtin__.dict,
                     'enumerate': __builtin__.enumerate,
+                    'float': __builtin__.float,
                     'fmt': DamlFormatter(),
                     'globals': __builtin__.globals,
+                    'int': __builtin__.int,
                     'len': __builtin__.len,
                     'list': __builtin__.list,
                     'locals': __builtin__.locals,
@@ -36,7 +38,8 @@ default_sandbox = { '__builtins__': None,
                     'max': __builtin__.max,
                     'min': __builtin__.min,
                     'open': _open,
-                    'range': __builtin__.range}
+                    'range': __builtin__.range,
+                    'str': __builtin__.str}
 
 # Python3
 if hasattr(__builtin__, 'False'):

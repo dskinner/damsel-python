@@ -176,7 +176,10 @@ def _py_parse(f, file_name='<string>'):
                 if tmp2[0] != '': #ugh
                     tmp3 = ':'+l.split('=')[1].strip() #really ugh
                     if tmp3[:4] != ':fmt': # oh geez
-                        r = tmp2.replace(tmp3, r)
+                        try: # oy!!!
+                            r = tmp2.replace(tmp3, r)
+                        except:
+                            r = tmp2.replace(tmp3, `r`)
 
                 ws = tmp[:-len(tmp.lstrip())]
                 f.insert(i+offset, ws+r)
