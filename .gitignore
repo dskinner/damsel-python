@@ -1,6 +1,8 @@
 daml/bench/*
 *.pyc
 *.pyo
+*.pyd
+*.pxd
 *.so
 *.c
 MANIFEST

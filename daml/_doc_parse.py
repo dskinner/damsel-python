@@ -77,12 +77,16 @@ def _doc_parse(f):
 
 if __name__ == '__main__':
     from _pre_parse import _pre_parse
-    from _py_parse import _py_parse
+    from _py_parse import _py_parse, ext
+    import _sandbox
     import sys
     from time import time
-
+    import codecs
+    
+    _py_parse.sandbox = _sandbox.new()
+    _py_parse.sandbox.update(ext)
     _f = sys.argv[1]
-    _f = open(_f).readlines()
+    _f = codecs.open(_f, encoding='utf-8').readlines()
     t = sys.argv[2]
 
     if t == 'y':

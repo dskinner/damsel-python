@@ -14,7 +14,6 @@ def _post(s):
     return '<!DOCTYPE html>'+s.replace('&gt;', '>').replace('&lt;', '<').replace('&amp;', '&')
 
 def parse(_f, context={}):
-    #f = codecs.open(_f, 'r', encoding='utf-8').read().splitlines()
     f = _sandbox._open(_f).read().splitlines()
     _py_parse.sandbox = _sandbox.new()
     _py_parse.sandbox.update(_py_parse.ext)
@@ -22,9 +21,37 @@ def parse(_f, context={}):
     f = _pre_parse(f)
     f = _py_parse._py_parse(f, _f)
     f = _doc_parse(f)
-    #f = _build(f)
 
     return _post(etree.tostring(f))
+
+def pprint(l):
+    for i, x in enumerate(l):
+        print i, `x`
+
+def parse_stop(i, _f, context={}):
+    f = _sandbox._open(_f).read().splitlines()
+    _py_parse.sandbox = _sandbox.new()
+    _py_parse.sandbox.update(_py_parse.ext)
+    _py_parse.sandbox.update(context)
+    f = _pre_parse(f)
+    if i == '0':
+        pprint(f)
+        print('_pre_parse')
+        return
+    f = _py_parse._py_parse(f, _f)
+    if i == '1':
+        pprint(f)
+        print('_py_parse')
+        return
+    f = _doc_parse(f)
+    if i == '2':
+        pprint(f)
+        print('_doc_parse')
+        return
+    #f = _build(f)
+
+    print _post(etree.tostring(f))
+    
 
 class Template(object):
     def __init__(self, f):
@@ -53,7 +80,6 @@ if __name__ == '__main__':
     _f = sys.argv[1]
     t = sys.argv[2]
 
-    #f = codecs.open(_f, 'r', encoding='utf-8').read().splitlines()
     if t is 'y':
         times=[]
         for x in range(100):
@@ -61,6 +87,9 @@ if __name__ == '__main__':
             r = parse(_f)
             times.append(time()-a)
         print min(times)
+    elif t in ['0', '1', '2']:
+        print parse_stop(t, _f)
+        print '!!!'
     else:
         print parse(_f)
 

@@ -53,7 +53,6 @@ def _doc_parse(f):
             plntxt = {}
         ###
 
-
         #u, attr = parse_attr(l)
         u, attr = parse_attr2(l)
         
