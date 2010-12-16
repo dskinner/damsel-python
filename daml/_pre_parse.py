@@ -36,9 +36,13 @@ def _pre_parse(f, implicit=True):
             offset -= 1
             continue
         
+        # this is what is suppose to handle splitting up lines for the
+        # following use-case
+        # %li %a[href=/] A Link
         while True:
-            a = l.partition(' ')
-            if a[2] != '' and a[0][0] in ['%', '.', '#', ':'] and (a[2][0] in ['%', '.', '#', ':'] or a[2][-1] == ':'):
+            a = l.partition(' ') # %span %div = ('%span', ' ', '%div')
+            if a[2] != '' and a[0][0] in ['%', '.', '#', ':'] and (a[2][0] in ['%', '.', '#', ':'] or (a[2][-1] == ':' and a[2][:2] in ['if', 'fo', 'wh'])):
+                print '@@@', a
                 f.pop(i+offset)
                 f.insert(i+offset, ws+a[0])
                 offset += 1
@@ -107,7 +111,8 @@ def _pre_parse(f, implicit=True):
             #continue
         
         # inspect for mixed content
-        if l[-1] == ':':
+        if l[-1] == ':' and l[0] not in ['%', '.', '#', ':']: # temp fix to stop issue 5 until rewrite
+            print '!!!', l
             f.pop(i+offset)
             # replace line with list where [0] is orig ws and [1] is string list to be built
             f.insert(i+offset, [ws, [':__mixed_content__ = []', l]])
