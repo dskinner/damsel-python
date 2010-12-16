@@ -93,4 +93,15 @@ def _doc_parse(f):
         r[ws] = e
         prev = ws
         # continue 132.72ms
+        
+    if plntxt:
+        for _ws, text in plntxt.items():
+            text = u' '.join(text)
+            el = r[prev]
+            if _ws > prev:
+                el.text += ' '+text
+            else: # _ws == prev
+                el.tail = el.tail and el.tail+' '+text or text
+
+        plntxt = {}
     return r[u'']
