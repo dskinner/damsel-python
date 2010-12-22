@@ -4,5 +4,4 @@ def test(a):
 
 %html
     %body
-        test('hello_world')
-        %span
+        %span From the void, :test('hello_world')

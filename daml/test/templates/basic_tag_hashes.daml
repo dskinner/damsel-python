@@ -1,0 +1,13 @@
+%html
+    %body
+        #header.top[cookies=yes]
+        %tag#id.class.class[more=less][some=little]
+        %tag.class#id.class[always=never][no=yes]
+        %tag.class.class#id
+        #id.class.class
+        #id
+        .class[who=what][where=when]
+        %h1.big#good[attr1=val1][attr2=val2]
+        %p.class1.class2#id1.class3
+        .class1#id2.class2[attr1=val1][attr2=val2]
+        #places[attr=val1][attr2=val2][attr3=val3]

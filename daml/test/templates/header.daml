@@ -1,2 +1,1 @@
-#header
-    %h1 {title}
+#header %h1 {title}
