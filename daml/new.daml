@@ -1,5 +1,0 @@
-class Test(object):
-    def greet():
-        return '%h1 Hello World'
-
-test = Test()

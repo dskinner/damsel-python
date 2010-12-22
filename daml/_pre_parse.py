@@ -3,6 +3,21 @@
 from _sandbox import _open
 from _cdoc import parse_ws, sub_str
 
+def parse_inline(s):
+    if ':' in s:
+        a = s.index(':')
+    else:
+        return None
+    if '(' in s:
+        b = s.index('(')
+    else:
+        return None
+    if ' ' in s[a:b] or a > b: # check a>b for attributes that have :
+        return None
+
+    c = s.index(')')+1
+    return s[a+1:c]
+
 def _pre_parse(f, implicit=True):
     f = f[:] # this fixes errors for benchmarks with multiple iterative runs
     
@@ -17,7 +32,7 @@ def _pre_parse(f, implicit=True):
     
     for i, line in enumerate(f[:]):
         ### this needs a better way
-        if i == 0 and line[:8] == 'extends(':
+        if line[:8] == 'extends(':
             _f = _open(line.split("'")[1]).readlines()
             f.pop(0)
             offset -= 1
@@ -39,10 +54,10 @@ def _pre_parse(f, implicit=True):
         # this is what is suppose to handle splitting up lines for the
         # following use-case
         # %li %a[href=/] A Link
+        # but it doesn't always work ...
         while True:
             a = l.partition(' ') # %span %div = ('%span', ' ', '%div')
             if a[2] != '' and a[0][0] in ['%', '.', '#', ':'] and (a[2][0] in ['%', '.', '#', ':'] or (a[2][-1] == ':' and a[2][:2] in ['if', 'fo', 'wh'])):
-                print '@@@', a
                 f.pop(i+offset)
                 f.insert(i+offset, ws+a[0])
                 offset += 1
@@ -88,8 +103,18 @@ def _pre_parse(f, implicit=True):
                     mc_ws = mc_ws or ws
                     _ws = sub_str(ws, mc_ws)
                     ws = sub_str(mc_ws, mc[0])
+                    #
+                    _inlines = []
+                    _inline = parse_inline(l)
+                    z = 0
+                    while _inline is not None:
+                        l = l.replace(':'+_inline, '{'+str(z)+'}')
+                        _inlines.append(_inline)
+                        _inline = parse_inline(l)
+                        z += 1
+                    #
                     # TODO account for mixed-indention with mixed-plaintxt
-                    l = '__mixed_content__.append(fmt.format("""{0}{1}"""))'.format(_ws, l)
+                    l = '__mixed_content__.append(fmt.format("""{0}{1}""",{2}))'.format(_ws, l, ','.join(_inlines))
 
                 mc[1].append(ws+l)
                 f.pop(i+offset)
@@ -112,7 +137,6 @@ def _pre_parse(f, implicit=True):
         
         # inspect for mixed content
         if l[-1] == ':' and l[0] not in ['%', '.', '#', ':']: # temp fix to stop issue 5 until rewrite
-            print '!!!', l
             f.pop(i+offset)
             # replace line with list where [0] is orig ws and [1] is string list to be built
             f.insert(i+offset, [ws, [':__mixed_content__ = []', l]])

@@ -1,19 +1,25 @@
+title = 'Test'
+user = 'Daniel'
+items = ['a', 'b', 'c', 'd', 'e']
+
 %html
     %head
         %title {title}
     %body
-        include('header.dae')
+        include('header.daml')
 
         greet = lambda x: "%p Hello, {0}".format(x)
         greet(user)
         greet('me')
         greet('world')
+        
+        juju = lambda x: "{0} has juju".format(x)
 
-        is_last = lambda x: (len(items) == x+1) and '(class=last)' or ''
+        is_last = lambda x: (len(items) == x+1) and '[class=last]' or ''
 
         %h2 Loop
         %ul
             for i, item in enumerate(items):
-                %li {item}
+                %li:is_last(i) {item} :juju('D') and more
 
         include('footer.daml')

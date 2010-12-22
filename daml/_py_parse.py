@@ -111,6 +111,8 @@ def _py_parse(f, file_name='<string>'):
 
     for i, line in enumerate(f):
         ws, l = parse_ws(line)
+        _inline = parse_inline(l)
+        
         if l[0] == ':':
             l = parse_cmd(l, _id, i)
             queue.append((i, l))
@@ -121,12 +123,11 @@ def _py_parse(f, file_name='<string>'):
             continue
 
         # look to see if :func() is embedded in line
-        _inline = parse_inline(l)
+        
         if _inline is None:
             continue
         else:
             queue.append((i, 'globals()["__{0}_{1}__"] = {2}'.format(_id, i, _inline)))
-
 
     py_str = '\n'.join([x[1] for x in queue])
     if py_str == '':
