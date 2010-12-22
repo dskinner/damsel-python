@@ -7,13 +7,18 @@ import codecs
 class TestPy(unittest.TestCase):
     def setUp(self):
         self.t = {
+            'py_block_default': None,
+            'py_embed': None,
+            'py_extends': None,
+            'py_formatter': None,
+            'py_func': None,
+            'py_ifelse': None,
             'py_include': None,
             'py_looping': None,
-            'py_block_default': None,
-            'py_extends': None,
             'py_mixed_content': None,
-            'py_embed': None,
-            'py_ifelse': None}
+            'py_nested_for': None,
+            'py_newline_var': None
+            }
 
         for k, v in self.t.items():
             # template file
@@ -21,6 +26,36 @@ class TestPy(unittest.TestCase):
             # expected output
             b = open(os.path.join('', k+'.html')).read()
             self.t[k] = (a, b)
+
+    def test_py_block_default(self):
+        parsed, expected = self.t['py_block_default']
+        parsed = parse(parsed)
+        self.assertEqual(parsed.strip(), expected.strip())
+
+    def test_py_embed(self):
+        parsed, expected = self.t['py_embed']
+        parsed = parse(parsed)
+        self.assertEqual(parsed.strip(), expected.strip())
+
+    def test_py_extends(self):
+        parsed, expected = self.t['py_extends']
+        parsed = parse(parsed)
+        self.assertEqual(parsed.strip(), expected.strip())
+
+    def test_py_formatter(self):
+        parsed, expected = self.t['py_formatter']
+        parsed = parse(parsed)
+        self.assertEqual(parsed.strip(), expected.strip())
+
+    def test_py_func(self):
+        parsed, expected = self.t['py_func']
+        parsed = parse(parsed)
+        self.assertEqual(parsed.strip(), expected.strip())
+
+    def test_py_ifelse(self):
+        parsed, expected = self.t['py_ifelse']
+        parsed = parse(parsed)
+        self.assertEqual(parsed.strip(), expected.strip())
 
     def test_py_include(self):
         parsed, expected = self.t['py_include']
@@ -32,29 +67,18 @@ class TestPy(unittest.TestCase):
         parsed = parse(parsed)
         self.assertEqual(parsed.strip(), expected.strip())
 
-    def test_py_block_default(self):
-        parsed, expected = self.t['py_block_default']
-        parsed = parse(parsed)
-        self.assertEqual(parsed.strip(), expected.strip())
-
-    def test_py_extends(self):
-        parsed, expected = self.t['py_extends']
-        parsed = parse(parsed)
-        self.assertEqual(parsed.strip(), expected.strip())
-
     def test_py_mixed_content(self):
         parsed, expected = self.t['py_mixed_content']
         parsed = parse(parsed)
         self.assertEqual(parsed.strip(), expected.strip())
 
-    def test_py_embed(self):
-        parsed, expected = self.t['py_embed']
+    def test_py_nested_for(self):
+        parsed, expected = self.t['py_nested_for']
         parsed = parse(parsed)
         self.assertEqual(parsed.strip(), expected.strip())
 
-    def test_py_ifelse(self):
-        parsed, expected = self.t['py_ifelse']
+    def test_py_newline_var(self):
+        parsed, expected = self.t['py_newline_var']
         parsed = parse(parsed)
         self.assertEqual(parsed.strip(), expected.strip())
-
 

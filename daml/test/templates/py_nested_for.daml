@@ -11,3 +11,8 @@
             for row in table:
                 %tr
                 [' %td {0}'.format(x) for x in row.values()]
+        
+        for x in range(5):
+            %p {x}
+                for y in range(3):
+                    %a {y}
