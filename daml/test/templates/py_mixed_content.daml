@@ -3,8 +3,7 @@ subs = ['www', 'js', 'gitview', 'vizi', 'music']
 %html
     .portal
         %ul for x in subs:
-            %li
-                %a[href=http://{x}.dasa.cc] {x}
+            %li %a[href=http://{x}.dasa.cc] {x}
 
         if 't' == 't':
             %p HELLO

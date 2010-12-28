@@ -9,3 +9,10 @@
         %div One
             %div Two
                 %div Three
+        
+        %ul for x in ['a', 'b', 'c']:
+            %li {x} :greet('me')
+            if True is True:
+                %li Who Ha!
+        
+        #blank

@@ -3,6 +3,62 @@
 from _sandbox import _open
 from _cdoc import parse_ws, sub_str
 
+directives = ['%', '#', '.']
+
+def split_space(s):
+    '''
+    temporarily from cext, quite silly how this (in cython) is faster than
+    split and partition
+    '''
+    for i, c in enumerate(s):
+        if c == u' ':
+            return s[:i], s[i+1:]
+    return s, u''
+
+def parse_attr(s):
+    '''
+    temporarily from cext
+    '''
+    mark_start = None
+    mark_end = None
+
+    key_start = None
+    val_start = None
+    literal_start = None
+
+    d = {}
+
+    for i, c in enumerate(s):
+        if key_start is not None:
+            if val_start is not None:
+                if i == val_start+1 and (c == u'"' or c == u"'"):
+                    literal_start = i
+                elif literal_start is not None and c == s[literal_start]:
+                    d[s[key_start+1:val_start]] = s[literal_start+1:i]
+                    key_start = None
+                    val_start = None
+                    literal_start = None
+                elif literal_start is None and c == u']':
+                    d[s[key_start+1:val_start]] = s[val_start+1:i]
+                    key_start = None
+                    val_start = None
+            elif c == u'=':
+                val_start = i
+        elif c == u'[':
+            key_start = i
+            if mark_start is None:
+                mark_start = i
+        elif c == u' ':
+            mark_end = i
+            break
+    
+    if mark_start is None:
+        return s, d
+    if mark_end is None:
+        return s[:mark_start], d
+    else:
+        return s[:mark_start]+s[mark_end:], d
+
 def parse_inline(s):
     if ':' in s:
         a = s.index(':')
@@ -51,19 +107,22 @@ def _pre_parse(f, implicit=True):
             offset -= 1
             continue
         
-        # this is what is suppose to handle splitting up lines for the
-        # following use-case
+        # handle use-cases:
         # %li %a[href=/] A Link
-        # but it doesn't always work ...
+        # %ul for x in l:
         while True:
-            a = l.partition(' ') # %span %div = ('%span', ' ', '%div')
-            if a[2] != '' and a[0][0] in ['%', '.', '#', ':'] and (a[2][0] in ['%', '.', '#', ':'] or (a[2][-1] == ':' and a[2][:2] in ['if', 'fo', 'wh'])):
-                f.pop(i+offset)
-                f.insert(i+offset, ws+a[0])
-                offset += 1
-                ws += ' '
-                l = a[2]
-                f.insert(i+offset, ws+l)
+            if l[0] in directives:
+                el, attr = parse_attr(l)
+                tag, txt = split_space(el)
+                if txt != u'' and (txt[0] in directives or txt[-1] == ':'): # TODO check for escaped colons
+                    f.pop(i+offset)
+                    f.insert(i+offset, ws+l.replace(txt, u''))
+                    offset += 1
+                    ws += u' '
+                    f.insert(i+offset, ws+txt)
+                    l = txt
+                else:
+                    break
             else:
                 break
         
@@ -191,6 +250,10 @@ if __name__ == '__main__':
             r = _pre_parse(_f)
             times.append(time()-a)
         print min(times)
+    elif t == '2':
+        r = _pre_parse2(_f)
+        for x in r:
+            print x
     else:
         r = _pre_parse(_f)
         for x in r:
