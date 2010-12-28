@@ -1,6 +1,18 @@
+heading = 'Basic HTML Test'
+
+if False is False:
+    tmp = None
+
+greet = lambda x: 'Hello, {0}'.format(x)
+
 %html
+    %head
+        :css /css/lib/
+            main.css
+            two.css
+            three.css
     %body
-        %h1 Basic HTML Test
+        %h1 {heading}
         %p %a Hello World
         
         %div %span
@@ -15,4 +27,15 @@
             if True is True:
                 %li Who Ha!
         
+        for x in range(4):
+            for y in range(2):
+                %p {x}, {y}
+                    %a My link
+            %p Woah
+        
+        if True is True:
+            %div Hello
+                %span World
+            
+            %div Test
         #blank

@@ -209,7 +209,9 @@ if __name__ == '__main__':
             sandbox.update(ext)
             _py_parse(_pre_parse(_f))
             times.append(time()-a)
-        print min(times)
+        for x in range(times.count(0.0)):
+            times.remove(0.0)
+        print min(times), times[0]
     elif t == 'pre':
         precomp = PyParse(_pre_parse(_f))
         for x in precomp.doc:
