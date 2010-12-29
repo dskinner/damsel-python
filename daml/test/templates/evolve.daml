@@ -12,10 +12,11 @@ greet = lambda x: 'Hello, {0}'.format(x)
             two.css
             three.css
     %body
-        :block content
-            #content My Block Stuff
-                #more and more!
         %h1 {heading}
+        
+        :block content
+            #content Hello Void! {heading}
+        
         %p %a Hello World
         
         %div %span
@@ -46,4 +47,4 @@ greet = lambda x: 'Hello, {0}'.format(x)
         #blank
 
 :block content
-    #content OVERRIDE!
+    #c OVERRIDE {heading}

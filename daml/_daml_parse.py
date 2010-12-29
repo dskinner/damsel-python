@@ -1,3 +1,5 @@
+from _sandbox import _open
+
 directives = ['%', '#', '.']
 
 def sub_str(a, b):
@@ -145,6 +147,7 @@ def _pre_parse(_f):
     f = _f[:]
     
     py_queue = []
+    py_id = id(py_queue)
     py_count = 0
     
     mixed_ws = None
@@ -160,11 +163,23 @@ def _pre_parse(_f):
             f.pop(i)
             continue
         
+        ### this needs a better way
+        if l[:8] == 'extends(':
+            _f = _open(l.split("'")[1]).readlines()
+            f.pop(0)
+            
+            j = i
+            for x in _f:
+                f.insert(j, x)
+                j += 1
+            continue
+        ###
+        
         if l[0] in directives:
             l = expand_line(ws, l, i, f)
         # else if list comprehension
         elif (l[0] == '[' and l[-1] == ']'):
-            py_queue.append('globals()["__py_parse__"].append('+l+')')
+            py_queue.append(u'globals()["__py_parse__"]["{0}_{1}"] = {2}'.format(py_id, py_count, l))
             f.pop(i)
             f.insert(i, ws+'{{{0}}}'.format(py_count))
             py_count += 1
@@ -176,9 +191,9 @@ def _pre_parse(_f):
                 py_queue.append(l)
                 f.pop(i)
             else:
-                py_queue.append('globals()["__py_parse__"].append('+l+')')
+                py_queue.append(u'globals()["__py_parse__"]["{0}_{1}"] = {2}'.format(py_id, py_count, l))
                 f.pop(i)
-                f.insert(i, ws+'{{{0}}}'.format(py_count))
+                f.insert(i, ws+u'{{{0}}}'.format(py_count))
                 py_count += 1
                 i += 1
             continue
@@ -192,7 +207,7 @@ def _pre_parse(_f):
         # inspect for format variables
         if '{' in l: # and mixed is None:
             l, inlines = parse_inlines(l)
-            py_queue.append(u'globals()["__py_parse__"].append(fmt.format("""{0}""", {1}))'.format(l, ','.join(inlines)))
+            py_queue.append(u'globals()["__py_parse__"]["{0}_{1}"] = fmt.format("""{2}""", {3})'.format(py_id, py_count, l, u','.join(inlines)))
             f.pop(i)
             f.insert(i, ws+u'{{{0}}}'.format(py_count))
             py_count += 1
@@ -219,11 +234,12 @@ def _pre_parse(_f):
             filter.append('""")')
             f.pop(i)
             if is_block:
-                f.insert(i, ws+'{{block}}{{{0}}}'.format(func))
+                f.insert(i, ws+u'{{block}}{{{0}}}'.format(func))
+                py_queue.append(u'globals()["__py_parse__"]["{0}_{1}"] = {2}'.format(py_id, py_count, u'\n'.join(filter)))
             else:
-                f.insert(i, ws+'{{{0}}}'.format(py_count))
+                f.insert(i, ws+u'{{{0}}}'.format(py_count))
+                py_queue.append(u'globals()["__py_parse__"]["{0}_{1}"] = {2}'.format(py_id, py_count, u'\n'.join(filter)))
                 py_count += 1
-            py_queue.append('globals()["__py_parse__"].append('+'\n'.join(filter)+')')
         
         # handle mixed content
         elif l[-1] == ':':
@@ -241,7 +257,7 @@ def _pre_parse(_f):
                     continue
                 
                 if _ws <= mixed_ws and _l[:4] not in ['else', 'elif']:
-                    py_queue.append(u'globals()["__py_parse__"].append(list(__mixed_content__))')
+                    py_queue.append(u'globals()["__py_parse__"]["{0}_{1}"] = list(__mixed_content__)'.format(py_id, py_count))
                     f.insert(j, mixed_ws+u'{{{0}}}'.format(py_count))
                     py_count += 1
                     i = j
@@ -268,7 +284,7 @@ def _pre_parse(_f):
                     continue
             # maybe this could be cleaner? instead of copy and paste
             if not mixed_closed:
-                py_queue.append(u'globals()["__py_parse__"].append(list(__mixed_content__))')
+                py_queue.append(u'globals()["__py_parse__"]["{0}_{1}"] = list(__mixed_content__)'.format(py_id, py_count))
                 f.insert(j, mixed_ws+u'{{{0}}}'.format(py_count))
                 py_count += 1
                 i = j
@@ -276,7 +292,7 @@ def _pre_parse(_f):
         elif ':' in l:
             l, inlines = parse_inlines(l)
             if len(inlines) != 0:
-                py_queue.append(u'globals()["__py_parse__"].append(fmt.format("""{0}""", {1}))'.format(l, ','.join(inlines)))
+                py_queue.append(u'globals()["__py_parse__"]["{0}_{1}"] = fmt.format("""{2}""", {3})'.format(py_id, py_count, l, ','.join(inlines)))
                 f.pop(i)
                 f.insert(i, ws+u'{{{0}}}'.format(py_count))
                 py_count += 1
@@ -291,7 +307,7 @@ def css(s):
     s = s.splitlines()
     n = s[0]
     s = s[1:]
-    return ['%link[rel=stylesheet][href={0}{1}]'.format(n, x) for x in s]
+    return [u'%link[rel=stylesheet][href={0}{1}]'.format(n, x) for x in s]
 
 def block(s):
     s = s.splitlines()
@@ -309,7 +325,7 @@ def _py_parse(_f, py_queue, sandbox):
     if py_str == '':
         return f
     try:
-        cc = compile('globals()["__py_parse__"] = []\nfmt.namespace=globals()\n'+py_str, '<string>', 'exec')
+        cc = compile('if "__py_parse__" not in globals():\n globals()["__py_parse__"] = {}\nfmt.namespace=globals()\n'+py_str, '<string>', 'exec')
         eval(cc, sandbox)
     except Exception as e:
         print '=================='
@@ -321,13 +337,20 @@ def _py_parse(_f, py_queue, sandbox):
     
     i = 0
     py_count = 0
+    py_id = id(py_queue)
     while i < len(f):
         t = '{%s}' % py_count
         if t in f[i]:
             # these should always be blank lines... i think...
             
             #
-            o = sandbox['__py_parse__'][py_count]
+            k = '{0}_{1}'.format(py_id, py_count)
+            #if k in sandbox['__py_parse__']:
+            o = sandbox['__py_parse__'][k]
+            #else:
+            #    i += 1
+            #    continue
+            
             if isinstance(o, (list, tuple)):
                 ws = f.pop(i).replace(t, '')
                 for x in o:
@@ -358,16 +381,18 @@ def _py_parse(_f, py_queue, sandbox):
     
     return f
 
+import _sandbox
+
+sandbox = _sandbox.new()
+sandbox.update({'css': css, 'block': block})
+
 if __name__ == '__main__':
     import sys
     import codecs
     from time import time
     
     _f = codecs.open(sys.argv[1], 'r', encoding='utf-8').read().splitlines()
-    import _sandbox
-
-    sandbox = _sandbox.new()
-    sandbox.update({'css': css, 'block': block})
+    
     
     try:
         sys.argv[2]
