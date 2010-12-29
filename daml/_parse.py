@@ -9,6 +9,7 @@ import _sandbox
 from lxml import etree
 from time import time
 import codecs
+import _daml_parse
 
 def _post(s):
     return '<!DOCTYPE html>'+s.replace('&gt;', '>').replace('&lt;', '<').replace('&amp;', '&')
@@ -23,6 +24,17 @@ def parse(_f, context={}):
     f = _doc_parse(f)
 
     return _post(etree.tostring(f))
+
+def parse_new(_f, context={}):
+    f = _sandbox._open(_f).read().splitlines()
+    sandbox = _sandbox.new()
+    sandbox.update(_py_parse.ext)
+    sandbox.update(context)
+    r, q = _daml_parse._pre_parse(f)
+    py = _daml_parse._py_parse(r, q, sandbox)
+    b = _doc_parse(py)
+    
+    return _post(etree.tostring(b))
 
 def pprint(l):
     for i, x in enumerate(l):
@@ -90,6 +102,8 @@ if __name__ == '__main__':
     elif t in ['0', '1', '2']:
         print parse_stop(t, _f)
         print '!!!'
+    elif t == 'new':
+        print parse_new(_f)
     else:
         print parse(_f)
 

@@ -1,13 +1,3 @@
-import _sandbox
-
-sandbox = _sandbox.new()
-def css(s):
-    s = s.splitlines()
-    n = s[0]
-    s = s[1:]
-    return ['%link[rel=stylesheet][href={0}{1}]'.format(n, x) for x in s]
-sandbox.update({'css': css})
-
 directives = ['%', '#', '.']
 
 def sub_str(a, b):
@@ -91,8 +81,10 @@ def parse_attr(s):
     else:
         return s[:mark_start]+s[mark_end:], d
 
-def parse_inline(s):
-    if ':' in s:
+def parse_inline(s, i=None):
+    if i is not None:
+        a = s.index(':', i)
+    elif ':' in s:
         a = s.index(':')
     else:
         return None
@@ -101,127 +93,218 @@ def parse_inline(s):
     else:
         return None
     if ' ' in s[a:b] or a > b: # check a>b for attributes that have :
-        return None
+        try:
+            a = s.index(':', a+1)
+            parse_inline(s, a)
+        except ValueError:
+            return None
 
     c = s.index(')')+1
     return s[a+1:c]
 
+def parse_inlines(s):
+    if ':' not in s:
+        return s, ()
+    
+    l = []
+    inline = parse_inline(s)
+    i = 0
+    while inline is not None:
+        s = s.replace(':'+inline, '{'+str(i)+'}')
+        l.append(inline)
+        inline = parse_inline(s)
+        i += 1
+    return s, l
+
+def is_assign(s):
+    '''
+    Tests a python string to determine if it is a variable assignment
+    a = 1 # returns True
+    map(a, b) # returns False
+    '''
+    a = s.find('(')
+    b = s.find('=')
+    if b != -1 and (b < a or a == -1):
+        return True
+    else:
+        return False
+
+def expand_line(ws, l, i, f):
+    el, attr = parse_attr(l)
+    tag, txt = split_space(el)
+    
+    # Check for inlined tag hashes
+    if txt != u'' and (txt[0] in directives or txt[-1] == ':'):
+        l = l.replace(txt, u'')
+        f.pop(i)
+        f.insert(i, ws+l)
+        f.insert(i+1, ws+u' '+txt)
+    return l
 
 def _pre_parse(_f):
     f = _f[:]
     
-    i = 0
-    
     py_queue = []
     py_count = 0
-    mixed = None
+    
     mixed_ws = None
     mixed_ws_last = None
     get_new_ws = False
-    filter = None
-    filter_ws = None
+    
+    i = 0
     
     while i < len(f):
         ws, l = parse_ws(f[i])
+        
         if not l:
             f.pop(i)
             continue
         
         if l[0] in directives:
-            el, attr = parse_attr(l)
-            tag, txt = split_space(el)
-            
-            # Check for inlined tag hashes
-            if txt != u'' and (txt[0] in directives or txt[-1] == ':'):
-                l = l.replace(txt, u'')
-                f.pop(i)
-                f.insert(i, ws+l)
-                f.insert(i+1, ws+u' '+txt)
-        # check for single-line python call
-        # TODO handle list comprehensions
-        elif l[:3] not in ['if ', 'for', 'whi'] and mixed is None and l[0] != ':':
-            py_queue.append(ws+l)
+            l = expand_line(ws, l, i, f)
+        # else if list comprehension
+        elif (l[0] == '[' and l[-1] == ']'):
+            py_queue.append('globals()["__py_parse__"].append('+l+')')
             f.pop(i)
+            f.insert(i, ws+'{{{0}}}'.format(py_count))
+            py_count += 1
+            i += 1
+            continue
+        # else if not a filter or mixed content
+        elif l[0] != ':' and l[-1] != ':':
+            if is_assign(l):
+                py_queue.append(l)
+                f.pop(i)
+            else:
+                py_queue.append('globals()["__py_parse__"].append('+l+')')
+                f.pop(i)
+                f.insert(i, ws+'{{{0}}}'.format(py_count))
+                py_count += 1
+                i += 1
             continue
         
+        # check for continued lines
+        while l[-1] == '\\':
+            _ws, _l = parse_ws(f.pop(i+1))
+            l = l[:-1] + _l
+            
+        
         # inspect for format variables
-        if '{' in l and mixed is None:
-            py_queue.append(u'globals()["__py_parse__"].append(fmt.format("""{0}"""))'.format(l))
+        if '{' in l: # and mixed is None:
+            l, inlines = parse_inlines(l)
+            py_queue.append(u'globals()["__py_parse__"].append(fmt.format("""{0}""", {1}))'.format(l, ','.join(inlines)))
             f.pop(i)
             f.insert(i, ws+u'{{{0}}}'.format(py_count))
             py_count += 1
             i += 1
             continue
         
-        # handle mixed content
-        if mixed is not None:
-            if ws <= mixed_ws and l[:4] not in ['else', 'elif']:
-                py_queue.append(u'globals()["__py_parse__"].append(list(__mixed_content__))')
-                f.insert(i, mixed_ws+u'{{{0}}}'.format(py_count))
-                py_count += 1
-                mixed = None
-                i += 1
-                continue
-            elif l[0] in directives:
-                ### parse inline python, ie, %p something, :greet('Daniel')
-                inlines = []
-                inline = parse_inline(l)
-                z = 0
-                while inline is not None:
-                    l = l.replace(':'+inline, '{'+str(z)+'}')
-                    inlines.append(inline)
-                    inline = parse_inline(l)
-                    z += 1
-                ###
-                if get_new_ws or sub_str(ws, mixed_ws) <= mixed_ws_last:
-                    mixed_ws_last = sub_str(ws, mixed_ws)
-                    get_new_ws = False
-                
-                py_queue.append(mixed_ws_last+u'__mixed_content__.append(fmt.format("""{0}{1}""", {2}))'.format(sub_str(sub_str(ws, mixed_ws_last), mixed_ws), l, ','.join(inlines)))
-                f.pop(i)
-                continue
-            else:
-                if l[:3] in ['if ', 'for', 'whi']:
-                    get_new_ws = True
-                py_queue.append(sub_str(ws, mixed_ws)+l)
-                f.pop(i)
-                continue
-        
         # handle filter
         if l[0] == ':':
             filter = l[1:].partition(' ')
+            
+            func = filter[2]
+            is_block = (filter[0] == 'block')
+            
             filter = [filter[0]+'("""'+filter[2]]
             j = i+1
-            fl_ws = None
-            while True:
+            fl_ws = None # first-line whitespace
+            while j < len(f):
                 _ws, _l = parse_ws(f[j])
                 if _ws <= ws:
                     break
-                if fl_ws is None:
-                    fl_ws = _ws
+                fl_ws = fl_ws or _ws
                 f.pop(j)
                 filter.append(sub_str(_ws, fl_ws)+_l)
             filter.append('""")')
             f.pop(i)
-            f.insert(i, ws+'{{{0}}}'.format(py_count))
+            if is_block:
+                f.insert(i, ws+'{{block}}{{{0}}}'.format(func))
+            else:
+                f.insert(i, ws+'{{{0}}}'.format(py_count))
+                py_count += 1
             py_queue.append('globals()["__py_parse__"].append('+'\n'.join(filter)+')')
-            py_count += 1
         
-        # inspect for mixed content
-        if mixed is None and l[-1] == ':':
-            mixed = True
+        # handle mixed content
+        elif l[-1] == ':':
             mixed_ws = mixed_ws_last = ws
             get_new_ws = True
             py_queue.append(u'__mixed_content__ = []')
             py_queue.append(l)
             f.pop(i)
-            continue
+            j = i
+            mixed_closed = False
+            while j < len(f):
+                _ws, _l = parse_ws(f[j])
+                if not _l:
+                    f.pop(j)
+                    continue
+                
+                if _ws <= mixed_ws and _l[:4] not in ['else', 'elif']:
+                    py_queue.append(u'globals()["__py_parse__"].append(list(__mixed_content__))')
+                    f.insert(j, mixed_ws+u'{{{0}}}'.format(py_count))
+                    py_count += 1
+                    i = j
+                    mixed_closed = True
+                    break
+                elif _l[0] in directives:
+                    _l = expand_line(_ws, _l, j, f)
+                    if get_new_ws or sub_str(_ws, mixed_ws) <= mixed_ws_last:
+                        mixed_ws_last = sub_str(_ws, mixed_ws)
+                        get_new_ws = False
+                    _l, inlines = parse_inlines(_l)
+                    py_queue.append(mixed_ws_last+u'__mixed_content__.append(fmt.format("""{0}{1}""", {2}))'.format(sub_str(sub_str(_ws, mixed_ws_last), mixed_ws), _l, ','.join(inlines)))
+                    f.pop(j)
+                    continue
+                # is this a list comprehension?
+                elif _l[0] == '[' and _l[-1] == ']':
+                    py_queue.append(mixed_ws_last+u'__mixed_content__.extend({0})'.format(_l))
+                    f.pop(j)
+                else:
+                    if _l[-1] == ':':
+                        get_new_ws = True
+                    py_queue.append(sub_str(_ws, mixed_ws)+_l)
+                    f.pop(j)
+                    continue
+            # maybe this could be cleaner? instead of copy and paste
+            if not mixed_closed:
+                py_queue.append(u'globals()["__py_parse__"].append(list(__mixed_content__))')
+                f.insert(j, mixed_ws+u'{{{0}}}'.format(py_count))
+                py_count += 1
+                i = j
+        # handle standalone embedded function calls
+        elif ':' in l:
+            l, inlines = parse_inlines(l)
+            if len(inlines) != 0:
+                py_queue.append(u'globals()["__py_parse__"].append(fmt.format("""{0}""", {1}))'.format(l, ','.join(inlines)))
+                f.pop(i)
+                f.insert(i, ws+u'{{{0}}}'.format(py_count))
+                py_count += 1
+                i += 1
+                continue
         
         i += 1
     
     return f, py_queue
 
-def _py_parse(f, py_queue):
+def css(s):
+    s = s.splitlines()
+    n = s[0]
+    s = s[1:]
+    return ['%link[rel=stylesheet][href={0}{1}]'.format(n, x) for x in s]
+
+def block(s):
+    s = s.splitlines()
+    n = s[0]
+    s = s[1:]
+    f, q = _pre_parse(s)
+    s = _py_parse(f, q, sandbox)
+    sandbox['__blocks__'][n] = s
+    return u''
+
+def _py_parse(_f, py_queue, sandbox):
+    f = _f[:]
+    
     py_str = '\n'.join(py_queue)
     if py_str == '':
         return f
@@ -236,123 +319,44 @@ def _py_parse(f, py_queue):
         print '------------------'
         raise e
     
-    #return '\n'.join(f).format(*sandbox['__py_parse__'])
     i = 0
     py_count = 0
     while i < len(f):
         t = '{%s}' % py_count
         if t in f[i]:
+            # these should always be blank lines... i think...
+            
+            #
             o = sandbox['__py_parse__'][py_count]
-            if isinstance(o, list):
-                f[i] = f[i].replace(t, '')
+            if isinstance(o, (list, tuple)):
+                ws = f.pop(i).replace(t, '')
                 for x in o:
-                    f.insert(i, f[i]+x)
-                    #f.insert(i, x)
+                    f.insert(i, ws+x)
                     i += 1
+                py_count += 1
+                continue
             else:
                 f[i] = f[i].replace(t, o)
-            py_count += 1
+                i += 1
+                py_count += 1
+                continue
+        elif '{block}' in f[i]:
+            tmp = f[i]
+            tmp = tmp.replace('{block}', '')
+            name = tmp[tmp.index('{')+1:tmp.index('}')]
+            if name in sandbox['__blocks__']:
+                ws = f.pop(i).replace('{block}{'+name+'}', '')
+                for x in sandbox['__blocks__'][name]:
+                    f.insert(i, ws+x)
+                    i += 1
+                del sandbox['__blocks__'][name]
+                continue
+            else:
+                f.pop(i)
+                continue
         i += 1
     
-    return '\n'.join(f)
-    
-    
-'''
-def _pre_parse(f):
-    f = f[:] # this fixes errors for benchmarks with multiple iterative runs
-    
-    py_queue = []
-    py_count = 0
-    offset = 0
-    
-    mixed_content = None
-    mixex_content_ws = None
-    filter = None
-    filter_ws = None
-    
-    for i, line in enumerate(f[:]):
-        ws, l = parse_ws(line)
-        
-        if not l:
-            f.pop(i+offset)
-            offset -= 1
-            continue
-        
-        # TODO handle use-cases:
-        # %li %a[href=/] A Link
-        # %ul for x in l:
-        while True:
-            if l[0] in directives:
-                el, attr = parse_attr(l)
-                tag, txt = split_space(el)
-                if txt != u'' and (txt[0] in directives or txt[-1] == ':'): # TODO check for escaped colons
-                    f.pop(i+offset)
-                    f.insert(i+offset, ws+l.replace(txt, u''))
-                    offset += 1
-                    ws += u' '
-                    f.insert(i+offset, ws+txt)
-                    l = txt
-                else:
-                    break
-            else:
-                break
-        
-        if l[0] not in directives and l[:3] not in ['if ', 'for', 'whi'] and \
-            mixed_content is None:
-            py_queue.append(ws+l)
-            f.pop(i+offset)
-            f.insert(i+offset, ws+u'{{{0}}}'.format(py_count))
-            py_count += 1
-            continue
-        
-        if '{' in l and mixed_content is None:
-            py_queue.append(u'fmt.format({0})'.format(l))
-            f.pop(i+offset)
-            f.insert(i+offset, ws+u'{{{0}}}'.format(py_count))
-            py_count += 1
-            continue
-        
-        # TODO handle filter
-        
-        # TODO handle mixed-content
-        if mixed_content is not None:
-            if ws <= mixed_content_ws and l[:4] not in ['else', 'elif']:
-                py_queue.append(u'list(__mixed_content__)')
-                f.insert(i+offset, mixed_content_ws+u'{{{0}}}'.format(py_count))
-                py_count += 1
-                mixed_content = None
-            elif l[0] in directives:
-                ### parse inline python
-                inlines = []
-                inline = parse_inline(l)
-                z = 0
-                while inline is not None:
-                    l = l.replace(':'+inline, '{'+str(z)+'}')
-                    inlines.append(inline)
-                    inline = parse_inline(l)
-                    z += 1
-                ###
-                py_queue.append(sub_str(ws, mixed_content_ws)+u'__mixed_content__.append(fmt.format("""{0}{1}""", {2}))'.format(ws, l, ','.join(inlines)))
-                f.pop(i+offset)
-                offset -= 1
-            else:
-                py_queue.append(sub_str(ws, mixed_content_ws)+l)
-                f.pop(i+offset)
-                offset -= 1
-        
-        # TODO inspect for filter
-        
-        # TODO inspect for mixed-content
-        if mixed_content is None and l[-1] == ':':
-            mixed_content = True
-            mixed_content_ws = ws
-            py_queue.append(u'__mixed_content__ = []')
-            py_queue.append(l)
-            f.pop(i+offset)
-            offset -= 1
-    
-    return f, py_queue
-'''
+    return f
 
 if __name__ == '__main__':
     import sys
@@ -360,6 +364,10 @@ if __name__ == '__main__':
     from time import time
     
     _f = codecs.open(sys.argv[1], 'r', encoding='utf-8').read().splitlines()
+    import _sandbox
+
+    sandbox = _sandbox.new()
+    sandbox.update({'css': css, 'block': block})
     
     try:
         sys.argv[2]
@@ -367,20 +375,25 @@ if __name__ == '__main__':
         for x in range(1000):
             a = time()
             r, q = _pre_parse(_f)
-            _py_parse(r, q)
+            _py_parse(r, q, sandbox)
             times.append(time()-a)
         for x in range(times.count(0.0)):
             times.remove(0.0)
         print min(times), times[0]
     except Exception as e:
         result, q = _pre_parse(_f)
-        py = _py_parse(result, q)
+        py = _py_parse(result, q, sandbox)
         
+        print '\n=== Original ===\n'
+        for l in _f:
+            print `l`
+        print '\n=== PreParse ===\n'
         for line in result:
             print `line`
-        print '\n---\n'
+        print '\n=== PyQueue ===\n'
         for line in q:
             print `line`
-        
-        print py
+        print '\n=== PyParse ===\n'
+        for line in py:
+            print `line`
 

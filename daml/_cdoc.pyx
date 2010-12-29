@@ -32,7 +32,8 @@ def _doc_parse(f):
 
     for line in f[1:]:
         ws, l = parse_ws2(line)
-
+        if not l:
+            continue
         ### plntxt queue
         if not_directive(l[0]):
             if ws in plntxt:

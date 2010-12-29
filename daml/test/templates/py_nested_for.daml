@@ -14,5 +14,5 @@
         
         for x in range(5):
             %p {x}
-                for y in range(3):
-                    %a {y}
+            for y in range(3):
+                %a {y}
