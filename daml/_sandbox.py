@@ -7,7 +7,7 @@ except ImportError:
 
 from copy import copy
 import os.path
-from _fmt import DamlFormatter
+from _fmt import DMSLFormatter
 import codecs
 
 class LXML(object):
@@ -24,11 +24,10 @@ def _open(f):
 _open.template_dir = ''
 
 default_sandbox = { '__builtins__': None,
-                    '__blocks__': {},
                     'dict': __builtin__.dict,
                     'enumerate': __builtin__.enumerate,
                     'float': __builtin__.float,
-                    'fmt': DamlFormatter(),
+                    'fmt': DMSLFormatter(),
                     'globals': __builtin__.globals,
                     'int': __builtin__.int,
                     'len': __builtin__.len,
@@ -51,3 +50,4 @@ if hasattr(__builtin__, 'True'):
 
 def new():
     return copy(default_sandbox)
+

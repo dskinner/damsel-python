@@ -8,7 +8,7 @@ class FormatSpecs(object):
     def escape(self, value):
         return value.replace('<', '&lt;').replace('>', '&gt;')
 
-class DamlFormatter(Formatter):
+class DMSLFormatter(Formatter):
     def __init__(self, namespace={}):
         Formatter.__init__(self)
         self.namespace = namespace
@@ -32,7 +32,7 @@ class DamlFormatter(Formatter):
         instantiation of class
         '''
         if isinstance(key, (int, long)):
-            #return args[key]
             return args[key]
         else:
             return self.namespace[key]
+

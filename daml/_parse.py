@@ -1,110 +1,64 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-from _pre_parse import _pre_parse
-import _py_parse
-#from _doc_parse import _doc_parse
-from _cdoc import _doc_parse
-from _build import _build
-import _sandbox
+
 from lxml import etree
-from time import time
-import codecs
-import _daml_parse
+
+import _sandbox
+from _ext import extensions
+from _parse_pre import _parse_pre
+from _parse_py import _parse_py
+from _parse_doc import _parse_doc
+
+from _c_parse_pre import _parse_pre as _c_parse_pre
+from _c_parse_py import _parse_py as _c_parse_py
+from _c_parse_doc import _parse_doc as _c_parse_doc
 
 def _post(s):
     return '<!DOCTYPE html>'+s.replace('&gt;', '>').replace('&lt;', '<').replace('&amp;', '&')
 
 def parse(_f, context={}):
     f = _sandbox._open(_f).read().splitlines()
-    _py_parse.sandbox = _sandbox.new()
-    _py_parse.sandbox.update(_py_parse.ext)
-    _py_parse.sandbox.update(context)
-    f = _pre_parse(f)
-    f = _py_parse._py_parse(f, _f)
-    f = _doc_parse(f)
-
-    return _post(etree.tostring(f))
-
-def parse_new(_f, context={}):
-    f = _sandbox._open(_f).read().splitlines()
     sandbox = _sandbox.new()
-    sandbox.update(_py_parse.ext)
+    sandbox.update(extensions)
     sandbox.update(context)
-    r, q = _daml_parse._pre_parse(f)
-    py = _daml_parse._py_parse(r, q, sandbox)
-    b = _doc_parse(py)
-    
+    r, q = _parse_pre(f)
+    py = _parse_py(r, q, sandbox)
+    b = _parse_doc(py)
     return _post(etree.tostring(b))
 
-def pprint(l):
-    for i, x in enumerate(l):
-        print i, `x`
-
-def parse_stop(i, _f, context={}):
+def c_parse(_f, context={}):
     f = _sandbox._open(_f).read().splitlines()
-    _py_parse.sandbox = _sandbox.new()
-    _py_parse.sandbox.update(_py_parse.ext)
-    _py_parse.sandbox.update(context)
-    f = _pre_parse(f)
-    if i == '0':
-        pprint(f)
-        print('_pre_parse')
-        return
-    f = _py_parse._py_parse(f, _f)
-    if i == '1':
-        pprint(f)
-        print('_py_parse')
-        return
-    f = _doc_parse(f)
-    if i == '2':
-        pprint(f)
-        print('_doc_parse')
-        return
-    #f = _build(f)
-
-    print _post(etree.tostring(f))
-    
-
-class Template(object):
-    def __init__(self, f):
-        import codecs
-        f = codecs.open(f, encoding='utf-8').readlines()
-        self.p = _py_parse.PyParse(_pre_parse(f))
-
-    def render(self, context):
-        a = time()
-        _py_parse.sandbox = self.p.sandbox
-        _py_parse.sandbox.update(context)
-        print 'init', time()-a
-        a = time()
-        f = _py_parse._py_parse(self.p.doc[:])
-        print 'py  ', time()-a
-        a = time()
-        f = _doc_parse(f)
-        print 'doc ', time()-a
-
-        return _post(etree.tostring(f))
+    sandbox = _sandbox.new()
+    sandbox.update(extensions)
+    sandbox.update(context)
+    r, q = _c_parse_pre(f)
+    py = _c_parse_py(r, q, sandbox)
+    b = _c_parse_doc(py)
+    return _post(etree.tostring(b))
 
 if __name__ == '__main__':
     import sys
     import codecs
     from time import time
     _f = sys.argv[1]
-    t = sys.argv[2]
-
-    if t is 'y':
+    
+    try:
+        option = sys.argv[2]
+        if option == 'c':
+            p = c_parse
+        else:
+            p = parse
+        
         times=[]
         for x in range(100):
             a = time()
-            r = parse(_f)
+            r = p(_f)
             times.append(time()-a)
         print min(times)
-    elif t in ['0', '1', '2']:
-        print parse_stop(t, _f)
-        print '!!!'
-    elif t == 'new':
-        print parse_new(_f)
-    else:
+    except IndexError:
         print parse(_f)
+    except Exception as e:
+        c_parse(_f)
+        
 
 

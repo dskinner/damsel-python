@@ -1,21 +1,24 @@
-# -*- coding: utf-8 -*-
-from _pre_parse import _pre_parse
-from _py_parse import _py_parse
-import _sandbox
-
-def include(f):
-    f = open(f).readlines()
-    f = _pre_parse(f)
-    f = _py_parse(f)
-    return f
+# Default set of dmsl extensions
 
 def block(s):
     s = s.splitlines()
-    s = _py_parse(s)
-    globals()['__blocks__'][s[0]] = [s[1:], False] # [content, been-used-yet?]
+    n = s[0]
+    s = s[1:]
+    block.blocks[n] = s
+block.blocks = {}
 
-extensions = {  'include': include,
-                'block': block}
+def css(s):
+    s = s.splitlines()
+    n = s[0]
+    s = s[1:]
+    return [u'%link[rel=stylesheet][href={0}{1}]'.format(n, x) for x in s]
 
-_sandbox.default_sandbox.update(extensions)
+def js(s):
+    s = s.splitlines()
+    n = s[0]
+    s = s[1:]
+    return ['%script[src={0}{1}]'.format(n, x) for x in s]
 
+extensions = {'block': block,
+              'css': css,
+              'js': js}
