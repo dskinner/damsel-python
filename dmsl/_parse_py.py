@@ -4,11 +4,11 @@ from _ext import block
 def _parse_py(_f, py_queue, sandbox):
     f = _f[:]
     
-    py_str = '\n'.join(py_queue)
-    if py_str == '':
+    py_str = u'\n'.join(py_queue)
+    if py_str == u'':
         return f
     try:
-        cc = compile(u'if "__py_parse__" not in globals():\n globals()["__py_parse__"] = {}\nfmt.namespace=globals()\n'+py_str, '<string>', 'exec')
+        cc = compile(u'if "__py_parse__" not in globals():\n globals()["__py_parse__"] = {}\nfmt.namespace=globals()\n'+py_str, u'<string>', u'exec')
         eval(cc, sandbox)
     except Exception as e:
         print '=================='
@@ -26,8 +26,8 @@ def _parse_py(_f, py_queue, sandbox):
         if t in f[i]:
             # these should always be blank lines... i think...
             
-            k = '{0}_{1}'.format(py_id, py_count)
-            o = sandbox['__py_parse__'][k]
+            k = u'{0}_{1}'.format(py_id, py_count)
+            o = sandbox[u'__py_parse__'][k]
             
             if isinstance(o, (list, tuple)):
                 ws = f.pop(i).replace(t, u'')
@@ -41,12 +41,12 @@ def _parse_py(_f, py_queue, sandbox):
                 i += 1
                 py_count += 1
                 continue
-        elif '{block}' in f[i]:
+        elif u'{block}' in f[i]:
             tmp = f[i]
-            tmp = tmp.replace('{block}', '')
-            name = tmp[tmp.index('{')+1:tmp.index('}')]
+            tmp = tmp.replace(u'{block}', u'')
+            name = tmp[tmp.index(u'{')+1:tmp.index(u'}')]
             if name in block.blocks:
-                ws = f.pop(i).replace(u'{block}{'+name+'}', u'')
+                ws = f.pop(i).replace(u'{block}{'+name+u'}', u'')
                 block_f, block_q = _parse_pre(block.blocks[name])
                 block_r = _parse_py(block_f, block_q, sandbox)
                 for x in block_r:

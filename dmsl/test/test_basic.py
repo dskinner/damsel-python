@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import os.path
 import unittest
-from _parse import parse
+from _parse import c_parse as parse
+#from _parse import parse
 import codecs
 
 class TestBasic(unittest.TestCase):
@@ -16,7 +17,7 @@ class TestBasic(unittest.TestCase):
 
         for k, v in self.t.items():
             # template file
-            a = k+'.daml'
+            a = k+'.dmsl'
             # expected output
             b = open(os.path.join('', k+'.html')).read()
             self.t[k] = (a, b)

@@ -55,6 +55,10 @@ if __name__ == '__main__':
             r = p(_f)
             times.append(time()-a)
         print min(times)
+        print (p(_f))
+        f = _sandbox._open(_f).read().splitlines()
+        r, q = _c_parse_pre(f)
+        print r
     except IndexError:
         print parse(_f)
     except Exception as e:

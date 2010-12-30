@@ -1,4 +1,4 @@
-from _parse_ext import *
+from _c_parse_ext cimport *
 from _sandbox import _open
 
 def parse_inlines(s):
@@ -47,10 +47,10 @@ def _parse_pre(_f):
             f.pop(i)
             continue
         
-        ### this needs a better way
+        ### maybe something better?
         if l[:8] == 'extends(':
             _f = _open(l.split("'")[1]).readlines()
-            f.pop(0)
+            f.pop(i)
             
             j = i
             for x in _f:
@@ -58,8 +58,16 @@ def _parse_pre(_f):
                 j += 1
             continue
         elif l[:8] == 'include(':
-            pass
+            _f = _open(l.split("'")[1]).readlines()
+            f.pop(i)
+            
+            j = i
+            for x in _f:
+                f.insert(j, ws+x)
+                j += 1
+            continue
         ###
+        
         if is_directive(l[0]):
             l = expand_line(ws, l, i, f)
         # else if list comprehension

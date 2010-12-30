@@ -20,7 +20,7 @@ cdef inline tuple split_space(unicode s):
 
     for i, c in enumerate(s):
         if c == u' ':
-            return s[:i], s[i:]
+            return s[:i], s[i+1:]
     return s, u''
 
 cdef inline tuple split_pound(unicode s):
@@ -94,22 +94,22 @@ cdef inline tuple parse_attr(unicode s):
 cdef inline unicode parse_inline(unicode s, int i):
     cdef Py_ssize_t a, b, c
     
-    if ':' in s:
+    if u':' in s:
         a = s.index(':', i)
     else:
         return u''
-    if '(' in s:
-        b = s.index('(')
+    if u'(' in s:
+        b = s.index(u'(')
     else:
         return u''
     if u' ' in s[a:b] or a > b: # check a>b for attributes that have :
         try:
-            a = s.index(':', a+1)
+            a = s.index(u':', a+1)
             parse_inline(s, a)
         except ValueError:
             return u''
 
-    c = s.index(')')+1
+    c = s.index(u')')+1
     return s[a+1:c]
 
 cdef inline bint is_assign(unicode s):

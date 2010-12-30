@@ -85,22 +85,22 @@ def parse_attr(s):
         return s[:mark_start]+s[mark_end:], d
 
 def parse_inline(s, i):
-    if ':' in s:
-        a = s.index(':', i)
+    if u':' in s:
+        a = s.index(u':', i)
     else:
         return u''
-    if '(' in s:
-        b = s.index('(')
+    if u'(' in s:
+        b = s.index(u'(')
     else:
         return u''
-    if ' ' in s[a:b] or a > b: # check a>b for attributes that have :
+    if u' ' in s[a:b] or a > b: # check a>b for attributes that have :
         try:
-            a = s.index(':', a+1)
+            a = s.index(u':', a+1)
             parse_inline(s, a)
         except ValueError:
             return u''
 
-    c = s.index(')')+1
+    c = s.index(u')')+1
     return s[a+1:c]
 
 def is_assign(s):
