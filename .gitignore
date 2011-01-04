@@ -1,4 +1,4 @@
-daml/bench/*
+dmsl/bench/*
 *.pyc
 *.pyo
 *.pyd

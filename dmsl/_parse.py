@@ -62,7 +62,7 @@ if __name__ == '__main__':
     except IndexError:
         print parse(_f)
     except Exception as e:
-        c_parse(_f)
+        parse(_f)
         
 
 

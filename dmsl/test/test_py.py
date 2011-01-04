@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import os.path
 import unittest
-from _parse import c_parse as parse
-#from _parse import parse
+#from _parse import c_parse as parse
+from _parse import parse
 import codecs
 
 class TestPy(unittest.TestCase):
