@@ -2,7 +2,7 @@
 import os.path
 import unittest
 #from _parse import c_parse as parse
-from _parse import parse
+from _parse import Template
 import codecs
 
 class TestBasic(unittest.TestCase):
@@ -24,26 +24,26 @@ class TestBasic(unittest.TestCase):
 
     def test_basic_html(self):
         parsed, expected = self.t['basic_html']
-        parsed = parse(parsed)
+        parsed = Template(parsed).render()
         self.assertEqual(parsed.strip(), expected.strip())
     
     def test_basic_indent(self):
         parsed, expected = self.t['basic_indent']
-        parsed = parse(parsed)
+        parsed = Template(parsed).render()
         self.assertEqual(parsed.strip(), expected.strip())
         
     def test_basic_inline(self):
         parsed, expected = self.t['basic_inline']
-        parsed = parse(parsed)
+        parsed = Template(parsed).render()
         self.assertEqual(parsed.strip(), expected.strip())
     
     def test_basic_tag_hashes(self):
         parsed, expected = self.t['basic_tag_hashes']
-        parsed = parse(parsed)
+        parsed = Template(parsed).render()
         self.assertEqual(parsed.strip(), expected.strip())
     
     def test_basic_variable_indent(self):
         parsed, expected = self.t['basic_variable_indent']
-        parsed = parse(parsed)
+        parsed = Template(parsed).render()
         self.assertEqual(parsed.strip(), expected.strip())
 

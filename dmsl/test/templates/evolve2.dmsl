@@ -13,8 +13,6 @@ greet = lambda x: 'Hello, {0}'.format(x)
             three.css
     %body
         %h1 {heading}
-        :block content
-            #content Hello {heading}
         %p %a Hello World
         
         %div %span
@@ -24,16 +22,6 @@ greet = lambda x: 'Hello, {0}'.format(x)
             %div Two
                 %div Three
         
-        %ul for x in ['a', 'b', 'c']:
-            %li {x} :greet('me')
-        
-        for x in range(4):
-            for y in range(2):
-                %p {x}, {y}
-                    %a My link
-                if 'a' == 'a':
-                    %i a
-            %p Woah
         
         if True is True:
             %div Hello
@@ -41,5 +29,3 @@ greet = lambda x: 'Hello, {0}'.format(x)
             
             %div Test
         #blank
-:block content
-    #c OVERRIDE {heading}

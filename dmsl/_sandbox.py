@@ -10,26 +10,41 @@ import os.path
 from _fmt import DMSLFormatter
 import codecs
 
-class LXML(object):
-    """
-    Used to declare lxml.etree.tostring params by declaring attributes. This
-    ends up working faster then declaring variables and scraping and is easier
-    on the eyes and fingers for declaring common tostring keyword arguments
-    versus the use of a traditional dict.
-    """
-    pass
+### Default set of dmsl extensions
+def block(s):
+    s = s.splitlines()
+    n = s[0]
+    s = s[1:]
+    block.blocks[n] = s
+block.blocks = {}
+
+def css(s):
+    s = s.splitlines()
+    n = s[0]
+    s = s[1:]
+    return [u'%link[rel=stylesheet][href={0}{1}]'.format(n, x) for x in s]
+
+def js(s):
+    s = s.splitlines()
+    n = s[0]
+    s = s[1:]
+    return ['%script[src={0}{1}]'.format(n, x) for x in s]
+###
 
 def _open(f):
     return codecs.open(os.path.join(_open.template_dir, f), encoding='utf-8')
 _open.template_dir = ''
 
 default_sandbox = { '__builtins__': None,
+                    'block': block,
+                    'css': css,
                     'dict': __builtin__.dict,
                     'enumerate': __builtin__.enumerate,
                     'float': __builtin__.float,
                     'fmt': DMSLFormatter(),
                     'globals': __builtin__.globals,
                     'int': __builtin__.int,
+                    'js': js,
                     'len': __builtin__.len,
                     'list': __builtin__.list,
                     'locals': __builtin__.locals,

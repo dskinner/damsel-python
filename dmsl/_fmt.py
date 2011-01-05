@@ -33,6 +33,8 @@ class DMSLFormatter(Formatter):
         '''
         if isinstance(key, (int, long)):
             return args[key]
+        elif key in kwargs:
+            return kwargs[key]
         else:
             return self.namespace[key]
 

@@ -2,7 +2,7 @@
 import os.path
 import unittest
 #from _parse import c_parse as parse
-from _parse import parse
+from _parse import parse, Template
 import codecs
 
 class TestPy(unittest.TestCase):
@@ -30,56 +30,56 @@ class TestPy(unittest.TestCase):
 
     def test_py_block_default(self):
         parsed, expected = self.t['py_block_default']
-        parsed = parse(parsed)
+        parsed = Template(parsed).render()
         self.assertEqual(parsed.strip(), expected.strip())
 
     def test_py_embed(self):
         parsed, expected = self.t['py_embed']
-        parsed = parse(parsed)
+        parsed = Template(parsed).render()
         self.assertEqual(parsed.strip(), expected.strip())
 
     def test_py_extends(self):
         parsed, expected = self.t['py_extends']
-        parsed = parse(parsed)
+        parsed = Template(parsed).render()
         self.assertEqual(parsed.strip(), expected.strip())
 
     def test_py_formatter(self):
         parsed, expected = self.t['py_formatter']
-        parsed = parse(parsed)
+        parsed = Template(parsed).render()
         self.assertEqual(parsed.strip(), expected.strip())
 
     def test_py_func(self):
         parsed, expected = self.t['py_func']
-        parsed = parse(parsed)
+        parsed = Template(parsed).render()
         self.assertEqual(parsed.strip(), expected.strip())
 
     def test_py_ifelse(self):
         parsed, expected = self.t['py_ifelse']
-        parsed = parse(parsed)
+        parsed = Template(parsed).render()
         self.assertEqual(parsed.strip(), expected.strip())
 
     def test_py_include(self):
         parsed, expected = self.t['py_include']
-        parsed = parse(parsed)
+        parsed = Template(parsed).render()
         self.assertEqual(parsed.strip(), expected.strip())
 
     def test_py_looping(self):
         parsed, expected = self.t['py_looping']
-        parsed = parse(parsed)
+        parsed = Template(parsed).render()
         self.assertEqual(parsed.strip(), expected.strip())
 
     def test_py_mixed_content(self):
         parsed, expected = self.t['py_mixed_content']
-        parsed = parse(parsed)
+        parsed = Template(parsed).render()
         self.assertEqual(parsed.strip(), expected.strip())
 
     def test_py_nested_for(self):
         parsed, expected = self.t['py_nested_for']
-        parsed = parse(parsed)
+        parsed = Template(parsed).render()
         self.assertEqual(parsed.strip(), expected.strip())
 
     def test_py_newline_var(self):
         parsed, expected = self.t['py_newline_var']
-        parsed = parse(parsed)
+        parsed = Template(parsed).render()
         self.assertEqual(parsed.strip(), expected.strip())
 
