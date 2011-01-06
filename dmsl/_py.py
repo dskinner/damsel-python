@@ -28,6 +28,9 @@ def _py(_f, py_queue, sandbox, local=None, code=None):
     py_count = 0
     py_id = id(py_queue)
     while i < len(f):
+        if isinstance(f[i], tuple):
+            i += 1
+            continue
         t = u'{%s}' % py_count
         if t in f[i]:
             # these should always be blank lines... i think...

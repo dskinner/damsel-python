@@ -1,68 +1,66 @@
 from lxml.etree import Element, SubElement
 from utils import parse_ws, parse_attr, split_space, split_pound, split_period, parse_tag, is_directive
 
-def _doc2(_f):
+def _doc_pre(_f):
     f = _f[:]
-    r = {'': Element('html')}
-    f[0] = r['']
-    plntxt = {}
-
-    prev = u''
-
+    
     for i, line in enumerate(f):
-        # TODO stop this at once!!
-        if i == 0:
+        if isinstance(line, tuple):
             continue
         
         ws, l = parse_ws(line)
         
-        if l[0] == '{': # TODO this hardly a good way to check
-            _tag = 'py'
-            text = l
-            _id = False
-            _class = False
-            attr = None
-        else:
-            u, attr = parse_attr(l)
-            hash, text = split_space(u)
-            _tag, _id, _class = parse_tag(hash)
+        if l[0] == '{':
+            continue
         
-        # 
-        if ws > prev:
-            e_root = r[prev]
-        if ws == prev:
-            e_root = r[prev].getparent()
-        if ws < prev:
-            e_root = r[ws].getparent()
+        u, attr = parse_attr(l)
+        hash, text = split_space(u)
+        _tag, _id, _class = parse_tag(hash)
+        
+        f[i] = (ws, _tag, _id, _class, attr, text)
+    
+    return f
+
+def _doc_build(f):
+    r = {}
+    prev = None
+
+    for line in f:
+        ws, _tag, _id, _class, attr, text = line
+        
+        #
+        if prev is None:
+            e = Element(_tag)
+        elif ws > prev:
+            e = SubElement(r[prev], _tag or 'div')
+        elif ws == prev:
+            e = SubElement(r[prev].getparent(), _tag or 'div')
+        elif ws < prev:
+            e = SubElement(r[ws].getparent(), _tag or 'div')
             
             for _ws in r.keys():
                 if _ws > ws:
                     r.pop(_ws)
         
-        e = SubElement(e_root, _tag or u'div')
         e.text = text
         if _id:
-            e.attrib[u'id'] = _id
+            e.attrib['id'] = _id
         if _class:
-            e.attrib[u'class'] = _class
+            e.attrib['class'] = _class
         if attr is not None:
             e.attrib.update(attr)
         
         r[ws] = e
-        f[i] = e
         prev = ws
-    return f
-
-def _build(l):
-    pass
+    return r['']
 
 def _doc(f):
-    r = {u'': Element(u'html')}
+    r = {}
     plntxt = {}
 
-    prev = u''
+    prev = None
 
-    for line in f[1:]:
+    for line in f:
         ws, l = parse_ws(line)
         
         ### plntxt queue, TODO i dont think this is relevant anymore
@@ -75,7 +73,7 @@ def _doc(f):
         
         if plntxt:
             for _ws, text in plntxt.items():
-                text = u' '.join(text)
+                text = ' '.join(text)
                 el = r[prev]
                 if _ws > prev:
                     el.text += ' '+text
@@ -85,27 +83,28 @@ def _doc(f):
         ###
         
         u, attr = parse_attr(l)
-        u = split_space(u)
-        _tag, _id, _class = parse_tag(u[0])
+        hash, text = split_space(u)
+        _tag, _id, _class = parse_tag(hash)
         
-        # 
-        if ws > prev:
-            e_root = r[prev]
-        if ws == prev:
-            e_root = r[prev].getparent()
-        if ws < prev:
-            e_root = r[ws].getparent()
+        #
+        if prev is None:
+            e = Element(_tag)
+        elif ws > prev:
+            e = SubElement(r[prev], _tag or 'div')
+        elif ws == prev:
+            e = SubElement(r[prev].getparent(), _tag or 'div')
+        elif ws < prev:
+            e = SubElement(r[ws].getparent(), _tag or 'div')
             
             for _ws in r.keys():
                 if _ws > ws:
                     r.pop(_ws)
         
-        e = SubElement(e_root, _tag or u'div')
-        e.text = u[1]
+        e.text = text
         if _id:
-            e.attrib[u'id'] = _id
+            e.attrib['id'] = _id
         if _class:
-            e.attrib[u'class'] = _class
+            e.attrib['class'] = _class
         if attr is not None:
             e.attrib.update(attr)
         
@@ -115,11 +114,11 @@ def _doc(f):
         
     if plntxt:
         for _ws, text in plntxt.items():
-            text = u' '.join(text)
+            text = ' '.join(text)
             el = r[prev]
             if _ws > prev:
                 el.text += ' '+text
             else: # _ws == prev
                 el.tail = el.tail and el.tail+' '+text or text
-    return r[u'']
+    return r['']
 

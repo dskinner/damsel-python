@@ -6,7 +6,7 @@ from lxml import etree
 import _sandbox
 from _pre import _pre
 from _py import _py, _compile
-from _doc import _doc
+from _doc import _doc, _doc_pre, _doc_build
 
 class Template(object):
     def __init__(self, filename):
@@ -17,12 +17,13 @@ class Template(object):
         self.r, self.q = _pre(self.f)
         self.sandbox = _sandbox.new()
         self.code = _compile(self.q)
+        self.r = _doc_pre(self.r)
     
     def render(self, context={}):
         s = copy(self.sandbox)
         s.update(context)
         py = _py(self.r, self.q, s, code=self.code)
-        b = _doc(py)
+        b = _doc_build(_doc_pre(py))
         return _post(etree.tostring(b))
 
 def _post(s):
