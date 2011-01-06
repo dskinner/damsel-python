@@ -1,10 +1,5 @@
 heading = 'Basic HTML Test'
-
-if False is False:
-    tmp = None
-
 greet = lambda x: 'Hello, {0}'.format(x)
-
 %html
     %head
         :css /css/lib/
@@ -21,7 +16,6 @@ greet = lambda x: 'Hello, {0}'.format(x)
         %div One
             %div Two
                 %div Three
-        
         
         if True is True:
             %div Hello

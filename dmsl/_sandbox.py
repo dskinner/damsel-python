@@ -11,13 +11,6 @@ from _fmt import DMSLFormatter
 import codecs
 
 ### Default set of dmsl extensions
-def block(s):
-    s = s.splitlines()
-    n = s[0]
-    s = s[1:]
-    block.blocks[n] = s
-block.blocks = {}
-
 def css(s):
     s = s.splitlines()
     n = s[0]
@@ -36,7 +29,6 @@ def _open(f):
 _open.template_dir = ''
 
 default_sandbox = { '__builtins__': None,
-                    'block': block,
                     'css': css,
                     'dict': __builtin__.dict,
                     'enumerate': __builtin__.enumerate,
@@ -53,6 +45,7 @@ default_sandbox = { '__builtins__': None,
                     'min': __builtin__.min,
                     'open': _open,
                     'range': __builtin__.range,
+                    'sorted': __builtin__.sorted,
                     'str': __builtin__.str}
 
 # Python3

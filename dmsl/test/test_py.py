@@ -2,7 +2,7 @@
 import os.path
 import unittest
 #from _parse import c_parse as parse
-from _parse import parse, Template
+from _parse import Template
 import codecs
 
 class TestPy(unittest.TestCase):

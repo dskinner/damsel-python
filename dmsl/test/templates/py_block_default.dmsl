@@ -1,9 +1,5 @@
 %html
     %body
-        :block header
-            #header.top This is some header content
-
+        #header This is some header content
         %div this is some middle content
-
-        :block footer
-            #footer.bottom this is some footer content
+        #footer.bottom this is some footer content
