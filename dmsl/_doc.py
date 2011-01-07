@@ -7,10 +7,32 @@ def _doc_pre(f):
     r = {}
     _ids = {}
     prev = None
+    plntxt = {}
     for line in f:
         ws, l = parse_ws(line)
         
+        ### plntxt queue
+        #if not is_directive(l[0]):
+        if l[0] == '\\':
+            if ws in plntxt:
+                plntxt[ws].append(l[1:])
+            else:
+                plntxt[ws] = [l[1:]]
+            continue
+        if plntxt:
+            for _ws, text in plntxt.items():
+                text = ' '+' '.join(text)
+                el = r[prev]
+                if _ws > prev:
+                    el.text += text
+                else: # _ws == prev
+                    el.tail = el.tail and el.tail+text or text
+            plntxt = {}
+        ###
+        
         if l[0] == '{':
+            if ws == '': # TODO use cases of no root node will make troublesome
+                continue
             _tag, _id, _class, attr, text = '_py_', False, False, None, l
         else:
             u, attr = parse_attr(l)
@@ -69,10 +91,29 @@ def _build_element(e, line):
 def _build_from_parent(p, f):
     r = {'root': p}
     prev = ''
-    
+    plntxt = {}
     for line in f:
         ws, l = parse_ws(line)
         
+        ### plntxt queue
+        #if not is_directive(l[0]):
+        if l[0] == '\\':
+            if ws in plntxt:
+                plntxt[ws].append(l[1:])
+            else:
+                plntxt[ws] = [l[1:]]
+            continue
+        if plntxt:
+            for _ws, text in plntxt.items():
+                text = ' '+' '.join(text)
+                el = r[prev]
+                if _ws > prev:
+                    el.text += text
+                else: # _ws == prev
+                    el.tail = el.tail and el.tail+text or text
+            plntxt = {}
+        ###
+    
         u, attr = parse_attr(l)
         hash, text = split_space(u)
         _tag, _id, _class = parse_tag(hash)

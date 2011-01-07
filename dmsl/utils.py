@@ -3,7 +3,7 @@ These are python equivalents of the cython parsing extensions, some are hardly
 suitable for an actual pure python module of daml.
 '''
 
-directives = ['%', '#', '.']
+directives = ['%', '#', '.', '\\']
 
 def sub_str(a, b):
     i = len(b)

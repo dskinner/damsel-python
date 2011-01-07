@@ -11,6 +11,7 @@ class TestBasic(unittest.TestCase):
             'basic_html': None,
             'basic_indent': None,
             'basic_inline': None,
+            'basic_multilinetext': None,
             'basic_tag_hashes': None,
             'basic_variable_indent': None
             }
@@ -34,6 +35,11 @@ class TestBasic(unittest.TestCase):
         
     def test_basic_inline(self):
         parsed, expected = self.t['basic_inline']
+        parsed = Template(parsed).render()
+        self.assertEqual(parsed.strip(), expected.strip())
+    
+    def test_basic_multilinetext(self):
+        parsed, expected = self.t['basic_multilinetext']
         parsed = Template(parsed).render()
         self.assertEqual(parsed.strip(), expected.strip())
     

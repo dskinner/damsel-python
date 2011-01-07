@@ -47,7 +47,6 @@ def _pre(_f):
     
     while i < len(f):
         ws, l = parse_ws(f[i])
-        
         if not l:
             del f[i]
             continue
@@ -59,7 +58,7 @@ def _pre(_f):
             for j, x in enumerate(_f):
                 f.insert(i+j, x)
             continue
-        elif l[:8] == 'include(':
+        if l[:8] == 'include(':
             del f[i]
             _f = _open(l.split("'")[1]).readlines()
             for j, x in enumerate(_f):
@@ -88,9 +87,11 @@ def _pre(_f):
             continue
         
         # check for continued lines
-        while l[-1] == '\\':
-            _ws, _l = parse_ws(f.pop(i+1))
-            l = l[:-1] + _l
+        if l[-1] == '\\':
+            while l[-1] == '\\':
+                _ws, _l = parse_ws(f.pop(i+1))
+                l = l[:-1] + _l
+            f[i] = ws+l
         
         # inspect for format variables
         if '{' in l: # and mixed is None:

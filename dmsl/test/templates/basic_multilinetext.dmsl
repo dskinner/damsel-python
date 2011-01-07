@@ -1,0 +1,12 @@
+%html
+    %body
+        %p This is a test of
+            \multiline text that includes
+            \head text with some 
+            
+            %span middle content that also has
+                \multiline text
+            
+            \and some tail text for the element.
+        
+        #footer
