@@ -3,49 +3,61 @@ These are python equivalents of the cython parsing extensions, some are hardly
 suitable for an actual pure python module of daml.
 '''
 
-directives = [u'%', u'#', u'.', u'\\']
+directives = ['%', '#', '.', '\\']
 
-def sub_str(a, b):
-    i = len(b)
+cdef inline unicode sub_str(unicode a, unicode b):
+    cdef Py_ssize_t i = len(b)
     if i == 0:
         return a
     return a[:-i]
 
-def parse_ws(s):
+cdef inline tuple parse_ws(unicode s):
+    cdef Py_ssize_t i
+    cdef Py_UNICODE c
+    
     for i, c in enumerate(s):
         if c != u' ':
             return s[:i], s[i:].rstrip()
     return u'', s.rstrip()
 
-def split_space(s):
+
+cdef inline tuple split_space(unicode s):
+    cdef Py_ssize_t i
+    cdef Py_UNICODE c
+
     for i, c in enumerate(s):
         if c == u' ':
             return s[:i], s[i+1:]
     return s, u''
 
-def split_pound(s):
+cdef inline tuple split_pound(unicode s):
+    cdef Py_ssize_t i
+    cdef Py_UNICODE c
+
     for i, c in enumerate(s):
         if c == u'#':
             return s[:i], s[i:]
     return s, u''
 
-def split_period(s):
+cdef inline tuple split_period(unicode s):
+    cdef Py_ssize_t i
+    cdef Py_UNICODE c
+
     for i, c in enumerate(s):
         if c == u'.':
             return s[:i], s[i:]
     return s, u''
 
-def parse_tag(s):
-    '''
-    accepts input such as
-    %tag.class#id.one.two
-    and returns
-    ('tag', 'id', 'class one two')
-    '''
+cdef inline tuple parse_tag(unicode s):
+    cdef unicode x
+
     r = [split_period(x) for x in split_pound(s)]
     return r[0][0][1:], r[1][0][1:], (r[0][1]+r[1][1]).replace(u'.', u' ')[1:]
 
-def parse_attr(s):
+cdef inline tuple parse_attr(unicode s):
+    cdef Py_ssize_t i
+    cdef Py_UNICODE c
+
     mark_start = None
     mark_end = None
 
@@ -58,24 +70,24 @@ def parse_attr(s):
     for i, c in enumerate(s):
         if key_start is not None:
             if val_start is not None:
-                if i == val_start+1 and (c == u'"' or c == u"'"):
+                if i is val_start+1 and (c is u'"' or c is u"'"):
                     literal_start = i
-                elif literal_start is not None and c == s[literal_start]:
+                elif literal_start is not None and c is s[literal_start]:
                     d[s[key_start+1:val_start]] = s[literal_start+1:i]
                     key_start = None
                     val_start = None
                     literal_start = None
-                elif literal_start is None and c == u']':
+                elif literal_start is None and c is u']':
                     d[s[key_start+1:val_start]] = s[val_start+1:i]
                     key_start = None
                     val_start = None
-            elif c == u'=':
+            elif c is u'=':
                 val_start = i
-        elif c == u'[':
+        elif c is u'[':
             key_start = i
             if mark_start is None:
                 mark_start = i
-        elif c == u' ':
+        elif c is u' ':
             mark_end = i
             break
     
@@ -86,9 +98,11 @@ def parse_attr(s):
     else:
         return s[:mark_start]+s[mark_end:], d
 
-def parse_inline(s, i):
+cdef inline unicode parse_inline(unicode s, int i):
+    cdef Py_ssize_t a, b, c
+    
     if u':' in s:
-        a = s.index(u':', i)
+        a = s.index(':', i)
     else:
         return u''
     if u'(' in s:
@@ -105,12 +119,14 @@ def parse_inline(s, i):
     c = s.index(u')')+1
     return s[a+1:c]
 
-def is_assign(s):
+cdef inline bint is_assign(unicode s):
     '''
     Tests a python string to determine if it is a variable assignment
     a = 1 # returns True
     map(a, b) # returns False
     '''
+    cdef Py_ssize_t a, b
+    
     a = s.find('(')
     b = s.find('=')
     if b != -1 and (b < a or a == -1):
@@ -118,11 +134,12 @@ def is_assign(s):
     else:
         return False
 
-def is_directive(c):
-    x = u'%'
-    y = u'#'
-    z = u'.'
+cdef inline bint is_directive(unicode c):
+    cdef Py_UNICODE w = u'\\'
+    cdef Py_UNICODE x = u'%'
+    cdef Py_UNICODE y = u'#'
+    cdef Py_UNICODE z = u'.'
 
-    if c != x and c != y and c != z:
+    if c != w and c != x and c != y and c != z:
         return False
     return True

@@ -32,7 +32,5 @@ Follow development at http://github.com/dasacc22/dmsl
         "Environment :: Web Environment",
         ],
     cmdclass = {'build_ext': build_ext},
-    ext_modules = [ Extension("dmsl._c_parse_pre", ["dmsl/_c_parse_pre.pyx"]),
-                    Extension("dmsl._c_parse_py", ["dmsl/_c_parse_py.pyx"]),
-                    Extension("dmsl._c_parse_doc", ["dmsl/_c_parse_doc.pyx"])]
+    ext_modules = [ Extension("dmsl._cdoc", ["dmsl/_cdoc.pyx"])]
     )

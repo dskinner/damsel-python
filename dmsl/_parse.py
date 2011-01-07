@@ -7,7 +7,7 @@ from lxml.etree import tostring
 import _sandbox
 from _pre import _pre
 from _py import _compile
-from _doc import _doc_pre, _build_from_parent, _build_element
+from _cdoc import _doc_pre, _build_from_parent, _build_element
 
 def func():pass
 func = type(func)
@@ -20,6 +20,7 @@ class Template(object):
         else:
             self.f = _sandbox._open(filename).read().splitlines()
         self.r, self.py_q = _pre(self.f)
+        
         if len(self.py_q) == 0:
             self.code = None
         else:
@@ -44,15 +45,15 @@ class Template(object):
         
         for e in py_list:
             t = e.text[1:-1]
-            k = '{0}_{1}'.format(py_id, t)
+            k = u'{0}_{1}'.format(py_id, t)
             o = py_parse[k]
             
             if isinstance(o, (list, tuple)):
                 p = e.getparent()
                 p.remove(e)
-                _build_from_parent(p, o)
+                _build_from_parent(p, [unicode(x) for x in o])
             else:
-                _build_element(e, o)
+                _build_element(e, unicode(o))
         
         return _post(tostring(r))
 

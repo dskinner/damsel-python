@@ -2,20 +2,20 @@ from utils import *
 from _sandbox import _open
 
 def parse_inlines(s):
-    if ':' not in s:
+    if u':' not in s:
         return s, ''
     
     l = []
     inline = parse_inline(s, 0)
     i = 0
-    while inline != '':
-        s = s.replace(':'+inline, '{'+str(i)+'}')
+    while inline != u'':
+        s = s.replace(u':'+inline, u'{'+str(i)+u'}')
         l.append(inline)
         inline = parse_inline(s, 0)
         i += 1
-    l = ','.join(l)
-    if l != '':
-        l += ','
+    l = u','.join(l)
+    if l != u'':
+        l += u','
     return s, l
 
 def expand_line(ws, l, i, f):
@@ -23,14 +23,14 @@ def expand_line(ws, l, i, f):
     tag, txt = split_space(el)
     
     # Check for inlined tag hashes
-    if txt != '' and (is_directive(txt[0]) or txt[-1] == ':'):
-        l = l.replace(txt, '')
+    if txt != u'' and (is_directive(txt[0]) or txt[-1] == u':'):
+        l = l.replace(txt, u'')
         f[i] = ws+l
         f.insert(i+1, ws+u' '+txt)
     return l
 
-txt_cmd = '__py_parse__["{0}_{1}"] = {2}'
-txt_fmt = '__py_parse__["{0}_{1}"] = fmt.format("""{2}""", {3}**locals())'
+txt_cmd = u'__py_parse__["{0}_{1}"] = {2}'
+txt_fmt = u'__py_parse__["{0}_{1}"] = fmt.format("""{2}""", {3}**locals())'
 
 def _pre(_f):
     f = _f[:]
@@ -52,13 +52,13 @@ def _pre(_f):
             continue
         
         ### maybe something better?
-        if l[:8] == 'extends(':
+        if l[:8] == u'extends(':
             del f[i]
             _f = _open(l.split("'")[1]).readlines()
             for j, x in enumerate(_f):
                 f.insert(i+j, x)
             continue
-        if l[:8] == 'include(':
+        if l[:8] == u'include(':
             del f[i]
             _f = _open(l.split("'")[1]).readlines()
             for j, x in enumerate(_f):
@@ -68,44 +68,44 @@ def _pre(_f):
         
         if l[0] in directives:
             l = expand_line(ws, l, i, f)
-        elif l[0] == '[' and l[-1] == ']': # else if list comprehension
+        elif l[0] == u'[' and l[-1] == u']': # else if list comprehension
             py_queue.append(txt_cmd.format(py_id, py_count, l))
-            f[i] = ws+'{{{0}}}'.format(py_count)
+            f[i] = ws+u'{{{0}}}'.format(py_count)
             py_count += 1
             i += 1
             continue
         # else if not a filter or mixed content
-        elif l[0] != ':' and l[-1] != ':':
+        elif l[0] != u':' and l[-1] != u':':
             if is_assign(l):
                 py_queue.append(l)
                 del f[i]
             else:
                 py_queue.append(txt_cmd.format(py_id, py_count, l))
-                f[i] = ws+'{{{0}}}'.format(py_count)
+                f[i] = ws+u'{{{0}}}'.format(py_count)
                 py_count += 1
                 i += 1
             continue
         
         # check for continued lines
-        if l[-1] == '\\':
-            while l[-1] == '\\':
+        if l[-1] == u'\\':
+            while l[-1] == u'\\':
                 _ws, _l = parse_ws(f.pop(i+1))
                 l = l[:-1] + _l
             f[i] = ws+l
         
         # inspect for format variables
-        if '{' in l: # and mixed is None:
+        if u'{' in l: # and mixed is None:
             l, inlines = parse_inlines(l)
             py_queue.append(txt_fmt.format(py_id, py_count, l, inlines))
-            f[i] = ws+'{{{0}}}'.format(py_count)
+            f[i] = ws+u'{{{0}}}'.format(py_count)
             py_count += 1
             i += 1
             continue
         
         # handle filter
-        if l[0] == ':':
-            func, sep, args = l[1:].partition(' ')
-            filter = [func+'("""'+args]
+        if l[0] == u':':
+            func, sep, args = l[1:].partition(u' ')
+            filter = [func+u'(u"""'+args]
             j = i+1
             fl_ws = None # first-line whitespace
             while j < len(f):
@@ -115,21 +115,21 @@ def _pre(_f):
                 fl_ws = fl_ws or _ws
                 del f[j]
                 filter.append(sub_str(_ws, fl_ws)+_l)
-            filter.append('""")')
+            filter.append(u'""")')
             
-            if func == 'block':
-                f[i] = ws+'{{block}}{{{0}}}'.format(args)
-                py_queue.append(txt_cmd.format(py_id, py_count, '\n'.join(filter)))
+            if func == u'block':
+                f[i] = ws+u'{{block}}{{{0}}}'.format(args)
+                py_queue.append(txt_cmd.format(py_id, py_count, u'\n'.join(filter)))
             else:
-                f[i] = ws+'{{{0}}}'.format(py_count)
-                py_queue.append(txt_cmd.format(py_id, py_count, '\n'.join(filter)))
+                f[i] = ws+u'{{{0}}}'.format(py_count)
+                py_queue.append(txt_cmd.format(py_id, py_count, u'\n'.join(filter)))
                 py_count += 1
         
         # handle mixed content
-        elif l[-1] == ':':
+        elif l[-1] == u':':
             mixed_ws = mixed_ws_last = ws
             get_new_ws = True
-            py_queue.append('__mixed_content__ = []')
+            py_queue.append(u'__mixed_content__ = []')
             py_queue.append(l)
             del f[i]
             mixed_closed = False
@@ -139,8 +139,8 @@ def _pre(_f):
                     del f[i]
                     continue
                 
-                if _ws <= mixed_ws and _l[:4] not in ['else', 'elif']:
-                    py_queue.append('__py_parse__["{0}_{1}"] = list(__mixed_content__)'.format(py_id, py_count))
+                if _ws <= mixed_ws and _l[:4] not in [u'else', u'elif']:
+                    py_queue.append(u'__py_parse__["{0}_{1}"] = list(__mixed_content__)'.format(py_id, py_count))
                     f.insert(i, mixed_ws+u'{{{0}}}'.format(py_count))
                     py_count += 1
                     mixed_closed = True
@@ -152,12 +152,12 @@ def _pre(_f):
                         mixed_ws_last = ws_diff
                         get_new_ws = False
                     _l, inlines = parse_inlines(_l)
-                    py_queue.append(mixed_ws_last+'__mixed_content__.append(fmt.format("""{0}{1}""", {2}**locals()))'.format(sub_str(sub_str(_ws, mixed_ws_last), mixed_ws), _l, inlines))
+                    py_queue.append(mixed_ws_last+u'__mixed_content__.append(fmt.format("""{0}{1}""", {2}**locals()))'.format(sub_str(sub_str(_ws, mixed_ws_last), mixed_ws), _l, inlines))
                     del f[i]
                     continue
                 # is this a list comprehension?
                 elif _l[0] == '[' and _l[-1] == ']':
-                    py_queue.append(mixed_ws_last+'__mixed_content__.extend({0})'.format(_l))
+                    py_queue.append(mixed_ws_last+u'__mixed_content__.extend({0})'.format(_l))
                     del f[i]
                 else:
                     if _l[-1] == ':':
@@ -167,7 +167,7 @@ def _pre(_f):
                     continue
             # maybe this could be cleaner? instead of copy and paste
             if not mixed_closed:
-                py_queue.append('__py_parse__["{0}_{1}"] = list(__mixed_content__)'.format(py_id, py_count))
+                py_queue.append(u'__py_parse__["{0}_{1}"] = list(__mixed_content__)'.format(py_id, py_count))
                 f.insert(i, mixed_ws+u'{{{0}}}'.format(py_count))
                 py_count += 1
         # handle standalone embedded function calls
@@ -175,7 +175,7 @@ def _pre(_f):
             l, inlines = parse_inlines(l)
             if inlines != '':
                 py_queue.append(txt_fmt.format(py_id, py_count, l, inlines))
-                f[i] = ws+'{{{0}}}'.format(py_count)
+                f[i] = ws+u'{{{0}}}'.format(py_count)
                 py_count += 1
                 i += 1
                 continue
