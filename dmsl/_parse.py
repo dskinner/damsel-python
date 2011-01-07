@@ -7,7 +7,7 @@ from lxml.etree import tostring
 import _sandbox
 from _pre import _pre
 from _py import _compile
-from _cdoc import _doc_pre, _build_from_parent, _build_element
+from cdoc import _doc_pre, _build_from_parent, _build_element
 
 def func():pass
 func = type(func)
@@ -20,7 +20,6 @@ class Template(object):
         else:
             self.f = _sandbox._open(filename).read().splitlines()
         self.r, self.py_q = _pre(self.f)
-        
         if len(self.py_q) == 0:
             self.code = None
         else:

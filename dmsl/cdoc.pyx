@@ -1,10 +1,7 @@
 cdef object Element, SubElement
 from lxml.etree import Element, SubElement
 #from xml.etree.cElementTree import Element, SubElement
-from cutils cimport parse_ws, parse_attr, split_space, split_pound, split_period, parse_tag, is_directive
-
-cdef unicode ws, _ws, l, _tag, _id, _class
-cdef object e
+from _cutils cimport _parse_ws, _parse_attr, _parse_tag, _split_space
 
 def _doc_pre(f):
     root = Element('root')
@@ -13,11 +10,10 @@ def _doc_pre(f):
     prev = None
     plntxt = {}
     for line in f:
-        ws, l = parse_ws(line)
+        ws, l = _parse_ws(line)
         
         ### plntxt queue
-        #if not is_directive(l[0]):
-        if l[0] == '\\':
+        if l[0] == u'\\':
             if ws in plntxt:
                 plntxt[ws].append(l[1:])
             else:
@@ -34,16 +30,16 @@ def _doc_pre(f):
             plntxt = {}
         ###
         
-        if l[0] == '{':
-            if ws == '': # TODO use cases of no root node will make troublesome
+        if l[0] == u'{':
+            if ws == u'': # TODO use cases of no root node will make troublesome
                 continue
-            _tag, _id, _class, attr, text = '_py_', False, False, None, l
+            _tag, _id, _class, attr, text = u'_py_', u'', u'', None, l
         else:
-            u, attr = parse_attr(l)
-            hash, text = split_space(u)
-            _tag, _id, _class = parse_tag(hash)
+            u, attr = _parse_attr(l)
+            hash, text = _split_space(u)
+            _tag, _id, _class = _parse_tag(hash)
         
-        if ws == '':
+        if ws == u'':
             if _id in _ids:
                 e = _ids[_id]
                 if attr.pop('super', None) is None:
@@ -77,13 +73,13 @@ def _doc_pre(f):
     return root[0]
 
 def _build_element(e, line):
-    ws, l = parse_ws(line)
+    ws, l = _parse_ws(line)
         
-    u, attr = parse_attr(l)
-    hash, text = split_space(u)
-    _tag, _id, _class = parse_tag(hash)
+    u, attr = _parse_attr(l)
+    hash, text = _split_space(u)
+    _tag, _id, _class = _parse_tag(hash)
     
-    e.tag = _tag or 'div'
+    e.tag = _tag or u'div'
     e.text = text
     if _id:
         e.attrib['id'] = _id
@@ -97,11 +93,10 @@ def _build_from_parent(p, f):
     prev = ''
     plntxt = {}
     for line in f:
-        ws, l = parse_ws(line)
+        ws, l = _parse_ws(line)
         
         ### plntxt queue
-        #if not is_directive(l[0]):
-        if l[0] == '\\':
+        if l[0] == u'\\':
             if ws in plntxt:
                 plntxt[ws].append(l[1:])
             else:
@@ -118,11 +113,11 @@ def _build_from_parent(p, f):
             plntxt = {}
         ###
     
-        u, attr = parse_attr(l)
-        hash, text = split_space(u)
-        _tag, _id, _class = parse_tag(hash)
+        u, attr = _parse_attr(l)
+        hash, text = _split_space(u)
+        _tag, _id, _class = _parse_tag(hash)
         
-        if ws == '':
+        if ws == u'':
             e = SubElement(r['root'], _tag or 'div')
         elif ws > prev:
             e = SubElement(r[prev], _tag or 'div')

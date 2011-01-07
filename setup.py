@@ -32,5 +32,7 @@ Follow development at http://github.com/dasacc22/dmsl
         "Environment :: Web Environment",
         ],
     cmdclass = {'build_ext': build_ext},
-    ext_modules = [ Extension("dmsl._cdoc", ["dmsl/_cdoc.pyx"])]
+    ext_modules = [ Extension("dmsl.cdoc", ["dmsl/cdoc.pyx"]),
+                    Extension("dmsl.cutils", ["dmsl/cutils.pyx"]),
+                    Extension("dmsl.cfmt", ["dmsl/cfmt.pyx"])]
     )

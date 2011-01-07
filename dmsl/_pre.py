@@ -1,5 +1,7 @@
-from utils import *
+from cutils import parse_attr, split_space, parse_inline, parse_ws, sub_str, var_assign
 from _sandbox import _open
+
+directives = ['%', '#', '.', '\\']
 
 def parse_inlines(s):
     if u':' not in s:
@@ -23,7 +25,7 @@ def expand_line(ws, l, i, f):
     tag, txt = split_space(el)
     
     # Check for inlined tag hashes
-    if txt != u'' and (is_directive(txt[0]) or txt[-1] == u':'):
+    if txt != u'' and (txt[0] in directives or txt[-1] == u':'):
         l = l.replace(txt, u'')
         f[i] = ws+l
         f.insert(i+1, ws+u' '+txt)
@@ -66,6 +68,13 @@ def _pre(_f):
             continue
         ###
         
+        # check for continued lines
+        if l[-1] == u'\\':
+            while l[-1] == u'\\':
+                _ws, _l = parse_ws(f.pop(i+1))
+                l = l[:-1] + _l
+            f[i] = ws+l
+        
         if l[0] in directives:
             l = expand_line(ws, l, i, f)
         elif l[0] == u'[' and l[-1] == u']': # else if list comprehension
@@ -76,7 +85,7 @@ def _pre(_f):
             continue
         # else if not a filter or mixed content
         elif l[0] != u':' and l[-1] != u':':
-            if is_assign(l):
+            if var_assign(l):
                 py_queue.append(l)
                 del f[i]
             else:
@@ -85,13 +94,6 @@ def _pre(_f):
                 py_count += 1
                 i += 1
             continue
-        
-        # check for continued lines
-        if l[-1] == u'\\':
-            while l[-1] == u'\\':
-                _ws, _l = parse_ws(f.pop(i+1))
-                l = l[:-1] + _l
-            f[i] = ws+l
         
         # inspect for format variables
         if u'{' in l: # and mixed is None:

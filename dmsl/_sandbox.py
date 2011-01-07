@@ -7,7 +7,7 @@ except ImportError:
 
 from copy import copy
 import os.path
-from _fmt import DMSLFormatter
+from cfmt import DMSLFormatter
 import codecs
 
 ### Default set of dmsl extensions
