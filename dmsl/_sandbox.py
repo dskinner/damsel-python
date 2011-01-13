@@ -25,7 +25,7 @@ def js(s):
 ###
 
 def _open(f):
-    return codecs.open(os.path.join(_open.template_dir, f), encoding='utf-8')
+    return codecs.open(os.path.join(_open.template_dir, f), encoding='utf-8', errors='replace')
 _open.template_dir = ''
 
 default_sandbox = { '__builtins__': None,
