@@ -6,3 +6,4 @@ dmsl.parse('index.dmsl', {'content': 'Hello World!'})
 """
 __version__ = '0.2'
 from _parse import Template
+from _sandbox import extensions

@@ -59,3 +59,4 @@ if hasattr(__builtin__, 'True'):
 def new():
     return copy(default_sandbox)
 
+extensions = {}

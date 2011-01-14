@@ -30,6 +30,7 @@ class Template(object):
     def render(self, context={}):
         self.sandbox.clear()
         self.sandbox.update(_sandbox.default_sandbox)
+        self.sandbox.update(_sandbox.extensions)
         self.sandbox.update(context)
         
         r = copy(self.r)
