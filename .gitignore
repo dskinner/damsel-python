@@ -7,3 +7,4 @@ dmsl/bench/*
 MANIFEST
 dist/*
 build/*
+dmsl.*

@@ -27,12 +27,12 @@ class Template(object):
             self.code = func(self.code.co_consts[0], self.sandbox)
         self.r = _doc_pre(self.r)
     
-    def render(self, context={}):
+    def render(self, **kwargs):
         self.sandbox.clear()
         self.sandbox.update(_sandbox.default_sandbox)
         self.sandbox.update(_sandbox.extensions)
-        self.sandbox.update(context)
-        
+        self.sandbox['kwargs'] = kwargs
+
         r = copy(self.r)
         
         if self.code == None:

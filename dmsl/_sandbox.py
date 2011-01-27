@@ -45,6 +45,7 @@ default_sandbox = { '__builtins__': None,
                     'min': __builtin__.min,
                     'open': _open,
                     'range': __builtin__.range,
+                    'repr': __builtin__.repr,
                     'sorted': __builtin__.sorted,
                     'str': __builtin__.str}
 
