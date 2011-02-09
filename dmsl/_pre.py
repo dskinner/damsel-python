@@ -130,6 +130,10 @@ def _pre(_f):
         # handle mixed content
         elif l[-1] == u':':
             mixed_ws = mixed_ws_last = ws
+            
+            # this keeps track of altering whitespace between mixed content and straight python, and is prepended to mc fmt text
+            offset_ws = ''
+            
             get_new_ws = True
             py_queue.append(u'__mixed_content__ = []')
             py_queue.append(l)
@@ -154,7 +158,7 @@ def _pre(_f):
                         mixed_ws_last = ws_diff
                         get_new_ws = False
                     _l, inlines = parse_inlines(_l)
-                    py_queue.append(mixed_ws_last+u'__mixed_content__.append(fmt.format("""{0}{1}""", {2}**locals()))'.format(sub_str(sub_str(_ws, mixed_ws_last), mixed_ws), _l, inlines))
+                    py_queue.append(mixed_ws_last+u'__mixed_content__.append(fmt.format("""{0}{1}""", {2}**locals()))'.format(sub_str(sub_str(_ws, mixed_ws_last), mixed_ws)+offset_ws, _l, inlines))
                     del f[i]
                     continue
                 # is this a list comprehension?
@@ -164,7 +168,16 @@ def _pre(_f):
                 else:
                     if _l[-1] == ':':
                         get_new_ws = True
-                    py_queue.append(sub_str(_ws, mixed_ws)+_l)
+                    
+                    # when mixed content is found before this line, mixed_ws != last, which alters how line is added to py_queue
+                    _tmp = u''
+                    if mixed_ws != mixed_ws_last:
+                        _tmp = sub_str(sub_str(_ws, mixed_ws), mixed_ws_last)
+                    
+                    #
+                    offset_ws += _tmp
+                    py_queue.append(sub_str(sub_str(_ws, mixed_ws), _tmp)+_l)
+                    #print '!!!!!!', _l, len(_ws), len(mixed_ws), len(mixed_ws_last)
                     del f[i]
                     continue
             # maybe this could be cleaner? instead of copy and paste
@@ -186,3 +199,16 @@ def _pre(_f):
     
     return f, py_queue
 
+
+if __name__ == '__main__':
+    import codecs
+    import sys
+    _f = codecs.open(sys.argv[1], 'r', 'utf-8').read().expandtabs(4).splitlines()
+    f, q = _pre(_f)
+    print '\n=== F ==='
+    for x in f:
+        print `x`
+    print '\n=== Q ==='
+    for x in q:
+        print `x`
+    

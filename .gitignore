@@ -1,3 +1,7 @@
+.externalToolBuilders/
+.project
+.pydevproject
+.settings/
 dmsl/bench/*
 *.pyc
 *.pyo
