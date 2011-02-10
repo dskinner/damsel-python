@@ -96,7 +96,8 @@ def _pre(_f):
             continue
         
         # inspect for format variables
-        if u'{' in l: # and mixed is None:
+        # and l[:3] is to prevent triggering dicts as formats in for, if, while statements
+        if u'{' in l and l[:3] not in ['for', 'if ', 'whi']: # and mixed is None:
             l, inlines = parse_inlines(l)
             py_queue.append(txt_fmt.format(py_id, py_count, l, inlines))
             f[i] = ws+u'{{{0}}}'.format(py_count)

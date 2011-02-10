@@ -7,3 +7,4 @@ def _compile(py_queue):
         return None
     py_str = 'def _py():\n  __py_parse__, __blocks__ = {}, {}\n  fmt.namespace=globals()\n  '+py_str+'\n  return locals()'
     return compile(py_str, '<string>', 'exec')
+

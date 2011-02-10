@@ -1,0 +1,5 @@
+test = lambda x: [0,1,2,3,4,5]
+
+%html %body
+    for x in test({'a': 'a'}):
+        %p {x}
