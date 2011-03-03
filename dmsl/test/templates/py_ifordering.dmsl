@@ -1,0 +1,8 @@
+%html
+    %body
+        %ul
+            if True:
+                %li One
+                %li Two
+            %li Three
+            %li Four

@@ -4,7 +4,8 @@ from string import Formatter
 class FormatSpecs(object):
     def safe(self, value):
         return value
-
+    def title(self, value):
+        return value.title()
     def escape(self, value):
         return value.replace('<', '&lt;').replace('>', '&gt;')
 

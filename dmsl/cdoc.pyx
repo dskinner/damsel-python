@@ -88,7 +88,7 @@ def _build_element(e, line):
     if attr is not None:
         e.attrib.update(attr)
 
-def _build_from_parent(p, f):
+def _build_from_parent(p, index, f):
     r = {'root': p}
     prev = ''
     plntxt = {}
@@ -118,17 +118,25 @@ def _build_from_parent(p, f):
         _tag, _id, _class = _parse_tag(hash)
         
         if ws == u'':
-            e = SubElement(r['root'], _tag or 'div')
+            _p = r['root']
+            e = SubElement(_p, _tag or 'div')
         elif ws > prev:
-            e = SubElement(r[prev], _tag or 'div')
+            _p = r[prev]
+            e = SubElement(_p, _tag or 'div')
         elif ws == prev:
-            e = SubElement(r[prev].getparent(), _tag or 'div')
+            _p = r[prev].getparent()
+            e = SubElement(_p, _tag or 'div')
         elif ws < prev:
-            e = SubElement(r[ws].getparent(), _tag or 'div')
+            _p = r[ws].getparent()
+            e = SubElement(_p, _tag or 'div')
             
             for _ws in r.keys():
                 if _ws > ws:
                     r.pop(_ws)
+        
+        if index is not None and _p == p:
+            p.insert(index, e)
+            index += 1
         
         e.text = text
         if _id:

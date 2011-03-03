@@ -118,7 +118,7 @@ def _pre(_f):
                 fl_ws = fl_ws or _ws
                 del f[j]
                 filter.append(sub_str(_ws, fl_ws)+_l)
-            filter.append(u'""")')
+            filter.append(u'""", locals())')
             
             if func == u'block':
                 f[i] = ws+u'{{block}}{{{0}}}'.format(args)

@@ -14,6 +14,7 @@ class TestPy(unittest.TestCase):
             'py_formatter': None,
             'py_func': None,
             'py_ifelse': None,
+            'py_ifordering': None,
             'py_include': None,
             'py_looping': None,
             'py_mixed_content': None,
@@ -55,6 +56,11 @@ class TestPy(unittest.TestCase):
 
     def test_py_ifelse(self):
         parsed, expected = self.t['py_ifelse']
+        parsed = Template(parsed).render()
+        self.assertEqual(parsed.strip(), expected.strip())
+    
+    def test_py_ifordering(self):
+        parsed, expected = self.t['py_ifordering']
         parsed = Template(parsed).render()
         self.assertEqual(parsed.strip(), expected.strip())
 

@@ -47,11 +47,15 @@ class Template(object):
             t = e.text[1:-1]
             k = u'{0}_{1}'.format(py_id, t)
             o = py_parse[k]
-            
             if isinstance(o, (list, tuple)):
                 p = e.getparent()
+                
+                index = None
+                if len(p.getchildren()) != 0:
+                    index = p.getchildren().index(e)
+                
                 p.remove(e)
-                _build_from_parent(p, [unicode(x) for x in o])
+                _build_from_parent(p, index, [unicode(x) for x in o])
             else:
                 _build_element(e, unicode(o))
         
