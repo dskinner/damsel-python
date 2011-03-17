@@ -136,6 +136,7 @@ def _pre(_f):
             offset_ws = ''
             
             get_new_ws = True
+            subtract_tmp = False
             py_queue.append(u'__mixed_content__ = []')
             py_queue.append(l)
             del f[i]
@@ -167,7 +168,9 @@ def _pre(_f):
                     py_queue.append(mixed_ws_last+u'__mixed_content__.extend({0})'.format(_l))
                     del f[i]
                 else:
+                    #print '!!!!!!', _l, get_new_ws, len(_ws), len(mixed_ws), len(mixed_ws_last)
                     if _l[-1] == ':':
+                        subtract_tmp = not get_new_ws
                         get_new_ws = True
                     
                     # when mixed content is found before this line, mixed_ws != last, which alters how line is added to py_queue
@@ -177,8 +180,12 @@ def _pre(_f):
                     
                     #
                     offset_ws += _tmp
-                    py_queue.append(sub_str(sub_str(_ws, mixed_ws), _tmp)+_l)
-                    #print '!!!!!!', _l, len(_ws), len(mixed_ws), len(mixed_ws_last)
+                    if subtract_tmp:
+                        subtract_tmp = False
+                        py_queue.append(sub_str(sub_str(_ws, mixed_ws), _tmp)+_l)
+                    else:
+                        py_queue.append(sub_str(_ws, mixed_ws)+_l)
+                    
                     del f[i]
                     continue
             # maybe this could be cleaner? instead of copy and paste
