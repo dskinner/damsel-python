@@ -1,5 +1,5 @@
 s = "Hello World"
-numbers = range(10)
+numbers = range(3)
 
 %html %body
     #content
@@ -9,12 +9,15 @@ numbers = range(10)
                 %h2 {s}
             
             %p Blank paragraph
-            
-            if "World" in s:
+            if True:
                 .box
                     %h3 My Title
                     .text %ul
                         for n in numbers:
-                            extra = "extra " + str(n)
-                            %li {extra}
+                            a = 'a'
+                            %li {n!s}
+                                %a test
+                        %li Ending
                     #blank
+                    #blank2
+                %p some content here

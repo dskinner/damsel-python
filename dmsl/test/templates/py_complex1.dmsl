@@ -1,0 +1,24 @@
+s = "Hello World"
+numbers = range(5)
+
+%html %body
+    #content
+        %h1 Test of complex statment mixes.
+        %div
+            if "Hello" in s:
+                %h2 {s}
+            
+            %p Blank paragraph
+            
+            #wrapper if "World" in s:
+                if True:
+                    %ul for n in numbers:
+                        extra = "extra " + str(n)
+                        if n == 4:
+                            sx = s + " " + str(n)
+                            %li {sx} {extra}
+                        else:
+                            %li {n!s}
+                    #blank
+            
+            %p ending paragraph

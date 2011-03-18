@@ -15,6 +15,15 @@ def sub_str(unicode a, unicode b):
         return a
     return a[:-i]
 
+def sub_strs(*args):
+    r = args[0]
+    for x in range(1, len(args)):
+        i = len(args[x])
+        if i == 0:
+            continue
+        r = r[:-i]
+    return r
+
 def parse_inline(unicode s, int i):
     cdef Py_ssize_t a, b, c
     

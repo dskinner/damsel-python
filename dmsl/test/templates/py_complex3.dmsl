@@ -1,0 +1,8 @@
+%html %body
+    #content
+        if True:
+            %h2 It Starts
+            for x in range(2):
+                %span Hello {x}
+                for y in range(2, 4):
+                    %span Hi {y}

@@ -118,8 +118,8 @@ def _build_from_parent(p, index, f):
         _tag, _id, _class = _parse_tag(hash)
         
         if ws == u'':
-            _p = r['root']
-            e = SubElement(_p, _tag or 'div')
+            _p = None
+            e = SubElement(p, _tag or 'div')
         elif ws > prev:
             _p = r[prev]
             e = SubElement(_p, _tag or 'div')
@@ -134,7 +134,7 @@ def _build_from_parent(p, index, f):
                 if _ws > ws:
                     r.pop(_ws)
         
-        if index is not None and _p == p:
+        if index is not None and _p is None:
             p.insert(index, e)
             index += 1
         

@@ -9,6 +9,9 @@ class TestPy(unittest.TestCase):
     def setUp(self):
         self.t = {
             'py_block_default': None,
+            'py_complex1': None,
+            'py_complex2': None,
+            'py_complex3': None,
             'py_embed': None,
             'py_extends': None,
             'py_formatter': None,
@@ -31,6 +34,21 @@ class TestPy(unittest.TestCase):
 
     def test_py_block_default(self):
         parsed, expected = self.t['py_block_default']
+        parsed = Template(parsed).render()
+        self.assertEqual(parsed.strip(), expected.strip())
+    
+    def test_py_complex1(self):
+        parsed, expected = self.t['py_complex1']
+        parsed = Template(parsed).render()
+        self.assertEqual(parsed.strip(), expected.strip())
+    
+    def test_py_complex2(self):
+        parsed, expected = self.t['py_complex2']
+        parsed = Template(parsed).render()
+        self.assertEqual(parsed.strip(), expected.strip())
+    
+    def test_py_complex3(self):
+        parsed, expected = self.t['py_complex3']
         parsed = Template(parsed).render()
         self.assertEqual(parsed.strip(), expected.strip())
 

@@ -1,4 +1,4 @@
-from cutils import parse_attr, split_space, parse_inline, parse_ws, sub_str, var_assign
+from cutils import parse_attr, split_space, parse_inline, parse_ws, sub_str, sub_strs, var_assign
 from _sandbox import _open
 
 directives = ['%', '#', '.', '\\']
@@ -34,6 +34,12 @@ def expand_line(ws, l, i, f):
 txt_cmd = u'__py_parse__["{0}_{1}"] = {2}'
 txt_fmt = u'__py_parse__["{0}_{1}"] = fmt.format("""{2}""", {3}**locals())'
 
+def add_strs(*args):
+    s = ''
+    for arg in args:
+        s += arg
+    return s
+
 def _pre(_f):
     f = _f[:]
     
@@ -43,7 +49,7 @@ def _pre(_f):
     
     mixed_ws = None
     mixed_ws_last = None
-    get_new_ws = False
+    get_new_mixed_ws = False
     
     i = 0
     
@@ -130,13 +136,23 @@ def _pre(_f):
         
         # handle mixed content
         elif l[-1] == u':':
-            mixed_ws = mixed_ws_last = ws
+            orig_mixed_ws = ws
+            mixed_ws = []
+            mixed_ws_offset = []
+            mixed_ws_last = ws
             
-            # this keeps track of altering whitespace between mixed content and straight python, and is prepended to mc fmt text
-            offset_ws = ''
+            content_ws = []
+            content_ws_offset = []
+            content_ws_last = None
             
-            get_new_ws = True
-            subtract_tmp = False
+            mixed_content_ws_offset = []
+            
+            get_new_mixed_ws = True
+            get_new_content_ws = True
+            level = 1
+            
+            content_ws_offset_append = False
+            
             py_queue.append(u'__mixed_content__ = []')
             py_queue.append(l)
             del f[i]
@@ -147,51 +163,77 @@ def _pre(_f):
                     del f[i]
                     continue
                 
-                if _ws <= mixed_ws and _l[:4] not in [u'else', u'elif']:
+                if content_ws_last is None:
+                    content_ws_last = _ws
+                
+                if _ws <= orig_mixed_ws and _l[:4] not in [u'else', u'elif']:
                     py_queue.append(u'__py_parse__["{0}_{1}"] = list(__mixed_content__)'.format(py_id, py_count))
-                    f.insert(i, mixed_ws+u'{{{0}}}'.format(py_count))
+                    f.insert(i, mixed_ws[0]+u'{{{0}}}'.format(py_count))
                     py_count += 1
                     mixed_closed = True
                     break
-                elif _l[0] in directives:
+                
+                # check for ws changes here
+                if get_new_mixed_ws:
+                    get_new_mixed_ws = False
+                    mixed_ws_offset.append(sub_strs(_ws, mixed_ws_last))
+                    if content_ws_offset_append:
+                        mixed_content_ws_offset.append(sub_strs(_ws, mixed_ws_last))
+                    mixed_ws.append(mixed_ws_last)
+                
+                if _ws == mixed_ws[-1]:
+                    mixed_ws_offset.pop()
+                    mixed_ws.pop()
+                
+                if len(mixed_ws) != 0:
+                    while _ws < mixed_ws[-1]:
+                        mixed_ws_offset.pop()
+                        mixed_ws.pop()
+                
+                '''
+                if get_new_content_ws:
+                    get_new_content_ws = False
+                    content_ws_offset.append(sub_strs(_ws, content_ws_last))
+                    content_ws.append(content_ws_last)
+                '''
+                
+                if _l[0] in directives:
                     _l = expand_line(_ws, _l, i, f)
-                    ws_diff = sub_str(_ws, mixed_ws)
-                    if get_new_ws or ws_diff <= mixed_ws_last:
-                        mixed_ws_last = ws_diff
-                        get_new_ws = False
                     _l, inlines = parse_inlines(_l)
-                    py_queue.append(mixed_ws_last+u'__mixed_content__.append(fmt.format("""{0}{1}""", {2}**locals()))'.format(sub_str(sub_str(_ws, mixed_ws_last), mixed_ws)+offset_ws, _l, inlines))
+                    
+                    '''
+                    if _ws > content_ws[-1]:
+                        content_ws_offset.append(sub_strs(_ws, content_ws[-1]))
+                        content_ws.append(_ws)
+                    while _ws < content_ws[-1]:
+                        content_ws_offset.pop()
+                        content_ws.pop()
+                    '''
+                    #tmp_ws = add_strs(*content_ws_offset+mixed_content_ws_offset)
+                    tmp_ws = sub_strs(_ws, orig_mixed_ws, *mixed_ws_offset)
+                    #print '###', _l, mixed_ws_offset
+                    py_queue.append(add_strs(*mixed_ws_offset)+u'__mixed_content__.append(fmt.format("""{0}{1}""", {2}**locals()))'.format(tmp_ws, _l, inlines))
+                    
                     del f[i]
                     continue
                 # is this a list comprehension?
                 elif _l[0] == '[' and _l[-1] == ']':
-                    py_queue.append(mixed_ws_last+u'__mixed_content__.extend({0})'.format(_l))
+                    py_queue.append(add_strs(*mixed_ws_offset)+u'__mixed_content__.extend({0})'.format(_l))
                     del f[i]
                 else:
-                    #print '!!!!!!', _l, get_new_ws, len(_ws), len(mixed_ws), len(mixed_ws_last)
                     if _l[-1] == ':':
-                        subtract_tmp = not get_new_ws
-                        get_new_ws = True
+                        mixed_ws_last = _ws
+                        get_new_mixed_ws = True
+                        content_ws_offset_append = True
                     
-                    # when mixed content is found before this line, mixed_ws != last, which alters how line is added to py_queue
-                    _tmp = u''
-                    if mixed_ws != mixed_ws_last:
-                        _tmp = sub_str(sub_str(_ws, mixed_ws), mixed_ws_last)
-                    
-                    #
-                    offset_ws += _tmp
-                    if subtract_tmp:
-                        subtract_tmp = False
-                        py_queue.append(sub_str(sub_str(_ws, mixed_ws), _tmp)+_l)
-                    else:
-                        py_queue.append(sub_str(_ws, mixed_ws)+_l)
+                    py_queue.append(add_strs(*mixed_ws_offset)+_l)
                     
                     del f[i]
                     continue
             # maybe this could be cleaner? instead of copy and paste
             if not mixed_closed:
                 py_queue.append(u'__py_parse__["{0}_{1}"] = list(__mixed_content__)'.format(py_id, py_count))
-                f.insert(i, mixed_ws+u'{{{0}}}'.format(py_count))
+                f.insert(i, mixed_ws[0]+u'{{{0}}}'.format(py_count))
                 py_count += 1
         # handle standalone embedded function calls
         elif ':' in l:
