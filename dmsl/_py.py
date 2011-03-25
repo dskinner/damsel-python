@@ -1,10 +1,10 @@
 #from _parse_pre import _parse_pre
 from _pre import _pre
 
-def _compile(py_queue):
+def _compile(py_queue, fn):
     py_str = '\n  '.join(py_queue)
     if py_str == '':
         return None
     py_str = 'def _py():\n  __py_parse__, __blocks__ = {}, {}\n  fmt.namespace=globals()\n  '+py_str+'\n  return locals()'
-    return compile(py_str, '<string>', 'exec')
+    return compile(py_str, fn, 'exec'), py_str
 

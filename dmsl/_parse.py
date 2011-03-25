@@ -12,18 +12,51 @@ from cdoc import _doc_pre, _build_from_parent, _build_element
 def func():pass
 func = type(func)
 
+class RenderException(Exception):
+    def __init__(self, f, py_str, exc_type, exc_value, exc_traceback):
+        import traceback
+        tb = traceback.extract_tb(exc_traceback)
+        self.msg = ['']
+        py_str = py_str.split('\n')
+        
+        for line in tb:
+            fn = line[0]
+            ln = line[1]
+            fnc = line[2]
+            src = line[3]
+            try:
+                src = py_str[ln].strip()
+                for i, x in enumerate(f):
+                    if src in x:
+                        ln = i
+                        break
+            except:
+                pass
+            self.msg.append('  File {0}, line {1}, in {2}\n    {3}'.format(fn, ln, fnc, src))
+        self.msg.append(repr(exc_value))
+        #self.msg.append('\n--- DMSL PYTHON QUEUE ---')
+        #self.msg.extend(py_q)
+        self.msg = '\n'.join(self.msg)
+        
+    def __str__(self):
+        return self.msg
+        
+
 class Template(object):
     def __init__(self, filename):
         self.sandbox = {}
         if isinstance(filename, list):
             self.f = filename
+            fn = '<string>'
         else:
             self.f = _sandbox._open(filename).read().splitlines()
+            fn = filename
         self.r, self.py_q = _pre(self.f)
         if len(self.py_q) == 0:
             self.code = None
+            self.py_str = ''
         else:
-            self.code = _compile(self.py_q)
+            self.code, self.py_str = _compile(self.py_q, fn)
             self.code = func(self.code.co_consts[0], self.sandbox)
         self.r = _doc_pre(self.r)
     
@@ -40,7 +73,17 @@ class Template(object):
         
         py_list = r.findall('.//_py_')
         py_id = id(self.py_q)
-        py_locals = self.code()
+        
+        try:
+            py_locals = self.code()
+        except Exception as e:
+            if isinstance(e, TypeError):
+                import sys
+                raise RenderException(self.f, self.py_str, *sys.exc_info())
+            else:
+                raise e
+            
+        
         py_parse = py_locals['__py_parse__']
         
         for e in py_list:
