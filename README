@@ -1,27 +1,43 @@
-This project is a work in progress. The examples in this README are outdated. Refer to test/templates/ for available syntax.
-Follow development at http://github.com/dasacc22/DAML
+This project is a work in progress. Refer to dmsl/test/templates/ for additional syntax not covered here.
+Follow development at http://github.com/dasacc22/dmsl or view this readme at http://dmsl.dasa.cc
 
 Building
 ========
 
-daml depends on Cython >= 0.13 and lxml so install as per your distribution, for example
+dmsl depends on Cython >= 0.13 and lxml so install as per your distribution, for example
 
-#> sudo aptitude install python-lxml
+.. sourcecode:: bash
+  
+  #> sudo apt-get install python-lxml; sudo apt-get install cython
+
 or
-#> sudo easy_install lxml
 
-After satisfying lxml dependancy, build and install globally with the following
+.. sourcecode:: bash
+  
+  #> sudo easy_install lxml; sudo apt-get install cython
 
-#> sudo python setup.py install
+or as I typically do
+
+.. sourcecode:: bash
+  
+  #> sudo apt-get install python-lxml; sudo easy_install cython
+
+After satisfying lxml and cython dependancy, build and install globally with the following
+
+.. sourcecode:: bash
+  
+  #> sudo python setup.py install
 
 or if you wish to not install globally, you can build the C extensions in place
 and use from directory
 
-#> python setup.py build_ext -i
+.. sourcecode:: bash
+  
+  #> python setup.py build_ext -i
 
 Running
 =======
-To run unit tests:
+To run unit tests, build in place and execute:
 
 .. sourcecode:: bash
 
@@ -31,11 +47,11 @@ To use:
 
 .. sourcecode:: python
 
-  import daml
-  daml._sandbox._open.template_dir = 'omg/seriously'
-  daml.parse('index.daml', {'content': 'Hello World'})
+  import dmsl
+  dmsl.set_template_dir('./templates')
+  dmsl.Template('index.daml').render({'content': 'Hello World'})
 
 Features and Examples
 =====================
 
-Coming soon...
+
