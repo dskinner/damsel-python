@@ -1,0 +1,12 @@
+'''
+this is a comment
+%with some stuff
+if in list
+'''
+
+%html
+    %body
+        """
+        %p this should be hidden
+        """
+        %p this should show up

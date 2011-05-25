@@ -51,6 +51,8 @@ def _pre(_f):
     mixed_ws_last = None
     get_new_mixed_ws = False
     
+    comment = None
+    
     i = 0
     
     while i < len(f):
@@ -58,6 +60,22 @@ def _pre(_f):
         if not l:
             del f[i]
             continue
+        
+        ### check for comments
+        if l[:3] in [u'"""', u"'''"]:
+            if comment is None:
+                comment = l[:3]
+                del f[i]
+                continue
+            elif l[:3] == comment:
+                comment = None
+                del f[i]
+                continue
+        
+        if comment is not None:
+            del f[i]
+            continue
+        ###
         
         ### maybe something better?
         if l[:8] == u'extends(':
