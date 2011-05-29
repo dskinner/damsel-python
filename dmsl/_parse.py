@@ -78,8 +78,9 @@ class Template(object):
         try:
             py_locals = self.code()
         except Exception as e:
-            if isinstance(e, TypeError):
+            if isinstance(e, TypeError) or isinstance(e, KeyError):
                 import sys
+                print self.py_str
                 raise RenderException(self.f, self.py_str, *sys.exc_info())
             else:
                 raise e
