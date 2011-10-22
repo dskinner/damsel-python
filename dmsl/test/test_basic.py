@@ -12,6 +12,7 @@ class TestBasic(unittest.TestCase):
             'basic_indent': None,
             'basic_inline': None,
             'basic_multilinetext': None,
+            'basic_tabs': None,
             'basic_tag_hashes': None,
             'basic_variable_indent': None
             }
@@ -43,6 +44,11 @@ class TestBasic(unittest.TestCase):
         parsed = Template(parsed).render()
         self.assertEqual(parsed.strip(), expected.strip())
     
+    def test_basic_tabs(self):
+        parsed, expected = self.t['basic_tabs']
+        parsed = Template(parsed).render()
+        self.assertEqual(parsed.strip(), expected.strip())
+
     def test_basic_tag_hashes(self):
         parsed, expected = self.t['basic_tag_hashes']
         parsed = Template(parsed).render()

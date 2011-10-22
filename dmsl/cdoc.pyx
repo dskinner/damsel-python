@@ -70,6 +70,9 @@ def _doc_pre(f):
         r[ws] = e
         prev = ws
     
+    if len(root) is 0:
+        return None
+
     return root[0]
 
 def _build_element(e, line):

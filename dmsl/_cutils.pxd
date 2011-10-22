@@ -53,7 +53,7 @@ cdef inline tuple _parse_ws(unicode s):
     cdef Py_UNICODE c
     
     for i, c in enumerate(s):
-        if c != u' ':
+        if c != u' ' and c != u'\t':
             return s[:i], s[i:].rstrip()
     return u'', s.rstrip()
 

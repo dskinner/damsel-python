@@ -5,7 +5,7 @@ from Cython.Distutils import build_ext
 
 setup(
     name='dmsl',
-    version='0.2',
+    version='0.3',
     author='Daniel Skinner',
     author_email='dasacc22@gmail.com',
     url='http://dmsl.dasa.cc',

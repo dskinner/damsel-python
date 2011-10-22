@@ -22,7 +22,8 @@ class TestPy(unittest.TestCase):
             'py_looping': None,
             'py_mixed_content': None,
             'py_nested_for': None,
-            'py_newline_var': None
+            'py_newline_var': None,
+            'py_raise': None
             }
 
         for k, v in self.t.items():
@@ -106,4 +107,12 @@ class TestPy(unittest.TestCase):
         parsed, expected = self.t['py_newline_var']
         parsed = Template(parsed).render()
         self.assertEqual(parsed.strip(), expected.strip())
+    
+    def test_py_raise(self):
+        parsed, expected = self.t['py_raise']
+        with self.assertRaises(Exception) as e:
+            parsed = Template(parsed).render()
+
+        self.assertEquals(str(e.exception), 'Testing raise Exception("...")')
+
 

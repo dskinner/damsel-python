@@ -72,8 +72,8 @@ class Template(object):
         if self.code == None:
             return _post(tostring(r))
         
-        py_list = r.findall('.//_py_')
-        py_id = id(self.py_q)
+        #py_list = r.findall('.//_py_')
+        #py_id = id(self.py_q)
         
         try:
             py_locals = self.code()
@@ -84,8 +84,13 @@ class Template(object):
                 raise RenderException(self.f, self.py_str, *sys.exc_info())
             else:
                 raise e
-            
         
+        # Check for empty doc, ussually result of python only code
+        if r is None:
+            return ''
+
+        py_list = r.findall('.//_py_')
+        py_id = id(self.py_q)
         py_parse = py_locals['__py_parse__']
         
         for e in py_list:

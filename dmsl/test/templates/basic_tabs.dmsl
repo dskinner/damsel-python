@@ -1,0 +1,6 @@
+%html
+	%head
+		%title Hello Tabs!
+	%body
+		%h1 Tabs and Spam!
+	

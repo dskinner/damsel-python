@@ -107,6 +107,12 @@ def _pre(_f):
             py_count += 1
             i += 1
             continue
+        # handle raise
+        elif l[:5] == u'raise':
+            py_queue.append(l)
+            del f[i]
+            i += 1
+            continue
         # else if not a filter or mixed content
         elif l[0] != u':' and l[-1] != u':':
             if var_assign(l):
