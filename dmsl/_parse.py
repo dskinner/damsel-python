@@ -1,8 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 from copy import copy, deepcopy
-from lxml.etree import tostring
-#from xml.etree.cElementTree import tostring
+import lxml.etree as etree
 
 import _sandbox
 from _pre import _pre
@@ -43,6 +42,8 @@ class RenderException(Exception):
         
 
 class Template(object):
+    debug = False
+
     def __init__(self, filename):
         self.sandbox = {}
         if isinstance(filename, list):
@@ -70,17 +71,15 @@ class Template(object):
         r = copy(self.r)
         
         if self.code == None:
-            return _post(tostring(r))
-        
-        #py_list = r.findall('.//_py_')
-        #py_id = id(self.py_q)
+            return _post(etree.tostring(r))
         
         try:
             py_locals = self.code()
         except Exception as e:
             if isinstance(e, TypeError) or isinstance(e, KeyError):
                 import sys
-                print self.py_str
+                if self.debug:
+                    print self.py_str
                 raise RenderException(self.f, self.py_str, *sys.exc_info())
             else:
                 raise e
@@ -109,7 +108,7 @@ class Template(object):
             else:
                 _build_element(e, unicode(o))
         
-        return _post(tostring(r))
+        return _post(etree.tostring(r))
 
 def _post(s):
     return '<!DOCTYPE html>'+s.replace('&gt;', '>').replace('&lt;', '<').replace('&amp;', '&')

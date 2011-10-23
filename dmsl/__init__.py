@@ -12,6 +12,9 @@ from _sandbox import extensions
 def set_template_dir(value):
     _sandbox._open.template_dir = value
 
+def set_debug(b):
+    Template.debug = b
+
 def parse(t, context={}):
     return Template(t).render(context)
 
