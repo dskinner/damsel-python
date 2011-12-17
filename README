@@ -41,8 +41,15 @@ To run unit tests, build in place and execute test/ directory:
 
 .. _featuresexamples:
 
+Submitting Bugs
+===============
+Please submit bugs and feature requests to the github issue tracker.
+
 Features and Examples
 =====================
+
+Command Line Interface
+----------------------
 Damsel can run via command line. For python2.7:
 
 .. sourcecode:: bash
@@ -56,13 +63,64 @@ For python2.6:
   pip install argparse
   python -m dmsl.__main__ -h
 
+Django Example
+--------------
+I'm not a django developer but I did run through a portion of the tutorial to provide enough information
+here to get started. Edit settings.py and add the following:
+
+.. sourcecode:: python
+
+  import dmsl
+  dmsl.set_template_dir('/path/to/dmsl/templates')
+
+The following two samples are adapted from the polls example from django docs. Edit views.py and
+render a response like this:
+
+.. sourcecode:: python
+
+  from polls.models import Poll
+  from django.http import HttpResponse
+  import dmsl
+  
+  def index(request):
+      latest_poll_list = Poll.objects.all().order_by('-pub_date')[:5]
+      context = {'latest_poll_list': latest_poll_list}
+
+      # there's two ways to render the template depending on if you're implement a caching mechanism
+      # dmsl.Template returns an object you can store in memory for rendering later
+      # Note the ** to expand the dict as keyword arguments.
+      response = dmsl.Template('index.dmsl').render(**context)
+      # optionally you could simply do the following which simply calls the above
+      # response = dmsl.parse('index.dmsl', **context)
+      return HttpResponse(response)
+
+The following is the contents of index.dmsl:
+
+.. sourcecode:: haml
+
+  polls = kwargs.get('latest_poll_list', [])
+  
+  %html %body
+      if len(polls) is 0:
+          %p No polls are available
+  
+      %ul for poll in polls:
+          %li %a[href="/polls/{poll.id}/"] {poll.question}
+
+Errors in a template will throw a RenderException. Insepct the "Exception Value:" on the django error page for the dmsl file
+and line number listed next to it.
+
+That should be enough to get a savvy django developer started. I'll get a more complete example done in the future.
+
+Generic Source Example
+----------------------
 To use in source:
 
 .. sourcecode:: python
 
   import dmsl
   dmsl.set_template_dir('./templates')
-  dmsl.Template('index.dmsl').render({'content': 'Hello World'})
+  dmsl.Template('index.dmsl').render(**{'content': 'Hello World'})
 
 Damsel features html outlining similar to css selectors. The most notable difference is using a percent (%) to specify a regular tag.
 

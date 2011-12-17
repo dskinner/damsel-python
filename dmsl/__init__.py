@@ -15,7 +15,7 @@ def set_template_dir(value):
 def set_debug(b):
     Template.debug = b
 
-def parse(t, context={}):
-    return Template(t).render(context)
+def parse(t, **kwargs):
+    return Template(t).render(**kwargs)
 
 
