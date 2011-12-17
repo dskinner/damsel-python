@@ -43,11 +43,18 @@ To run unit tests, build in place and execute test/ directory:
 
 Features and Examples
 =====================
-Damsel can run via command line:
+Damsel can run via command line. For python2.7:
 
 .. sourcecode:: bash
 
   python -m dmsl -h  # see for more info
+
+For python2.6:
+
+.. sourcecode:: bash
+
+  pip install argparse
+  python -m dmsl.__main__ -h
 
 To use in source:
 
