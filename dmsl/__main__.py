@@ -58,12 +58,34 @@ parser.add_argument('--template-dir', dest='template_dir', type=str, nargs=1, de
 parser.add_argument('--timeit', dest='timed', action='store_const', const=True, default=False, help='Time the duration of parse.')
 parser.add_argument('--cache', dest='cache', action='store_const', const=True, default=False, help='When timing parse,  prerender portions of the template and time final render.')
 parser.add_argument('--repeat', dest='repeat', type=int, nargs=1, default=[100], help='When timing parse, specify number of runs to make.')
+parser.add_argument('--debug', dest='debug', action='store_const', const=True, default=False, help='Parser step output for debugging module and templates. Negates any other options set (except --template-dir) and only applicable for parsing a single template file.')
 
 args = parser.parse_args()
 
 if args.template_dir is not None:
     _sandbox._open.template_dir = args.template_dir[0]
 
-parse_templates(args.templates, args.kwargs[0], args._locals[0], args.timed, args.cache, args.repeat[0])
+if not args.debug:
+    parse_templates(args.templates, args.kwargs[0], args._locals[0], args.timed, args.cache, args.repeat[0])
+else:
+    import pprint
+    from _pre import _pre
+    from _py import _compile
+
+    pp = pprint.PrettyPrinter(depth=3)
+
+    fn = args.templates[0]
+    f = _sandbox._open(fn).read().splitlines()
+    r, py_q = _pre(f)
+    print('\n!!! r !!!\n')
+    pp.pprint(r)
+    print('\n@@@ py_q @@@\n')
+    pp.pprint(py_q)
+    print('\n### py_str ###\n')
+    code, py_str = _compile(py_q, fn)
+    print(py_str)
+    print('\n$$$$$$$$$$\n')
+
+
 
 

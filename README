@@ -101,7 +101,7 @@ The following is the contents of index.dmsl:
   polls = kwargs.get('latest_poll_list', [])
   
   %html %body
-      if len(polls) is 0:
+      if not polls:
           %p No polls are available
   
       %ul for poll in polls:

@@ -197,7 +197,7 @@ def _pre(_f):
                     mixed_closed = True
                     break
                 
-                # check for ws changes here
+                # check for ws changes here, python statement ws only
                 if get_new_mixed_ws:
                     get_new_mixed_ws = False
                     mixed_ws_offset.append(sub_strs(_ws, mixed_ws_last))
@@ -205,14 +205,20 @@ def _pre(_f):
                         mixed_content_ws_offset.append(sub_strs(_ws, mixed_ws_last))
                     mixed_ws.append(mixed_ws_last)
                 
-                if _ws == mixed_ws[-1]:
+
+                # handles catching n[-1] of if,elif,else and related to align correctly
+                while mixed_ws and _ws == mixed_ws[-1]:
                     mixed_ws_offset.pop()
                     mixed_ws.pop()
                 
-                if len(mixed_ws) != 0:
-                    while _ws < mixed_ws[-1]:
-                        mixed_ws_offset.pop()
-                        mixed_ws.pop()
+                #if _ws == mixed_ws[-1]:
+                #    mixed_ws_offset.pop()
+                #    mixed_ws.pop()
+
+                # handles catching n[1:-1] of if,elif,else and related to align correctly
+                while mixed_ws and _ws <= mixed_ws[-1]:
+                    mixed_ws_offset.pop()
+                    mixed_ws.pop()
                 
                 '''
                 if get_new_content_ws:

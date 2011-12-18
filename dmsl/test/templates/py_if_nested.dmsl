@@ -1,0 +1,17 @@
+%html %body
+    if True:
+        %p a
+        if True:
+            %p b
+            if False:
+                %p b
+            elif True:
+                %p c
+        elif False:
+            %p b
+        else:
+            %p c
+    elif False:
+        %p b
+    else:
+        %p c
