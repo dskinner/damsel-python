@@ -18,19 +18,41 @@ cdef class Element:
     
     def __cinit__(self):
         self.children = []
+
+    def _to_string(self):
+        result = ['<', self.tag]
+
+        for k, v in self.attrib.items():
+            result.extend([' ', k, '="', v, '"'])
+        
+        result.extend(['>', self.text])
+
+        for child in self.children:
+            result.extend(child._to_string())
+
+        result.extend(['</', self.tag, '>'])
+
+        if self.tail:
+            result.append(self.tail)
+
+        return result
+
     def to_string(self):
+        '''
         result = []
         result.extend(['<', self.tag])
-        if self.attrib:
-            result.append(' ')
         for k, v in self.attrib.items():
-            result.extend([k, '="', v, '"'])
+            result.extend([' ', k, '="', v, '"'])
         result.extend(['>', self.text])
         if len(self.children) != 0:
             for child in self.children:
                 result.append(child.to_string())
-        result.extend([self.tail, '</', self.tag, '>'])
+        result.extend(['</', self.tag, '>'])
+        if self.tail:
+            result.append(self.tail)
         return ''.join(result)
+        '''
+        return ''.join(self._to_string())
 
     def findall(self, unicode s):
         cdef list result = []
@@ -67,7 +89,7 @@ cdef class Element:
     property tail:
         def __get__(self):
             if not self._tail:
-                self._tail = u''
+                return False
             return self._tail
         def __set__(self, unicode tail):
             self._tail = tail
