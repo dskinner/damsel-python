@@ -96,20 +96,20 @@ def _build_from_parent(p, index, f):
     r = {'root': p}
     prev = ''
     plntxt = {}
-    #from time import time
-    #ws_time = 0
-    #plntxt_time = 0
-    #tag_time = 0
-    #el_time = 0
-    #attrib_time = 0
+    from time import time
+    ws_time = 0
+    plntxt_time = 0
+    tag_time = 0
+    el_time = 0
+    attrib_time = 0
 
     for line in f:
-        #st = time()
+        st = time()
         ws, l = _parse_ws(line)
-        #ws_time += time()-st
+        ws_time += time()-st
 
         ### plntxt queue
-        #st = time()
+        st = time()
         if l[0] == u'\\':
             if ws in plntxt:
                 plntxt[ws].append(l[1:])
@@ -125,16 +125,16 @@ def _build_from_parent(p, index, f):
                 else: # _ws == prev
                     el.tail = el.tail and el.tail+text or text
             plntxt = {}
-        #plntxt_time += time()-st
+        plntxt_time += time()-st
         ###
         
-        #st = time()
+        st = time()
         u, attr = _parse_attr(l)
         hash, text = _split_space(u)
         _tag, _id, _class = _parse_tag(hash)
-        #tag_time += time()-st
+        tag_time += time()-st
         
-        #st = time()
+        st = time()
         if ws == u'':
             _p = None
             e = SubElement(p, _tag or 'div')
@@ -152,13 +152,15 @@ def _build_from_parent(p, index, f):
                 if _ws > ws:
                     r.pop(_ws)
         
-        #el_time += time()-st
+        el_time += time()-st
         
-        #st = time()
+        st = time()
+        # fctr 7
         if index is not None and _p is None:
             p.insert(index, e)
             index += 1
-        
+        st = time()
+        # fctr 5
         e.text = text
         if _id:
             e.attrib['id'] = _id
@@ -166,14 +168,16 @@ def _build_from_parent(p, index, f):
             e.attrib['class'] = _class
         if attr:
             e.attrib.update(attr)
-        
+        # fctr 1
         r[ws] = e
+        # fctr 1.5
         prev = ws
-        #attrib_time += time()-st
+        attrib_time += time()-st
     
-    #print 'ws_time: %.2f ms' % (ws_time*1000)
-    #print 'plntxt_time: %.2f ms' % (plntxt_time*1000)
-    #print 'tag_time: %.2f ms' % (tag_time*1000)
-    #print 'el_time: %.2f ms' % (el_time*1000)
-    #print 'attrib_time: %.2f ms' % (attrib_time*1000)
-
+    print '!!!!!'
+    print 'ws_time: %.2f ms' % (ws_time*1000)
+    print 'plntxt_time: %.2f ms' % (plntxt_time*1000)
+    print 'tag_time: %.2f ms' % (tag_time*1000)
+    print 'el_time: %.2f ms' % (el_time*1000)
+    print 'attrib_time: %.2f ms' % (attrib_time*1000)
+    print '!!!!!'

@@ -33,6 +33,7 @@ Follow development at http://github.com/dasacc22/dmsl
         ],
     cmdclass = {'build_ext': build_ext},
     ext_modules = [ Extension("dmsl.cdoc", ["dmsl/cdoc.pyx"]),
+                    Extension("dmsl.cdoc2", ["dmsl/cdoc2.pyx"]),
                     Extension("dmsl.cutils", ["dmsl/cutils.pyx"]),
                     Extension("dmsl.cfmt", ["dmsl/cfmt.pyx"])]
     )
