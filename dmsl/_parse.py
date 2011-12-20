@@ -6,7 +6,7 @@ import lxml.etree as etree
 import _sandbox
 from _pre import _pre
 from _py import _compile
-from cdoc2 import doc_pre, doc_py, _build_from_parent, _build_element
+from cdoc2 import doc_pre, doc_py
 
 def func():pass
 func = type(func)
@@ -43,6 +43,7 @@ class RenderException(Exception):
 
 class Template(object):
     debug = False
+    inject_kwargs = True
 
     def __init__(self, filename):
         self.sandbox = {}
@@ -59,22 +60,24 @@ class Template(object):
         else:
             self.code, self.py_str = _compile(self.py_q, fn)
             self.code = func(self.code.co_consts[0], self.sandbox)
-        self.r2 = doc_pre(self.r)
+        self.r = doc_pre(self.r)
     
     def render(self, *args, **kwargs):
         self.sandbox.clear()
         self.sandbox.update(_sandbox.default_sandbox)
         self.sandbox.update(_sandbox.extensions)
         self.sandbox['args'] = args
-        self.sandbox['kwargs'] = kwargs
+        if self.inject_kwargs:
+            self.sandbox.update(kwargs)
+        else:
+            self.sandbox['kwargs'] = kwargs
 
-        #r = deepcopy(self.r)
-        # TODO copy fails on my Element
-        r = doc_pre(self.r)
+        r = copy(self.r)
+        #r = doc_pre(self.r)
         
         if self.code == None:
             #return _post(etree.tostring(r))
-            return _post(r.to_string())
+            return _post(str(r))
         
         try:
             py_locals = self.code()
@@ -91,30 +94,11 @@ class Template(object):
         if r is None:
             return ''
 
-        #py_list = r.findall('.//_py_')
         py_id = id(self.py_q)
         py_parse = py_locals['__py_parse__']
         doc_py(r, py_id, py_parse)
-        '''
-        for e in py_list:
-            t = e.text[1:-1]
-            k = u'{0}_{1}'.format(py_id, t)
-            o = py_parse[k]
-            if isinstance(o, (list, tuple)):
-                p = e.getparent()
-                
-                index = None
-                if len(p.getchildren()) != 0:
-                    index = p.getchildren().index(e)
-                
-                p.remove(e)
-                _build_from_parent(p, index, [unicode(x) for x in o])
-            else:
-                _build_element(e, unicode(o))
-        
-        return _post(etree.tostring(r))
-        '''
-        return _post(r.to_string())
+        return _post(str(r))
+
 def _post(s):
     return '<!DOCTYPE html>'+s.replace('&gt;', '>').replace('&lt;', '<').replace('&amp;', '&')
 

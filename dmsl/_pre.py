@@ -25,7 +25,7 @@ def expand_line(ws, l, i, f):
     tag, txt = split_space(el)
     
     # Check for inlined tag hashes
-    if txt != u'' and (txt[0] in directives or txt[-1] == u':'):
+    if txt != u'' and (txt[0] in directives or txt[-1] == u':' or (txt[0] == u'[' and txt[-1] == u']')):
         l = l.replace(txt, u'')
         f[i] = ws+l
         f.insert(i+1, ws+u' '+txt)
