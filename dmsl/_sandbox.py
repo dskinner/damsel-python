@@ -7,7 +7,7 @@ except ImportError:
 
 from copy import copy
 import os.path
-from cfmt import DMSLFormatter
+from cfmt import fmt
 import codecs
 
 ### Default set of dmsl extensions
@@ -53,7 +53,7 @@ default_sandbox = { '__builtins__': None,
                     'Exception': Exception,
                     'form': form,
                     'float': __builtin__.float,
-                    'fmt': DMSLFormatter(),
+                    'fmt': fmt,
                     'globals': __builtin__.globals,
                     'int': __builtin__.int,
                     'js': js,

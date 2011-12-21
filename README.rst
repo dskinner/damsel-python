@@ -11,7 +11,13 @@ Follow development at http://github.com/dasacc22/dmsl or view this readme at htt
   * Command Line Interface
   * Django Example
   * Generic Source
-  * Language Features
+
+* Language Features
+
+  * Elements and Attributes
+  * Embedding Python
+  * Filters
+  * Reusable Templates
 
 .. _Building:
 
@@ -48,13 +54,9 @@ Please submit bugs and feature requests to the github issue tracker.
 
 Speed Tests
 ===========
-Damsel is fast but not as fast as it could be. Alot of the codebase has been
-kept simplified with a focus on ironing out the language details. Below are results
-from the genshi svn benchmark bigtable.py for different template languages. The
-purpose of sharing this is to illustrate two points,
-
-* Damsel is reasonably fast
-* Python is truely at your disposal
+Damsel is fast while keeping the codebase small and safe from game-breaking
+optimizations. Below are results from the genshi svn benchmark bigtable.py
+for different template languages.
 
 This test creates a table with 1000 rows, each containing 10 columns from calling
 dict.values() and setting each as the column text. It's a silly test, but let's
@@ -66,26 +68,24 @@ look at two ways to do this in dmsl::
 
 This is how one might typically do such in dmsl since it's clean and readable::
 
-  Damsel Template  86.63 ms
+  Damsel Template  30.89 ms
   Mako Template    21.64 ms
   Genshi Template  127.03 ms
   Django Template  274.57 ms
 
-This puts alot of stress on certain portions of dmsl that are starting to get some
-attention to speed. But also worth noting is the basic iteration over a large dataset.
-In python, we might use a list comprehension to speed up such things and dmsl is no
-different in its capabilities::
+Worth noting is the basic iteration over a large dataset.
+In python, one might use a list comprehension to speed up such things and dmsl
+is no different in its capabilities::
 
-  data = [['%tr'] + ['  %td {0}'.format(col) for col in row.values()] for row in table]
+  data = [['%tr'] + [fmt('  %td {0}', col) for col in row.values()] for row in table]
   %table [row for item in data for row in item]
 
-Using list comprehensions reduces the time significantly at the cost of the first
-example's readability::
+Using list comprehensions combined with selective formatter statements reduces the
+time slightly at the cost of the first example's readability::
 
-  Damsel Template  29.55 ms
+  Damsel Template  24.64 ms
 
-There's room for improvement in many areas of the dmsl parser that will be developed
-over the coming months, but dmsl is already reasonably fast.
+The use of list comprehensions for template outputting is discussed later on.
 
 Features and Examples
 =====================
@@ -155,7 +155,10 @@ To use in source::
   dmsl.Template('index.dmsl').render(**{'content': 'Hello World'})
 
 Language Features
------------------
+=================
+
+Elements and Attributes
+-----------------------
 Damsel features html outlining similar to css selectors. The most notable difference is using a percent (%) to specify a regular tag::
 
   %html
@@ -185,13 +188,23 @@ Attributes are specified as in CSS. Breaking attributes across multiple lines is
       %img[border=0][style="margin: 20px;"]
       %a#home.link[href="http://www.dasa.cc"]
 
+Embedding Python
+----------------
 Damsel also supports embedding python in the document. There's no special syntax for use aside from embedding a function call inline of a tag, starting the call with a colon (:). HTML outlining and python can be intermixed for different effect. Embedding a variable within an outline element is done via the standard python string `Formatter <http://docs.python.org/library/string.html#format-string-syntax>`_::
   
   n = 4
   greet = lambda x: 'Hello, '+x
   %html %body for x in range(n):
-      y = x*2
-      %p Number is {x}. :greet('Daniel'). Here's the number doubled, {y}
+      y = x*2.5
+      %p Number is {x}. :greet('Daniel'). Here's the number multiplied and formatted, {y:.2f}
+
+str.format is also available but is not safe for formatting user input. In cases where you want to call this directly with safety checks, fmt is available in the sandbox::
+
+  %html %body
+      a = 'a'
+      b = 'b'
+      c = fmt('{0}{b}', a, b=b)
+      %p {c}
 
 Python can be used to control the flow of the document as well::
 
@@ -213,6 +226,8 @@ The evaluation of python code takes place in a sandbox that can be extended with
 
 ObjectId will then be available for use in your dmsl templates.
 
+Filters
+-------
 Another extensible feature of dmsl are filters. A filter allows you to write a slightly altered syntax for calling a python function. Take for example the builtin js filter used for specifying multiple javascript files in a particular location::
 
   def js(s, _locals):
@@ -238,8 +253,10 @@ This would be the same as explicitly typing it out::
       %script[src="/js/lib/utils.js"][type="text/javascript"]
       %script[src="/js/lib/js.js"][type="text/javascript"]
 
-Filters can be used for most anything from a docutils or markdown processor to whatever you might imagine.
+Filters can be used for most anything from a docutils or markdown processor, automatic form generation based on keywords and variables, or to whatever you might imagine.
 
+Reusable Templates
+------------------
 Being able to create templates are a must and there are two methods implemented in dmsl to do so. The first is the standard include statement. Consider the following file, top.dmsl::
 
   #top

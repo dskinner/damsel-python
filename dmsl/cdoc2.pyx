@@ -26,6 +26,8 @@ cdef inline unicode _tostring(Element el):
 
     return s
 
+cdef inline unicode _post(unicode s):
+    return u'<!DOCTYPE html>'+s.replace(u'&lt;', u'<').replace(u'&gt;', u'>').replace(u'&amp;', u'&')
 
 cdef inline Element _copy(Element orig):
     cdef Element orig_child, child
@@ -54,9 +56,6 @@ cdef class Element:
         self._attrib = {}
         self._children = []
 
-    def __str__(self):
-        return _tostring(self)
-
     def __copy__(self):
         return _copy(self)
 
@@ -64,6 +63,9 @@ cdef class Element:
         cdef list result = []
         _findall(self, s, result)
         return result
+
+    def tostring(self):
+        return _post(_tostring(self))
 
     property attrib:
         def __get__(self):
@@ -254,6 +256,8 @@ def _build_from_parent(p, index, f):
     #tag_time = 0
     #el_time = 0
     #attrib_time = 0
+
+    cache = {}
     
     for line in f:
         #st = time()
@@ -281,9 +285,17 @@ def _build_from_parent(p, index, f):
         ###
         
         #st = time()
-        u, attr = _parse_attr(l)
-        hash, text = _split_space(u)
-        _tag, _id, _class = _parse_tag(hash)
+        if cache.has_key(l):
+            _tag, _id, _class, attr, text = cache[l]
+        else:
+            #4.5   
+            u, attr = _parse_attr(l)
+            #0.8
+            hash, text = _split_space(u)
+            #7.7
+            _tag, _id, _class = _parse_tag(hash)
+            #13
+            cache[l] = (_tag, _id, _class, attr, text)
         #tag_time += time()-st
         
         #st = time()

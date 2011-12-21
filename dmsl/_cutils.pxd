@@ -9,7 +9,7 @@ cdef inline tuple _parse_attr(unicode s):
     val_start = -1
     literal_start = -1
 
-    d = {}
+    cdef dict d = {}
 
     for i, c in enumerate(s):
         if key_start != -1:

@@ -17,7 +17,7 @@ class RenderException(Exception):
         tb = traceback.extract_tb(exc_traceback)
         self.msg = ['']
         py_str = py_str.split('\n')
-        
+
         for line in tb:
             fn = line[0]
             ln = line[1]
@@ -36,51 +36,40 @@ class RenderException(Exception):
         #self.msg.append('\n--- DMSL PYTHON QUEUE ---')
         #self.msg.extend(py_q)
         self.msg = '\n'.join(self.msg)
-        
+
     def __str__(self):
         return self.msg
-        
+
 
 class Template(object):
     debug = False
-    inject_kwargs = True
-
     def __init__(self, filename):
-        self.sandbox = {}
+        self.sandbox = _sandbox.new()
+        self.sandbox.update(_sandbox.extensions)
+
         if isinstance(filename, list):
             self.f = filename
-            fn = '<string>'
+            self.fn = '<string>'
         else:
             self.f = _sandbox._open(filename).read().splitlines()
-            fn = filename
+            self.fn = filename
+
         self.r, self.py_q = _pre(self.f)
-        if len(self.py_q) == 0:
-            self.code = None
-            self.py_str = ''
-        else:
-            self.code, self.py_str = _compile(self.py_q, fn)
-            self.code = func(self.code.co_consts[0], self.sandbox)
         self.r = doc_pre(self.r)
-    
+
     def render(self, *args, **kwargs):
-        self.sandbox.clear()
-        self.sandbox.update(_sandbox.default_sandbox)
-        self.sandbox.update(_sandbox.extensions)
         self.sandbox['args'] = args
-        if self.inject_kwargs:
-            self.sandbox.update(kwargs)
-        else:
-            self.sandbox['kwargs'] = kwargs
 
         r = copy(self.r)
-        #r = doc_pre(self.r)
-        
-        if self.code == None:
-            #return _post(etree.tostring(r))
-            return _post(str(r))
-        
+
+        if len(self.py_q) == 0:
+            return r.tostring()
+        else:
+            self.code, self.py_str = _compile(self.py_q, self.fn, kwargs)
+            self.code = func(self.code.co_consts[0], self.sandbox)
+
         try:
-            py_locals = self.code()
+            py_locals = self.code(**kwargs)
         except Exception as e:
             if isinstance(e, TypeError) or isinstance(e, KeyError):
                 import sys
@@ -89,7 +78,7 @@ class Template(object):
                 raise RenderException(self.f, self.py_str, *sys.exc_info())
             else:
                 raise e
-        
+
         # Check for empty doc, ussually result of python only code
         if r is None:
             return ''
@@ -97,10 +86,8 @@ class Template(object):
         py_id = id(self.py_q)
         py_parse = py_locals['__py_parse__']
         doc_py(r, py_id, py_parse)
-        return _post(str(r))
+        return r.tostring()
 
-def _post(s):
-    return '<!DOCTYPE html>'+s.replace('&gt;', '>').replace('&lt;', '<').replace('&amp;', '&')
 
 if __name__ == '__main__':
     import sys

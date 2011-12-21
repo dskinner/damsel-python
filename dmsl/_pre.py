@@ -32,7 +32,7 @@ def expand_line(ws, l, i, f):
     return l
 
 txt_cmd = u'__py_parse__["{0}_{1}"] = {2}'
-txt_fmt = u'__py_parse__["{0}_{1}"] = fmt.format("""{2}""", {3}**locals())'
+txt_fmt = u'__py_parse__["{0}_{1}"] = fmt("""{2}""", {3}**locals())'
 
 def add_strs(*args):
     s = ''
@@ -242,7 +242,7 @@ def _pre(_f):
                     #tmp_ws = add_strs(*content_ws_offset+mixed_content_ws_offset)
                     tmp_ws = sub_strs(_ws, orig_mixed_ws, *mixed_ws_offset)
                     #print '###', _l, mixed_ws_offset
-                    py_queue.append(add_strs(*mixed_ws_offset)+u'__mixed_content__.append(fmt.format("""{0}{1}""", {2}**locals()))'.format(tmp_ws, _l, inlines))
+                    py_queue.append(add_strs(*mixed_ws_offset)+u'__mixed_content__.append(fmt("""{0}{1}""", {2}**locals()))'.format(tmp_ws, _l, inlines))
                     
                     del f[i]
                     continue
