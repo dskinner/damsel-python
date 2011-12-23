@@ -32,7 +32,7 @@ def expand_line(ws, l, i, f):
     return l
 
 txt_cmd = u'__py_parse__["{0}_{1}"] = {2}'
-txt_fmt = u'__py_parse__["{0}_{1}"] = fmt("""{2}""", {3}**locals())'
+txt_fmt = u'__py_parse__["{0}_{1}"] = fmt(u"""{2}""", {3}**locals())'
 
 def add_strs(*args):
     s = ''

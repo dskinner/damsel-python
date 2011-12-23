@@ -1,7 +1,6 @@
 import argparse
 import ast
 import timeit
-import lxml.etree as etree
 import os
 
 from _parse import Template
@@ -19,7 +18,8 @@ def parse(template, context, _locals, timed, cache, repeat):
             print '%.2f ms %s' % (1000 * t.timeit(repeat)/repeat, template)
         else:
             t = Template(template)
-            print '<!DOCTYPE html>\n'+etree.tostring(etree.fromstring(t.render(**context)), pretty_print=True)
+            print(t.render(**context))
+            #print '<!DOCTYPE html>\n'+etree.tostring(etree.fromstring(t.render(**context)), pretty_print=True)
     except Exception as e:
         print 'Exception rendering ', template
         print e

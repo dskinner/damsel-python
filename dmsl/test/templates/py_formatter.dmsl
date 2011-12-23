@@ -4,6 +4,6 @@ say = lambda x: 'Who says, {0}'.format(x)
 
 %html
     %body
-        %p {item:escape} :say('where')
-        %p {tag:safe} :say('how')
+        %p {item} :say('where')
+        %p {tag!r} :say('how')
         %p :say('what?')
