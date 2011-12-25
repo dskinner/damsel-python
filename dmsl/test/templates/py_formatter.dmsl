@@ -1,4 +1,4 @@
-item = 'Translucent Bulbs'
+item = 'Translucent <strong> Bulbs'
 tag = 'this <div> rocks'
 say = lambda x: 'Who says, {0}'.format(x)
 
@@ -6,4 +6,5 @@ say = lambda x: 'Who says, {0}'.format(x)
     %body
         %p {item} :say('where')
         %p {tag!r} :say('how')
+        %p {tag!s}
         %p :say('what?')

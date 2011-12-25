@@ -54,38 +54,23 @@ Please submit bugs and feature requests to the github issue tracker.
 
 Speed Tests
 ===========
-Damsel is fast while keeping the codebase small and safe from game-breaking
-optimizations. Below are results from the genshi svn benchmark bigtable.py
-for different template languages.
+Damsel is fast while keeping the codebase relatively small. Below are results
+from the genshi svn benchmark bigtable.py for different template languages.
 
 This test creates a table with 1000 rows, each containing 10 columns from calling
 dict.values() and setting each as the column text. It's a silly test, but let's
-look at two ways to do this in dmsl::
+look at how this can be handled in dmsl::
 
   %table for row in table:
       %tr for col in row.values():
           %td {col}
 
-This is how one might typically do such in dmsl since it's clean and readable::
+And the results::
 
-  Damsel Template  30.89 ms
+  Damsel Template  37.22 ms
   Mako Template    21.64 ms
   Genshi Template  127.03 ms
   Django Template  274.57 ms
-
-Worth noting is the basic iteration over a large dataset.
-In python, one might use a list comprehension to speed up such things and dmsl
-is no different in its capabilities::
-
-  data = [['%tr'] + [fmt('  %td {0}', col) for col in row.values()] for row in table]
-  %table [row for item in data for row in item]
-
-Using list comprehensions combined with selective formatter statements reduces the
-time slightly at the cost of the first example's readability::
-
-  Damsel Template  24.64 ms
-
-The use of list comprehensions for template outputting is discussed later on.
 
 Features and Examples
 =====================

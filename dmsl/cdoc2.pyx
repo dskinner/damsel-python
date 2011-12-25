@@ -13,11 +13,20 @@ cdef inline _findall(Element el, unicode srch, list result):
 cdef inline unicode _tostring(Element el):
     cdef Element child
     cdef unicode s
+    cdef list keyset = []
+    cdef list attribset = []
 
     s = u'<' + el._tag
 
     if el._attrib:
-        s += u''.join([u' '+k+u'="'+v+u'"' for k, v in el._attrib.items()])
+        el._attrib.reverse()
+        for k, v in el._attrib:
+            if k in keyset:
+                continue
+            attribset.append((k, v))
+            keyset.append(k)
+        attribset.reverse()
+        s += u''.join([u' '+k+u'="'+v+u'"' for k, v in attribset])#.items()])
 
     s += u'>' + el._text + u''.join([_tostring(child) for child in el._children]) + u'</'+el._tag+u'>'
 
@@ -36,7 +45,8 @@ cdef inline Element _copy(Element orig):
     el.tag = copy(orig.tag)
     el.text = copy(orig.text)
     el.tail = copy(orig.tail)
-    el.attrib = orig.attrib.copy()
+    #el.attrib = orig.attrib.copy()
+    el.attrib = copy(orig.attrib)
     for orig_child in orig.children:
         child = _copy(orig_child)
         child.parent = el
@@ -50,10 +60,12 @@ cdef class Element:
     cdef unicode _tag
     cdef unicode _text
     cdef unicode _tail
-    cdef dict _attrib
+    #cdef dict _attrib
+    cdef list _attrib
 
     def __cinit__(self):
-        self._attrib = {}
+        #self._attrib = {}
+        self._attrib = []
         self._children = []
 
     def __copy__(self):
@@ -65,13 +77,14 @@ cdef class Element:
         return result
 
     def tostring(self):
-        return _post(_tostring(self))
+        return u'<!DOCTYPE html>' + _tostring(self)
 
     property attrib:
         def __get__(self):
             return self._attrib
 
-        def __set__(self, dict attrib):
+        #def __set__(self, dict attrib):
+        def __set__(self, list attrib):
             self._attrib = attrib
 
     property tag:
@@ -195,9 +208,19 @@ cdef Element _doc_pre(list f):
         if ws == u'':
             if _id in _ids:
                 e = _ids[_id]
-                if attr.pop(u'super', None) is None:
-                    for child in e.children:
-                        e.children.remove(child)
+                is_super = 0
+                for i, t in enumerate(attr):
+                    if t[0] == u'super':
+                        is_super = 1
+                        attr.pop(i)
+                        break
+                if is_super:
+                    e.children = []
+                    #for child in e.children:
+                    #    e.children.remove(child)
+                #if attr.pop(u'super', None) is None:
+                #    for child in e.children:
+                #        e.children.remove(child)
             else:
                 e = SubElement(root, _tag or u'div')
         elif ws > prev:
@@ -213,12 +236,15 @@ cdef Element _doc_pre(list f):
         
         e.text = text
         if _id:
-            e.attrib[u'id'] = _id
+            #e.attrib[u'id'] = _id
+            e.attrib.append((u'id', _id))
             _ids[_id] = e
         if _class:
-            e.attrib[u'class'] = _class
+            #e.attrib[u'class'] = _class
+            e.attrib.append((u'class', _class))
         if attr:
-            e.attrib.update(attr)
+            #e.attrib.update(attr)
+            e.attrib.extend(attr)
         
         r[ws] = e
         prev = ws
@@ -238,14 +264,16 @@ def _build_element(e, line):
     e.tag = _tag or u'div'
     e.text = text
     if _id:
-        e.attrib[u'id'] = _id
+        #e.attrib[u'id'] = _id
+        e.attrib.append((u'id', _id))
     if _class:
-        e.attrib[u'class'] = _class
+        #e.attrib[u'class'] = _class
+        e.attrib.append((u'class', _class))
     if attr:
-        e.attrib.update(attr)
+        #e.attrib.update(attr)
+        e.attrib.extend(attr)
 
 def _build_from_parent(p, index, f):
-    # TODO this is one of the slowest parts of dmsl for extremely large documents
     r = {'root': p}
     prev = ''
     plntxt = {}
@@ -326,11 +354,14 @@ def _build_from_parent(p, index, f):
         # fctr 5
         e.text = text
         if _id:
-            e.attrib[u'id'] = _id
+            #e.attrib[u'id'] = _id
+            e.attrib.append((u'id', _id))
         if _class:
-            e.attrib[u'class'] = _class
+            #e.attrib[u'class'] = _class
+            e.attrib.append((u'class', _class))
         if attr:
-            e.attrib.update(attr)
+            #e.attrib.update(attr)
+            e.attrib.extend(attr)
         # fctr 1
         r[ws] = e
         # fctr 1.5

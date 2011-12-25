@@ -9,7 +9,8 @@ cdef inline tuple _parse_attr(unicode s):
     val_start = -1
     literal_start = -1
 
-    cdef dict d = {}
+    #cdef dict d = {}
+    cdef list l = []
 
     for i, c in enumerate(s):
         if key_start != -1:
@@ -17,12 +18,14 @@ cdef inline tuple _parse_attr(unicode s):
                 if i is val_start+1 and (c is u'"' or c is u"'"):
                     literal_start = i
                 elif literal_start != -1 and c is s[literal_start]:
-                    d[s[key_start+1:val_start]] = s[literal_start+1:i]
+                    #d[s[key_start+1:val_start]] = s[literal_start+1:i]
+                    l.append((s[key_start+1:val_start], s[literal_start+1:i]))
                     key_start = -1
                     val_start = -1
                     literal_start = -1
                 elif literal_start == -1 and c is u']':
-                    d[s[key_start+1:val_start]] = s[val_start+1:i]
+                    #d[s[key_start+1:val_start]] = s[val_start+1:i]
+                    l.append((s[key_start+1:val_start], s[val_start+1:i]))
                     key_start = -1
                     val_start = -1
             elif c is u'=':
@@ -36,11 +39,11 @@ cdef inline tuple _parse_attr(unicode s):
             break
     
     if mark_start == -1:
-        return s, d
+        return s, l
     if mark_end == -1:
-        return s[:mark_start], d
+        return s[:mark_start], l
     else:
-        return s[:mark_start]+s[mark_end:], d
+        return s[:mark_start]+s[mark_end:], l
 
 cdef inline tuple _parse_tag(unicode s):
     cdef unicode x
