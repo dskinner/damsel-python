@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 cdef inline tuple _parse_format(char* s, tuple args, dict kwargs):
-    cdef Py_ssize_t i, inc, key_start, key_end, offset, esc
-    cdef bytes e
-    cdef bytes result
+    cdef Py_ssize_t i, inc, key_start, conversion_start, offset, esc
+    cdef str e
+    cdef str result
     cdef bytes new_s = s
     cdef char c
     cdef object obj
@@ -12,27 +12,29 @@ cdef inline tuple _parse_format(char* s, tuple args, dict kwargs):
     cdef list traverse
     cdef list keys = []
 
+    cdef list cnv_idx = []
+
     key_start = -1
-    key_end = -1
     inc = len(args) #increment arg count
-    offset = 0
 
     for i, c in enumerate(s):
+        if key_start != -1:
+            if c is '}' or c is ':':
+                keys.append(s[key_start+1:i])
+                key_start = -1
+            elif c is '!':
+                keys.append(s[key_start+1:i+2])
+                #s = s[:i] + s[i+2:]
+                cnv_idx.append(i)
+                key_start = -1
+
         if c is '{':
             key_start = i
-        elif key_start != -1:
-            if c is '}' or c is ':':
-                key_end = i
-            elif c is '!':
-                key_end = i+2
 
-            if key_end != -1:
-                keys.append(s[key_start+1:key_end])
-                new_s = new_s[:key_start+1+offset] + str(inc) + new_s[key_end+offset:]
-                offset -= key_end-key_start-2
-                inc += 1
-                key_start = -1
-                key_end = -1
+    offset = 0
+    for i in cnv_idx:
+        new_s = new_s[:i+offset] + new_s[i+offset+2:]
+        offset -= 2
 
     for e in keys:
         if e[-2:] == '!s':
@@ -56,6 +58,8 @@ cdef inline tuple _parse_format(char* s, tuple args, dict kwargs):
             obj = kwargs[e]
 
         if isinstance(obj, (float, int)):
+            new_s = new_s.replace('{'+e, '{'+str(inc))
+            inc += 1
             _args.append(obj)
         elif esc:
             result = repr(obj).replace('<', '&lt;').replace('>', '&gt;')
@@ -63,8 +67,12 @@ cdef inline tuple _parse_format(char* s, tuple args, dict kwargs):
                 result = result[1:-1]
             elif isinstance(obj, unicode):
                 result = result[2:-1]
+            new_s = new_s.replace('{'+e, '{'+str(inc))
+            inc += 1
             _args.append(result)
         else:
+            new_s = new_s.replace('{'+e, '{'+str(inc))
+            inc += 1
             _args.append(obj)
 
     return (new_s, _args)
@@ -72,5 +80,6 @@ cdef inline tuple _parse_format(char* s, tuple args, dict kwargs):
 def fmt(__fmt_string__, *args, **kwargs):
     __fmt_string__, _args = _parse_format(__fmt_string__, args, kwargs)
     return __fmt_string__.format(*_args)
+    #return __fmt_string__.format(*args, **kwargs)
 
 

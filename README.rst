@@ -67,7 +67,7 @@ look at how this can be handled in dmsl::
 
 And the results::
 
-  Damsel Template  37.22 ms
+  Damsel Template  44.45 ms
   Mako Template    21.64 ms
   Genshi Template  127.03 ms
   Django Template  274.57 ms

@@ -43,6 +43,7 @@ class RenderException(Exception):
 
 class Template(object):
     debug = False
+
     def __init__(self, filename):
         self.sandbox = _sandbox.new()
         self.sandbox.update(_sandbox.extensions)
