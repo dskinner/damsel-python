@@ -19,7 +19,10 @@ cdef inline tuple _parse_format(char* s, tuple args, dict kwargs):
 
     for i, c in enumerate(s):
         if c is '{':
-            key_start = i
+            if key_start == -1:
+                key_start = i
+            else:
+                key_start = -1
         elif key_start != -1:
             if c is '}' or c is ':':
                 key_end = i
