@@ -191,6 +191,14 @@ str.format is also available but is not safe for formatting user input. In cases
       c = fmt('{0}{b}', a, b=b)
       %p {c}
 
+By default, html sequences are escaped when using the python formatter. You can control this by using the two builtin conversion types, !r and !s. When repr an object, this will escape the item, while the latter leaves it as is::
+
+  bad = '<strong> hello'
+  %html %body
+      %p This output will be escaped, {bad}
+      %p This is same as above, {bad!r}
+      %p This output will not be escaped, {bad!s} causing this text to be bold
+
 Python can be used to control the flow of the document as well::
 
   val = False
