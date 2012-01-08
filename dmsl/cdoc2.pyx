@@ -214,7 +214,7 @@ cdef Element _doc_pre(list f):
                         is_super = 1
                         attr.pop(i)
                         break
-                if is_super:
+                if not is_super:
                     e.children = []
                     #for child in e.children:
                     #    e.children.remove(child)
