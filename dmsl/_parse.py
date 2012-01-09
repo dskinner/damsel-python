@@ -6,7 +6,7 @@ import lxml.etree as etree
 import _sandbox
 from _pre import _pre
 from _py import _compile
-from cdoc2 import doc_pre, doc_py
+from cdoc import doc_pre, doc_py
 
 def func():pass
 func = type(func)

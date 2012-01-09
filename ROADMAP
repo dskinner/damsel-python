@@ -10,6 +10,4 @@ dmsl 0.x series
 * Tackle security issues
 * Try to uncover any and all issues related to characters in source document
   that will cause the parser to error
-* Django integration
-* Cherrypy integration (!done)
 
