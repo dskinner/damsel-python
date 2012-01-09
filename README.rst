@@ -23,11 +23,16 @@ Follow development at http://github.com/dasacc22/dmsl or view this readme at htt
 
 Building From Source
 =====================
-dmsl depends on Cython >= 0.15 so install as per your distribution, for example::
+The latest version of dmsl on pypi is 0.4 and has no package dependencies. Python sources are required to compile
+C extensions::
+
+  sudo pip install dmsl
+
+If building from git, dmsl depends on Cython >= 0.15.1 so install as per your distribution, for example::
 
   sudo easy_install cython
 
-After satisfying lxml and cython dependencies, clone the repo from github, build and install globally with the following::
+After satisfying cython dependency, clone the repo from github, build and install globally with the following::
 
   git clone git://github.com/dasacc22/dmsl.git
   cd dmsl
