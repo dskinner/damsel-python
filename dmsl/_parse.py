@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 from copy import copy, deepcopy
-import lxml.etree as etree
 
 import _sandbox
 from _pre import _pre
