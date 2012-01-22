@@ -122,13 +122,11 @@ Edit views.py and render a response like this::
 
 The following is the contents of index.dmsl::
 
-  polls = kwargs.get('latest_poll_list', [])
-  
   %html %body
-      if not polls:
+      if not latest_poll_list:
           %p No polls are available
   
-      %ul for poll in polls:
+      %ul for poll in latest_poll_list:
           %li %a[href="/polls/{poll.id}/"] {poll.question}
 
 Errors in a template will throw a RenderException. Insepct the "Exception Value:" on the django error page for the dmsl file
