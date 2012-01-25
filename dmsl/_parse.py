@@ -59,6 +59,7 @@ class Template(object):
 
     def render(self, *args, **kwargs):
         self.sandbox['args'] = args
+        self.sandbox['kwargs'] = kwargs
 
         r = copy(self.r)
 
