@@ -2,52 +2,58 @@ This project is a work in progress. Refer to dmsl/test/templates/ for additional
 
 Follow development at http://github.com/dasacc22/dmsl or view this readme at http://damsel.dasa.cc
 
-* Building From Source
-* Running Unit Tests
-* Submitting Bugs
-* Speed Tests
-* Features and Examples
+* `Building From Source`_
+* `Running Unit Tests`_
+* `Submitting Bugs`_
+* `Speed Tests`_
+* `Features and Examples`_
 
-  * Command Line Interface
-  * Django Example
-  * Generic Source
+  * `Command Line Interface`_
+  * `Django Example`_
+  * `Generic Source Example`_
 
-* Language Features
+* `Language Features`_
 
-  * Elements and Attributes
-  * Embedding Python
-  * Filters
-  * Reusable Templates
-
-.. _Building:
+  * `Elements and Attributes`_
+  * `Embedding Python`_
+  * `Filters`_
+  * `Reusable Templates`_
 
 Building From Source
-=====================
+====================
 The latest version of dmsl on pypi is 0.4 and has no package dependencies. Python sources are required to compile
-C extensions::
+C extensions
+
+::
 
   sudo pip install dmsl
 
-If building from git, dmsl depends on Cython >= 0.15.1 so install as per your distribution, for example::
+If building from git, dmsl depends on Cython >= 0.15.1 so install as per your distribution, for example
+
+::
 
   sudo easy_install cython
 
-After satisfying cython dependency, clone the repo from github, build and install globally with the following::
+After satisfying cython dependency, clone the repo from github, build and install globally with the following
+
+::
 
   git clone git://github.com/dasacc22/dmsl.git
   cd dmsl
   sudo python setup.py install
 
 or if you wish to not install globally, you can build the C extensions in place
-and use from directory::
+and use from directory
+
+::
 
   python setup.py build_ext -i
 
-.. _unittests:
-
 Running Unit Tests
 ==================
-To run unit tests, build in place and execute test/ directory::
+To run unit tests, build in place and execute test/ directory
+
+::
 
   python setup.py build_ext -i
   cd dmsl/
@@ -82,11 +88,11 @@ Features and Examples
 
 Command Line Interface
 ----------------------
-Damsel can run via command line. For python2.7::
+Damsel can run via command line. For python2.7
 
   python -m dmsl -h  # see for more info
 
-For python2.6::
+For python2.6
 
   pip install argparse
   python -m dmsl.__main__ -h
@@ -188,11 +194,8 @@ Damsel also supports embedding python in the document. There's no special syntax
 
 str.format is also available but is not safe for formatting user input. In cases where you want to call this directly with safety checks, fmt is available in the sandbox::
 
-  %html %body
-      a = 'a'
-      b = 'b'
-      c = fmt('{0}{b}', a, b=b)
-      %p {c}
+  %html %body %ul
+      [fmt('%li {0}', x) for x in range(10)]
 
 By default, html sequences are escaped when using the python formatter. You can control this by using the two builtin conversion types, !r and !s. When repr an object, this will escape the item, while the latter leaves it as is::
 
@@ -207,6 +210,7 @@ Python can be used to control the flow of the document as well::
   val = False
   %html %body
       %p Test the value of val
+      
       if val:
           %p val is True
       else:

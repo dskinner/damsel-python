@@ -16,7 +16,7 @@ cdef inline tuple _parse_format(char* s, tuple args, dict kwargs):
     key_end = -1
     inc = len(args) #increment arg count
     offset = 0
-
+    print '!!!', 'start'
     for i, c in enumerate(s):
         if c is '{':
             if key_start == -1:
@@ -38,6 +38,7 @@ cdef inline tuple _parse_format(char* s, tuple args, dict kwargs):
                 key_end = -1
 
     for e in keys:
+        print '@@@', e
         if e[-2:] == '!s':
             esc = False
             e = e[:-2]
@@ -55,6 +56,12 @@ cdef inline tuple _parse_format(char* s, tuple args, dict kwargs):
             obj = kwargs[traverse[0]]
             for x in traverse[1:]:
                 obj = obj[x]
+        elif '.' in e:
+            print e
+            traverse = [x for x in e.split('.')]
+            obj = kwargs[traverse[0]]
+            for x in traverse[1:]:
+                obj = getattr(obj, x)
         else:
             obj = kwargs[e]
 

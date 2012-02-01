@@ -1,3 +1,4 @@
 include MIT-LICENSE
 include ROADMAP
 recursive-include dmsl *.html *.dmsl *.c
+recursive-exclude dmsl *.pyx
