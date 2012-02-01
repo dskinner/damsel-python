@@ -21,7 +21,7 @@ Follow development at http://github.com/dasacc22/dmsl or view this readme at htt
 
 Building From Source
 ====================
-The latest version of dmsl on pypi is 0.4 and has no package dependencies. Python sources are required to compile
+The latest version of dmsl on pypi is 0.4.1 and has no package dependencies. Python sources are required to compile
 C extensions
 
 ::
