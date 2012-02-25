@@ -66,6 +66,8 @@ default_sandbox = { '__builtins__': None,
                     'open': _open,
                     'range': __builtin__.range,
                     'repr': __builtin__.repr,
+                    'reversed': __builtin__.reversed,
+                    'set': __builtin__.set,
                     'sorted': __builtin__.sorted,
                     'str': __builtin__.str}
 
@@ -75,6 +77,11 @@ if hasattr(__builtin__, 'False'):
 
 if hasattr(__builtin__, 'True'):
     default_sandbox['True'] = getattr(__builtin__, 'True')
+
+# Python2
+if hasattr(__builtin__, 'unicode'):
+    default_sandbox['unicode'] = getattr(__builtin__, 'unicode')
+
 #
 
 def new():
