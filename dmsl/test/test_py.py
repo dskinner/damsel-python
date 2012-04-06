@@ -13,6 +13,7 @@ class TestPy(unittest.TestCase):
             'py_complex2': None,
             'py_complex3': None,
             'py_embed': None,
+            'py_ending_colon': None,
             'py_extends': None,
             'py_formatter': None,
             'py_func': None,
@@ -56,6 +57,11 @@ class TestPy(unittest.TestCase):
 
     def test_py_embed(self):
         parsed, expected = self.t['py_embed']
+        parsed = Template(parsed).render()
+        self.assertEqual(parsed.strip(), expected.strip())
+
+    def test_py_ending_colon(self):
+        parsed, expected = self.t['py_ending_colon']
         parsed = Template(parsed).render()
         self.assertEqual(parsed.strip(), expected.strip())
 

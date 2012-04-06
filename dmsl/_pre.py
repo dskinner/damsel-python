@@ -2,6 +2,15 @@ from cutils import parse_attr, split_space, parse_inline, parse_ws, sub_str, sub
 from _sandbox import _open
 
 directives = ['%', '#', '.', '\\']
+py_stmts = ['for', 'if', 'while', 'try', 'except', 'with']
+
+def is_py_stmt(l):
+    if l[-1] != u':':
+        return False
+    for stmt in py_stmts:
+        if l.startswith(stmt):
+            return True
+    return False
 
 def parse_inlines(s):
     if u':' not in s:
@@ -25,7 +34,7 @@ def expand_line(ws, l, i, f):
     tag, txt = split_space(el)
     
     # Check for inlined tag hashes
-    if txt != u'' and (txt[0] in directives or txt[-1] == u':' or (txt[0] == u'[' and txt[-1] == u']')):
+    if txt != u'' and (txt[0] in directives or is_py_stmt(txt) or (txt[0] == u'[' and txt[-1] == u']')):
         l = l.replace(txt, u'')
         f[i] = ws+l
         f.insert(i+1, ws+u' '+txt)

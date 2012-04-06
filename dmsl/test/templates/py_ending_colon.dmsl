@@ -1,0 +1,3 @@
+%html
+    %ul for x in range(5):
+        %li {x!s} is the number:
