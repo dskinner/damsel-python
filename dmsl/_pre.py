@@ -2,7 +2,7 @@ from cutils import parse_attr, split_space, parse_inline, parse_ws, sub_str, sub
 from _sandbox import _open
 
 directives = ['%', '#', '.', '\\']
-py_stmts = ['for', 'if', 'while', 'try', 'except', 'with']
+py_stmts = ['for', 'if', 'while', 'try', 'except', 'with', 'def']
 
 def is_py_stmt(l):
     if l[-1] != u':':
@@ -168,7 +168,7 @@ def _pre(_f):
                 py_count += 1
         
         # handle mixed content
-        elif l[-1] == u':':
+        elif is_py_stmt(l):
             orig_mixed_ws = ws
             mixed_ws = []
             mixed_ws_offset = []

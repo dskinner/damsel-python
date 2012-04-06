@@ -7,6 +7,7 @@ import codecs
 class TestBasic(unittest.TestCase):
     def setUp(self):
         self.t = {
+            'basic_ending_colon': None,
             'basic_html': None,
             'basic_indent': None,
             'basic_inline': None,
@@ -22,6 +23,11 @@ class TestBasic(unittest.TestCase):
             # expected output
             b = open(os.path.join('', k+'.html')).read()
             self.t[k] = (a, b)
+
+    def test_basic_ending_colon(self):
+        parsed, expected = self.t['basic_ending_colon']
+        parsed = Template(parsed).render()
+        self.assertEqual(parsed.strip(), expected.strip())
 
     def test_basic_html(self):
         parsed, expected = self.t['basic_html']
